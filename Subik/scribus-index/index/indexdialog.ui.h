@@ -14,6 +14,8 @@
 
 #include "scribus.h"
 
+#define USPACE QString(QChar(0xA0))
+
 extern ScribusApp *ScApp;
 
 
@@ -62,7 +64,7 @@ void IndexDialog::okButton_pressed()
 				if (inToc && item->Ptext.at(k)->ch != QChar(13))
 				{
 					if (item->Ptext.at(k)->ch == " ")
-						toc += QString(QChar(0xA0));
+						toc += USPACE;
 					else
 						toc += item->Ptext.at(k)->ch;
 				}
@@ -95,7 +97,7 @@ void IndexDialog::okButton_pressed()
 	ScApp->doc->ActPage->SetRectFrame(ScApp->doc->ActPage->Items.at(itno));
 	PageItem *item = ScApp->doc->ActPage->Items.at(itno);
 	// text into frame
-	toc = "Table of Contents" + QString(QChar(13)) + toc;
+	toc = "Table" + USPACE + "of" + USPACE + "Contents" + QString(QChar(13)) + toc;
 	for (uint i = 0; i < toc.length(); ++i)
 	{
 		struct Pti *hg = new Pti;
@@ -120,6 +122,15 @@ void IndexDialog::okButton_pressed()
 		hg->PtransY = 0;
 		item->Ptext.append(hg);
 	}
+	// enforce align BLOCK formating for this frame
+	int apMode = ScApp->doc->AppMode;
+	item->OwnPage->SelItem.clear();
+	item->OwnPage->SelItem.append(item);
+	if (item->HasSel)
+		ScApp->doc->AppMode = 7;
+	ScApp->setNewAbStyle(4); // ALIGN_BLOCK
+	ScApp->doc->AppMode = apMode;
+	item->OwnPage->Deselect();
 	item->paintObj();
 	// return
 	accept();
