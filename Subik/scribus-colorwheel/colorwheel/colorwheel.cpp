@@ -17,7 +17,7 @@ PluginManager::PluginType type()
 
 int ID()
 {
-	return 66;
+	return 13;
 }
 
 
@@ -46,22 +46,10 @@ bool actionEnabledOnStartup()
 	return true;
 }
 
-/**
-Create dialog and insert font into Style menu when user accepts.
-*/
+/** Create dialog. Everything else is handled in separated classes. */
 void run(QWidget *d, ScribusApp */*plug*/)
 {
 	ColorWheelDialog *dlg = new ColorWheelDialog(d, "dlg", TRUE, 0);
-	// run it and wait for user's reaction
-	if (dlg->exec() == QDialog::Accepted)
-	{
-	    qDebug("exec");
-	/*
-		if  (plug->pluginManager->dllInput == "")
-			plug->SetNewFont(dlg->fontList->currentItem()->text(0));
-		else
-			plug->pluginManager->dllReturn = dlg->fontList->currentItem()->text(0);
-			*/
-	}
+	dlg->exec();
 	delete dlg;
 }

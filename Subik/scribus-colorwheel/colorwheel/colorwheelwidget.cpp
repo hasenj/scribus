@@ -8,10 +8,6 @@
 
 ColorWheel::ColorWheel(QWidget * parent, const char * name) : QLabel(parent, name, 0)
 {
-	xsize = 100;
-	ysize = 100;
-	actualPoint = QPoint(xsize, ysize);
-	angle = 5;
 }
 
 ColorWheel::~ColorWheel()
@@ -34,11 +30,6 @@ QRgb ColorWheel::getPointColor(QPoint p1)
 	QImage image;
 	const QPixmap *pm = pixmap();
 	image = pm->convertToImage();
-	/*
-	qDebug(QString("pc: %1 %2").arg(p1.x()).arg(p1.y()));
-	*/
-	//qDebug(QString("pcrgb: %1 %2 %3").arg(qRed(image.pixel(p1.x(), p1.y()))).arg(qGreen(image.pixel(p1.x(), p1.y()))).arg(qBlue(image.pixel(p1.x(), p1.y()))));
-
 	return image.pixel(p1.x(), p1.y());
 }
 
@@ -55,18 +46,16 @@ void ColorWheel::mouseReleaseEvent(QMouseEvent *e)
 
 void ColorWheel::paintWheel(QValueVector<QPoint> selectedPoints)
 {
-	xsize = width();
-	ysize = height();
-	QPixmap pm(xsize, ysize);
+	QPixmap pm(width(), height());
 	pm.fill(Qt::white);
 	QPainter *p = new QPainter(&pm);
-	p->setWindow( 0, 0, xsize, ysize);
+	p->setWindow( 0, 0, width(), height());
 	p->setPen(Qt::white);
-	p->drawRect(0, 0, xsize, ysize);
+	p->drawRect(0, 0, width(), height());
 	for (int i = 0; i < 361; ++i)
 	{
 		QWMatrix matrix;
-		matrix.translate(xsize/2, ysize/2);
+		matrix.translate(width()/2, height()/2);
 		matrix.rotate((float)i);
 		p->setWorldMatrix(matrix);
 		QColor c;
@@ -135,25 +124,18 @@ double ColorWheel::pointAngle(QPoint p)
 	return 0.0;
 }
 
-//#include <iostream.h>
 void ColorWheel::sampleByAngle(double angle, QString name)
 {
-	/*
-	x2:=cpx+round(x*cos(radang)-y*sin(radang));
-	y2:=cpy+round(y*cos(radang)+x*sin(radang));
-	*/
 	double radang = M_PI * angle/180;
 	//cout << "angle: " << radang << endl;
-	int x = actualPoint.x() - xsize/2;
-	int y = actualPoint.y() - ysize/2;
+	int x = actualPoint.x() - width()/2;
+	int y = actualPoint.y() - height()/2;
 	//cout << " xy: " << actualPoint.x() << " " << actualPoint.y() << endl;
 	//cout << "oxy: " << x << " " << y << endl;
-	//int dx = sqrt(x*x + y*y) * cos(atan(y / x) + M_PI*angle/180);
-	//int dy = sqrt(x*x + y*y) * sin(atan(y / x) + M_PI*angle/180);
 	int dx = (int) round(x * cos(radang) - y * sin(radang));
 	int dy = (int) round(y * cos(radang) + x * sin(radang));
 	//cout << "dxy: " << dx << " " << dy << endl;
-	QRgb rgb = getPointColor(QPoint(dx + xsize/2, dy + ysize/2));
+	QRgb rgb = getPointColor(QPoint(dx + width()/2, dy + height()/2));
 	//cout << "nxy: " << dx + xsize/2 << " " << dy + ysize/2 << endl;
 	// create color
 	colorList[name] = cmykColor(rgb);

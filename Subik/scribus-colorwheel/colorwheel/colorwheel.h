@@ -5,6 +5,15 @@
 #include "scribus.h"
 #include "pluginmanager.h"
 
+/** \brief This is a simple "Color Theory" plugin for Scribus 1.3 and later.
+Harmonious colors are colors that work well together, that produce a color
+scheme that looks attractive; the color wheel can be used as a valuable
+tool for determining harmonious colors.
+More on: http://en.wikipedia.org/wiki/Color_wheel
+\author Petr Vanek; petr@yarpen.cz
+\date April 2005
+*/
+
 /** Calls the Plugin with the main Application window as parent
   * and the main Application Class as parameter */
 extern "C" void run(QWidget *d, ScribusApp *plug);
@@ -15,13 +24,12 @@ extern "C" void run(QWidget *d, ScribusApp *plug);
 extern "C" QString name();
 
 
-/** Returns the Type of the Plugin.
-  * 1 = the Plugin is a normal Plugin, which appears in the Extras Menue
-  * 2 = the Plugin is a Import Plugin, which appears in the Import Menue
-  * 3 = the Plugin is a Export Plugin, which appears in the Export Menue
-  * 4 = the Plugin is a resident Plugin   */
+/** Returns the Type of the Plugin. */
 extern "C" PluginManager::PluginType type();
+/** ID for plugin registry */
 extern "C" int ID();
+
+/** menu settings */
 extern "C" QString actionName();
 extern "C" QString actionKeySequence();
 extern "C" QString actionMenu();

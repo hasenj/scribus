@@ -17,6 +17,11 @@ class QListViewItem;
 class QPushButton;
 class QSpinBox;
 
+/** \brief GUI dialog for Color Wheel Plugin.
+Quite everything in this class is self explanatory (except few things ;)).
+\author Petr Vanek; petr@yarpen.cz
+\date April 2005
+*/
 class ColorWheelDialog : public QDialog
 {
 	Q_OBJECT
@@ -36,6 +41,8 @@ class ColorWheelDialog : public QDialog
 		QPushButton* cancelButton;
 
 	protected:
+		/** It fills a colors into list view. It takes colors
+		    from ColorWheel widget. */
 		void fillColorList();
 		QGridLayout* formLayout;
 		QHBoxLayout* mainLayout;
@@ -46,6 +53,7 @@ class ColorWheelDialog : public QDialog
 		QHBoxLayout* buttonLayout;
 		/** Configuration structure */
 		PrefsContext* prefs;
+		/** Draws a strange colorful things as preview of the color schema. */
 		void setPreview();
 
 	public slots:

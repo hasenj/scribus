@@ -91,6 +91,7 @@ ColorWheelDialog::ColorWheelDialog(QWidget* parent, const char* name, bool modal
 	prefs = prefsFile->getPluginContext("colorwheel");
 	typeCombo->setCurrentItem(prefs->getInt("cw_type", 0));
 	angleSpin->setValue(prefs->getInt("cw_angle", 15));
+	colorWheel->angle = angleSpin->value();
 	QValueVector<QPoint> vp;
 	int x = prefs->getInt("cw_x", 0);
 	int y = prefs->getInt("cw_y", 0);
@@ -144,7 +145,14 @@ void ColorWheelDialog::languageChange()
 	angleLabel->setText(tr("Angle (0 - 365 degrees):"));
 	addButton->setText(tr("&Add Colors"));
 	cancelButton->setText(tr("&Cancel"));
-
+	// tips
+	QToolTip::add(addButton, "<qt>" + tr("Appends created colors into socument colors") + "</qt>");
+	QToolTip::add(cancelButton, "<qt>" + tr("Leave colors untouched") + "</qt>");
+	QToolTip::add(angleSpin, "<qt>" + tr("Difference between selected value and counted ones. See documentation for more info") + "</qt>");
+	QToolTip::add(colorWheel, "<qt>" + tr("Click the wheel to get base color") + "</qt>");
+	QToolTip::add(previewLabel, "<qt>" + tr("Here you have the sample color schema") + "</qt>");
+	QToolTip::add(typeCombo, "<qt>" + tr("Select one of the method to create color schema. See documentation for more info") + "</qt>");
+	QToolTip::add(colorList, "<qt>" + tr("Here you have the color of your chosen color schema") + "</qt>");
 }
 
 void ColorWheelDialog::fillColorList()
