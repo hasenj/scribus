@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf8"?>
+<lorem>
+<file name="Bass" url="turkey-bass.txt" description="Yo, man!" type="turkey"/>
+<file name="czech" url="turkey-czech.txt" description="Czech with specials" type="turkey"/>
+<file name="czech ASCII" url="turkey-czech-ascii.txt" description="Czech L.I. in ASCII - without any special chars" type="turkey"/>
+<file name="latin" url="turkey-latin.txt" description="Classic one" type="turkey"/>
+
+<file name="arabic" url="http://www.lorem-ipsum.info/generator2?arabic" description="desc" type="network"/>
+<file name="chinese" url="http://www.lorem-ipsum.info/generator2?chinese" description="desc" type="network"/>
+<file name="esperanto" url="http://www.lorem-ipsum.info/generator2?esperanto" description="desc" type="network"/>
+<file name="greek" url="http://www.lorem-ipsum.info/generator2?greek" description="desc" type="network"/>
+<file name="hebrew" url="http://www.lorem-ipsum.info/generator2?hebrew" description="desc" type="network"/>
+<file name="hindi" url="http://www.lorem-ipsum.info/generator2?hindi" description="desc" type="network"/>
+<file name="interlingua" url="http://www.lorem-ipsum.info/generator2?interlingua" description="desc" type="network"/>
+<file name="japanese" url="http://www.lorem-ipsum.info/generator2?japanese" description="desc" type="network"/>
+<file name="l33tspeak" url="http://www.lorem-ipsum.info/generator2?l33tspeak" description="desc" type="network"/>
+<file name="latin" url="http://www.lorem-ipsum.info/generator2?latin" description="desc" type="network"/>
+<file name="letzebuergesch" url="http://www.lorem-ipsum.info/generator2?letzebuergesch" description="desc" type="network"/>
+<file name="morsecode" url="http://www.lorem-ipsum.info/generator2?morsecode" description="desc" type="network"/>
+<file name="quenya" url="http://www.lorem-ipsum.info/generator2?quenya" description="desc" type="network"/>
+<file name="russian" url="http://www.lorem-ipsum.info/generator2?russian" description="desc" type="network"/>
+<file name="slovio" url="http://www.lorem-ipsum.info/generator2?slovio" description="desc" type="network"/>
+<file name="sona" url="http://www.lorem-ipsum.info/generator2?sona" description="desc" type="network"/>
+<file name="tokipona" url="http://www.lorem-ipsum.info/generator2?tokipona" description="desc" type="network"/>
+<file name="volapuek" url="http://www.lorem-ipsum.info/generator2?volapuek" description="desc" type="network"/>
+
+</lorem>
