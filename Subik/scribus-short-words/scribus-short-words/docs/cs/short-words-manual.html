@@ -1,13 +1,56 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Scribus – Zkratky a předložky</title><link rel="stylesheet" href="yarpen_docbook.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.62.4" /></head><body><div class="book" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h1 class="title"><a id="id2427929"></a>Scribus – Zkratky a předložky</h1></div><div><h2 class="subtitle">Short Words for Scribus</h2></div><div><p class="copyright">Copyright © 2004 Petr Vaněk</p></div><div><div class="legalnotice"><p>
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation;   with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section entitled "GNU Free Documentation License".
-</p></div></div></div><div></div><hr /></div><div class="toc"><p><b>Obsah</b></p><dl><dt><span class="chapter"><a href="#id2430892">1. K čemu to je…</a></span></dt><dt><span class="chapter"><a href="#id2427941">2. Jak to pracuje…</a></span></dt><dt><span class="chapter"><a href="#id2428014">3. Jak to spustím…</a></span></dt><dt><span class="chapter"><a href="#id2476234">4. Instalace</a></span></dt><dt><span class="chapter"><a href="#id2428363">5. Konfigurace</a></span></dt><dt><span class="chapter"><a href="#id2428461">6. Short Words for Scribus Copyright</a></span></dt></dl></div><div class="list-of-figures"><p><b>Seznam obrázků</b></p><dl><dt>2.1. <a href="#id2427954">Ukázka textu před aplikací</a></dt><dt>2.2. <a href="#id2427991">Ukázka textu po aplikaci</a></dt><dt>3.1. <a href="#id2428040">Spuštění Zkratek a předložek</a></dt><dt>3.2. <a href="#id2476136">Dialogové okno aplikace</a></dt></dl></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2430892"></a>Kapitola 1. K čemu to je…</h2></div></div><div></div></div><p>
-<span class="application">Zkratky a předložky</span> je modul DTP programu <span class="application">Scribus</span>, který vkládá speciální mezery za předložky a specifikované zkratky a.j.</p><p>Každá typografie požaduje specifické formátování různých slov, resp. jejich povolenou pozici na konci řádku, popřípadě mezislovní mezeru. Pravidla České typografie hovoří jasnou řečí: Jednohláskové neslabičné předložky <span class="emphasis"><em>K, k, S, s, V, v, Z, z,</em></span> slabičné <span class="emphasis"><em>O, o, U, u, a</em></span> spojky <span class="emphasis"><em>I, i, A,</em></span> nesmějí být na konci řádky (více viz. např. <a href="http://www.typo.cz" target="_top">typo.cz</a>). Existuje také celá řada fyzikálních jednotek titulů nebo vojenských a akademických hodností, které mají být také ošetřeny.</p><p><span class="application">Scribus</span> umožňuje vkládat nezlomitelnou mezeru pouze manuálně, což velice zdržuje a ve velkých objemech textů nevyhnutelně vede k těžko dohledatelným chybám. Podle pro systém <span class="application">T<sub>e</sub>X</span> určeného programu <span class="application">vlna</span>, páně Olšáka, jsem napsal modul, kterýautomatizuje zdlouhavou a nezáživnou robotu.</p></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2427941"></a>Kapitola 2. Jak to pracuje…</h2></div></div><div></div></div><p>Obrázek textového rámce dokumentu obsahuje neošetřený text. Chybný zlom textu je zvýrazněný červenou barvou.</p><div class="figure"><a id="id2427954"></a><p class="title"><b>Obrázek 2.1. Ukázka textu před aplikací</b></p><div class="mediaobject"><img src="before_short_words.png" alt="Ukázka textu před aplikací" /></div></div><p>Stejný text po spuštění <span class="application">Zkratek a předložek</span>. Text je lámán před předložkou – pomocí tzv. nezlomitelné mezery.</p><div class="figure"><a id="id2427991"></a><p class="title"><b>Obrázek 2.2. Ukázka textu po aplikaci</b></p><div class="mediaobject"><img src="after_short_words.png" alt="Ukázka textu po aplikaci" /></div></div></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2428014"></a>Kapitola 3. Jak to spustím…</h2></div></div><div></div></div><p>Jestliže máte modul úspěšně nainstalován, spustíte jej z menu <span class="guimenu">Extra</span> položkou <span class="guimenu">Předložky a zkratky (nezlomitelná mezera)...</span>. Následné okno aplikace vám nabídne:</p><div class="figure"><a id="id2428040"></a><p class="title"><b>Obrázek 3.1. Spuštění Zkratek a předložek</b></p><div class="mediaobject"><img src="menu.png" alt="Spuštění Zkratek a předložek" /></div></div><div class="figure"><a id="id2476136"></a><p class="title"><b>Obrázek 3.2. Dialogové okno aplikace</b></p><div class="mediaobject"><img src="dialog.png" alt="Dialogové okno aplikace" /></div></div><div class="variablelist"><dl><dt><span class="term">Vybrané rámce</span></dt><dd><p>Zpracuje text pouze ve vybraných textových rámcích.</p></dd><dt><span class="term">Aktuální stránka</span></dt><dd><p>Zpracuje text všech textových rámů strany, na které uživatel právě pracuje.</p></dd><dt><span class="term">Celý dokument</span></dt><dd><p>Zpracuje text všech textových rámů dokumentu.</p></dd><dt><span class="term">Nahradit původní nastavení uživatelským</span></dt><dd><p>Jestliže máte vytvořený vlastní soubor s konfigurací modulu, můžete zvolit, zda vaše nastavení přepíše standardní nastavení nebo se k němu připojí. Nastavení provedete v:  <tt class="filename">~/.scribus/scribus-short-words.rc</tt>.</p></dd></dl></div></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2476234"></a>Kapitola 4. Instalace</h2></div></div><div></div></div><p>Nejjednodušší instalace modulu e pochopitelně pomocí balíčkovacího systému vaší distribuce. Prohlédněte si <a href="http://www.scribus.net" target="_top">web aplikace Scribus</a>, zda tam nejsou připravené balíky právě pro vás (např. Fedora, SuSE, Gentoo, Mandrake, or PLD.</p><p>Jestliže nenajdete odpovídající balíček (nebo z jakéhokoli jiného důvodu), zkuste si modul přeložit ze zdrojových kódů – a to klasicky:</p><pre class="programlisting">#./configure
+<qt>
+<title>Scribus – Zkratky a předložky</title>
+
+<h1 class="title">Scribus – Zkratky a předložky</h1>
+<p>Short Words for Scribus</p>
+<p class="copyright">Copyright © 2004 Petr Vaněk</p>
+<p>Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section entitled "GNU Free Documentation License".</p>
+
+<h2>K čemu to je…</h2>
+<p>Zkratky a předložky je modul DTP programu Scribus, který vkládá speciální mezery za předložky a specifikované zkratky a.j.</p>
+<p>Každá typografie požaduje specifické formátování různých slov, resp. jejich povolenou pozici na konci řádku, popřípadě mezislovní mezeru. Pravidla České typografie hovoří jasnou řečí: jednohláskové neslabičné předložky <em>K, k, S, s, V, v, Z, z,</em> slabičné <em>O, o, U, u</em> a spojky <em>I, i, A,</em> nesmějí být na konci řádky (více viz. např. typo.cz). Existuje také celá řada fyzikálních jednotek titulů nebo vojenských a akademických hodností, které mají být také ošetřeny.</p>
+<p>Scribus umožňuje vkládat nezlomitelnou mezeru pouze manuálně, což velice zdržuje a ve velkých objemech textů nevyhnutelně vede k těžko dohledatelným chybám. Podle pro systém T<sub>e</sub>X určeného programu <code>vlna</code>, páně Olšáka, jsem napsal modul, který automatizuje zdlouhavou a nezáživnou robotu.</p>
+
+<h2>Jak to pracuje…</h2>
+<p>Obrázek textového rámce dokumentu obsahuje neošetřený text. Chybný zlom textu je zvýrazněný červenou barvou.</p>
+<p><b>Ukázka textu před aplikací</b></p>
+<img src="before_short_words.png" alt="Ukázka textu před aplikací" />
+<p>Stejný text po spuštění Zkratek a předložek. Text je lámán před předložkou – pomocí tzv. nezlomitelné mezery.</p>
+<p><b>Ukázka textu po aplikaci</b></p>
+<img src="after_short_words.png" alt="Ukázka textu po aplikaci" />
+
+<h2>Jak to spustím…</h2>
+<p>Jestliže máte modul úspěšně nainstalován, spustíte jej z menu <code>Extra</code> položkou <code>Předložky a zkratky (nezlomitelná mezera)...</code>. Následné okno aplikace vám nabídne:</p>
+<p><b>Spuštění Zkratek a předložek</b></p>
+<img src="menu.png" alt="Spuštění Zkratek a předložek" />
+<p><b>Dialogové okno aplikace</b></p>
+<img src="dialog.png" alt="Dialogové okno aplikace" />
+
+<dl>
+<dt>Vybrané rámce</dt>
+	<dd><p>Zpracuje text pouze ve vybraných textových rámcích.</p></dd>
+<dt>Aktuální stránka</dt>
+	<dd><p>Zpracuje text všech textových rámů strany, na které uživatel právě pracuje.</p></dd>
+<dt>Celý dokument</dt>
+	<dd><p>Zpracuje text všech textových rámů dokumentu.</p></dd>
+<dt>Nahradit původní nastavení uživatelským</dt>
+	<dd><p>Jestliže máte vytvořený vlastní soubor s konfigurací modulu, můžete zvolit, zda vaše nastavení přepíše standardní nastavení nebo se k němu připojí. Nastavení provedete v:  <code>~/.scribus/scribus-short-words.rc</tt>.</p></dd>
+</dl>
+
+<h2>Instalace</h2>
+<p>Nejjednodušší instalace modulu je pochopitelně pomocí balíčkovacího systému vaší distribuce. Prohlédněte si web aplikace Scribus (http://www.scribus.net), zda tam nejsou připravené balíky právě pro vás (např. Fedora, SuSE, Gentoo, Mandrake, or PLD.</p>
+<p>Jestliže nenajdete odpovídající balíček (nebo z jakéhokoli jiného důvodu), zkuste si modul přeložit ze zdrojových kódů – a to klasicky:</p>
+<pre>
+#./configure
 # make
 # make install
-...
-</pre><p>V některých případech je potřeba zadat jinou cestu k souborům Scribusu. To provedete při  <tt class="filename">./configure --prefix=/path/to/scribus/previously/installed</tt>. Implicitní prefix je <tt class="filename">/usr/local</tt>, kam bývají obvykle instalovány dodatečné aplikace. Na svém Gentoo používám <tt class="filename">./configure --prefix=/usr</tt>, abych splnil podmínky Scribus ebuildu.</p><p>Jestliže se během překladu objeví nějaká chyba, prostudujte nejdříve, jaké je třeba nainstalovat <a href="http://ahnews.music.salford.ac.uk/scribus/documentation/index-2.html#ss2.2" target="_top">knihovny</a>. Poté se třeba zeptejte v emailové konferenci.</p></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2428363"></a>Kapitola 5. Konfigurace</h2></div></div><div></div></div><p>Modul <span class="application">Zkratky a předložky</span> používá globální konfigurační soubor <tt class="filename">scribus-short-words.rc</tt>, který obvykle bývá v adresáři  <tt class="filename">/usr/local/lib/scribus/plugins</tt>. Skutečné umístění závisí na tom, kam je ve vaší distribuci instalován <span class="application">Scribus</span>. Konfigurační soubor nepotřebuje složitý popis. Ve zkratce – soubor obsahuje seznam(y) zkratek, předložek a dalších slov, uvozených nebo následovaných mezerou oddělených čárkou. Pozice mezery ukazuje, kam bude vložena nedělitelná mezera. Každý seznam musí začínat kódem jazyka, kterému je určen a končit čárkou. Např. Česká a Anglická konfigurace:</p><pre class="programlisting">
+</pre>
+<p>V některých případech je potřeba zadat jinou cestu k souborům Scribusu. To provedete při <code>./configure --prefix=/path/to/scribus/previously/installed</code>. Implicitní prefix je <code>/usr/local</code>, kam bývají obvykle instalovány dodatečné aplikace. Na svém Gentoo používám <code>./configure --prefix=/usr</code>, abych splnil podmínky Scribus ebuildu.</p>
+<p>Jestliže se během překladu objeví nějaká chyba, prostudujte nejdříve, jaké je třeba nainstalovat potřebné knihovny. Poté se třeba zeptejte v emailové konferenci.</p>
+
+<h2>Konfigurace</h2>
+<p>Modul Zkratky a předložky používá globální konfigurační soubor <code>scribus-short-words.rc</code>, který obvykle bývá v adresáři <code>/usr/local/lib/scribus/plugins</code>. Skutečné umístění závisí na tom, kam je ve vaší distribuci instalován <code>Scribus</code>. Konfigurační soubor nepotřebuje složitý popis. Ve zkratce – soubor obsahuje seznam(y) zkratek, předložek a dalších slov, uvozených nebo následovaných mezerou oddělených čárkou. Pozice mezery ukazuje, kam bude vložena nedělitelná mezera. Každý seznam musí začínat kódem jazyka, kterému je určen a končit čárkou. Např. Česká a Anglická konfigurace:</p>
+<pre>
 #  English stuff START here
 en=Dr. ,Dr ,Mr. ,Mr ,Mrs. ,Mrs ,Ms. ,Ms ,Prof. ,Prof ,Rev. ,Rev ,
 en= Kg, kg, g, mg, oz, lb, cwt, km, Km, m, cm, mm,
@@ -17,9 +60,15 @@ en= Kg, kg, g, mg, oz, lb, cwt, km, Km, m, cm, mm,
 cs=K ,k ,S ,s ,V ,v ,Z ,z ,O ,o ,U ,u ,I ,i ,A ,
 ## physics and math
 cs= kg, g, m, cm, mm, l, hl, s, %,
+</pre>
+<p>Jestliže chcete používat vlastní nastavení, např. nový jazyk, vytvořte si ve vašem skrytém adresáři programu <code>Scribus</code> soubor <code>scribus-short-words.rc</code>, tedy celou cestou <code>~/.scribus/scribus-short-words.rc</code> a v okně modulu poté zvolte, zda chcete nové nastavení připojit nebo jím staré přepsat.</p>
 
-</pre><p>Jestliže chcete používat vlastní nastavení, např. nový jazyk, vytvořte si ve vašem skrytém adresáři programu <span class="application">Scribus</span> soubor <tt class="filename">scribus-short-words.rc</tt>, tedy celou cestou <tt class="filename">~/.scribus/scribus-short-words.rc</tt> a v okně modulu poté zvolte, zda chcete nové nastavení připojit nebo jím staré přepsat.</p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Důležité</h3>Uvítám každou relevantní připomínku k nastavení nebo funkci programu.</div></div><div class="chapter" lang="cs" xml:lang="cs"><div class="titlepage"><div><div><h2 class="title"><a id="id2428461"></a>Kapitola 6. Short Words for Scribus Copyright</h2></div></div><div></div></div><p>Short Words for Scribus Copyright 2003, 2004 Petr Vaněk,
-<tt class="email">&lt;<a href="mailto:petr@yarpen.cz">petr@yarpen.cz</a>&gt;</tt></p><p>This program is free software; you can redistribute it
+<h3>Důležité</h3>
+<p>Uvítám každou relevantní připomínku k nastavení nebo funkci programu.</p>
+
+<h2>Short Words for Scribus Copyright</h2>
+<p>Short Words for Scribus Copyright 2003, 2004 Petr Vaněk, &lt;petr@yarpen.cz&gt;</p>
+<p>This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; either version 2 of the
 License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be
@@ -27,4 +76,6 @@ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 General Public License for more details.</p><p>You should have received a copy of the GNU General Public
 License along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</p></div></div></body></html>
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</p>
+
+</qt>

@@ -24,7 +24,7 @@ pkgincludedir = $(includedir)/scribus-vlna
 top_builddir = ../../..
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
-INSTALL = /bin/install -c -p
+INSTALL = /usr/bin/install -c -p
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
 install_sh_SCRIPT = $(install_sh) -c
@@ -39,13 +39,13 @@ POST_UNINSTALL = :
 build_triplet = i686-pc-linux-gnu
 host_triplet = i686-pc-linux-gnu
 target_triplet = i686-pc-linux-gnu
-ACLOCAL = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run aclocal-1.7
+ACLOCAL = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run aclocal-1.7
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run tar
-AUTOCONF = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run automake-1.7
+AMTAR = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run tar
+AUTOCONF = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run automake-1.7
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -107,7 +107,7 @@ LIB_X11 = -lX11 $(LIBSOCKET)
 LIB_XEXT = -lXext
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run makeinfo
 MOC = /usr/qt/3/bin/moc
 NOOPT_CFLAGS =  -g
 NOOPT_CXXFLAGS =  -fno-exceptions -fno-check-new
@@ -142,14 +142,14 @@ VERSION = 0.3.7
 WOVERLOADED_VIRTUAL = 
 X_EXTRA_LIBS =  -lresolv
 X_INCLUDES = -I/usr/X11R6/include
-X_LDFLAGS = -L/usr/X11R6/lib
+X_LDFLAGS = -L/usr/lib
 X_PRE_LIBS = 
 ac_ct_CC = gcc
-ac_ct_CXX = 
+ac_ct_CXX = g++
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
 all_includes = -I/usr/qt/3/include -I/usr/X11R6/include
-all_libraries = -L/usr/X11R6/lib -L/usr/qt/3/lib
+all_libraries = -L/usr/lib -L/usr/qt/3/lib
 am__fastdepCC_FALSE = #
 am__fastdepCC_TRUE = 
 am__fastdepCXX_FALSE = #
@@ -172,14 +172,14 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/subzero/devel/scribus-short-words-1.2.1/admin/install-sh
+install_sh = /home/subzero/devel/Subik/scribus-short-words/admin/install-sh
 kde_qtver = 3
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 oldincludedir = /usr/include
-prefix = /home/subzero/devel/SCRIBUS
+prefix = /home/subzero/devel/SCRIBUS/
 program_transform_name = s,x,x,
 qt_includes = /usr/qt/3/include
 qt_libraries = /usr/qt/3/lib
@@ -192,8 +192,8 @@ target_cpu = i686
 target_os = linux-gnu
 target_vendor = pc
 x_includes = /usr/X11R6/include
-x_libraries = /usr/X11R6/lib
-EXTRA_DIST = after_short_words.png before_short_words.png dialog.png menu.png short-words-manual.html short-words-manual.xml yarpen_docbook.css
+x_libraries = /usr/lib
+EXTRA_DIST = menu.xml after_short_words.png before_short_words.png dialog.png menu.png short-words-manual.html
 subdir = scribus-short-words/docs/en
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/admin/mkinstalldirs
@@ -355,71 +355,65 @@ uninstall-am: uninstall-info-am uninstall-local
 
 
 install-data-local:
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/after_short_words.png $(prefix)/share/scribus/doc/scribus-short-words/en/after_short_words.png
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/menu.xml $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.xml
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/after_short_words.png $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/after_short_words.png
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/menu.xml $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.xml
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/before_short_words.png $(prefix)/share/scribus/doc/scribus-short-words/en/before_short_words.png
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/after_short_words.png $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/after_short_words.png
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/before_short_words.png $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/before_short_words.png
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/after_short_words.png $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/after_short_words.png
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/dialog.png $(prefix)/share/scribus/doc/scribus-short-words/en/dialog.png
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/before_short_words.png $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/before_short_words.png
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/dialog.png $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/dialog.png
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/before_short_words.png $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/before_short_words.png
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/menu.png $(prefix)/share/scribus/doc/scribus-short-words/en/menu.png
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/dialog.png $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/dialog.png
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/menu.png $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/menu.png
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/dialog.png $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/dialog.png
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/short-words-manual.html $(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.html
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/menu.png $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.png
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/short-words-manual.html $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.html
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/menu.png $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.png
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/short-words-manual.xml $(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.xml
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
+#>- 	$(INSTALL_DATA) $(srcdir)/short-words-manual.html $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/short-words-manual.html
 #>+ 1
-	$(INSTALL_DATA) $(srcdir)/short-words-manual.xml $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.xml
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/en/
+	$(INSTALL_DATA) $(srcdir)/short-words-manual.html $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/short-words-manual.html
+#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 #>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/
-#>- 	$(INSTALL_DATA) $(srcdir)/yarpen_docbook.css $(prefix)/share/scribus/doc/scribus-short-words/en/yarpen_docbook.css
-#>+ 1
-	$(INSTALL_DATA) $(srcdir)/yarpen_docbook.css $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/yarpen_docbook.css
+	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/
 
 uninstall-local:
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/after_short_words.png
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.xml
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/after_short_words.png
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/before_short_words.png
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.xml
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/after_short_words.png
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/before_short_words.png
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/dialog.png
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/after_short_words.png
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/before_short_words.png
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/dialog.png
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/menu.png
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/before_short_words.png
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/dialog.png
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/menu.png
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.html
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/dialog.png
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.png
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.html
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.xml
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/menu.png
+#>- 	-rm -f $(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/short-words-manual.html
 #>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/short-words-manual.xml
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/en/yarpen_docbook.css
-#>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/en/yarpen_docbook.css
+	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/en/tutorials/scribus-short-words/short-words-manual.html
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

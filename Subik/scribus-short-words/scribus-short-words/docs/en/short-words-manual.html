@@ -1,17 +1,57 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Short Words for Scribus</title><link rel="stylesheet" href="yarpen_docbook.css" type="text/css" /><meta name="generator" content="DocBook XSL Stylesheets V1.62.4" /></head><body><div class="book" lang="en" xml:lang="en"><div class="titlepage"><div><div><h1 class="title"><a id="id2427929"></a>Short Words for Scribus</h1></div><div><p class="copyright">Copyright © 2004 Petr Vaněk, Maciej Hanski</p></div><div><div class="legalnotice"><p>
-Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation;   with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section entitled "GNU Free Documentation License".
-</p></div></div></div><div></div><hr /></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="chapter"><a href="#id2430894">1. What is Short Words meant for</a></span></dt><dt><span class="chapter"><a href="#id2430934">2. How it works</a></span></dt><dt><span class="chapter"><a href="#id2427946">3. How to execute Short Words</a></span></dt><dt><span class="chapter"><a href="#id2476152">4. Installation</a></span></dt><dt><span class="chapter"><a href="#id2476223">5. Configuration</a></span></dt><dt><span class="chapter"><a href="#id2428348">6. Short Words Copyright</a></span></dt></dl></div><div class="list-of-figures"><p><b>List of Figures</b></p><dl><dt>2.1. <a href="#id2430944">Text sample before executing Short Words</a></dt><dt>2.2. <a href="#id2430970">Text sample after executing Short Words</a></dt><dt>3.1. <a href="#id2427969">Calling Short Words for Scribus</a></dt><dt>3.2. <a href="#id2427988">Short Words dialog window</a></dt></dl></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2430894"></a>Chapter 1. What is Short Words meant for</h2></div></div><div></div></div><p>
-<span class="application">Short Words for Scribus</span> is a special plug-in for adding non-breaking spaces before or after so called short words.</p><p>These short words are specific to every national typography,  e.g. according to Czech, Polish, and Slovak typographical standards it is not allowed to leave one letter conjunctions at line ends, if the line contains more than 25 signs. A common issue are measure and weight units, where for obvious reasons non-breaking spaces should be put in-between the preceding numbers and the units. Last but not least, there are plenty of abbreviated academic degrees, military ranks etc, which should not be separated from their owners. </p><p>
-Although Scribus team cannot individually address every one of these national standards, one of the Scribus core team developers, Petr Vaněk, decided to provide Scribus users with a plug-in, that can be easily customized to meet their specific needs.
-</p></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2430934"></a>Chapter 2. How it works</h2></div></div><div></div></div><p>The screen shot below shows a sample text containing a short word before applying non-breaking spaces.</p><div class="figure"><a id="id2430944"></a><p class="title"><b>Figure 2.1. Text sample before executing Short Words</b></p><div class="mediaobject"><img src="before_short_words.png" alt="Text sample before executing Short Words" /></div></div><p>The same text after applying non-breaking spaces. The red encircled word Mr jumped to the next line, because the normal space between Mr and Justice has been replaced by a non-breaking space.</p><div class="figure"><a id="id2430970"></a><p class="title"><b>Figure 2.2. Text sample after executing Short Words</b></p><div class="mediaobject"><img src="after_short_words.png" alt="Text sample after executing Short Words" /></div></div></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2427946"></a>Chapter 3. How to execute Short Words</h2></div></div><div></div></div><p>If you successfully installed the plug-in, go to the <span class="guimenu">Extras</span>
-menu and choose the <span class="guimenu">Short Words...</span> option:</p><div class="figure"><a id="id2427969"></a><p class="title"><b>Figure 3.1. Calling Short Words for Scribus</b></p><div class="mediaobject"><img src="menu.png" alt="Calling Short Words for Scribus" /></div></div><div class="figure"><a id="id2427988"></a><p class="title"><b>Figure 3.2. Short Words dialog window</b></p><div class="mediaobject"><img src="dialog.png" alt="Short Words dialog window" /></div></div><div class="variablelist"><dl><dt><span class="term">Selected frames</span></dt><dd><p>Apply non-breaking spaces to selected text frames.</p></dd><dt><span class="term">Active page</span></dt><dd><p>Apply non-breaking spaces to all frames of the current page.</p></dd><dt><span class="term">All items</span></dt><dd><p>Apply non-breaking spaces to the  <span class="emphasis"><em>whole document</em></span></p></dd></dl></div><div class="variablelist"><dl><dt><span class="term">Replace defaults by user config</span></dt><dd><p>When the user config file exists you can choose if you want to append your config to the global configuration by unchecked button. You can replace predefined values by yours with checked button too.</p></dd></dl></div></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2476152"></a>Chapter 4. Installation</h2></div></div><div></div></div><p>The easiest way of installing the plug-in is to check on the  <a href="http://www.scribus.net" target="_top">Scribus site</a>, if there are installation packages available for your favourite distribution, e.g. Fedora, SuSE, Gentoo, Mandrake, or PLD.</p><p>Should there be no suitable package for you, try to build the plug-in from source, which in most cases is the matter of the following three statements:</p><pre class="programlisting">#./configure
+<qt>
+<title>Short Words for Scribus</title>
+
+<h1>Short Words for Scribus</h1>
+
+<p>Copyright © 2004 Petr Van&#283;k, Maciej Hanski</p>
+<p>Permission is granted to copy, distribute and/or modify this document under the terms of the GNU Free Documentation License, Version 1.2 or any later version published by the Free Software Foundation; with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A copy of the license is included in the section entitled "GNU Free Documentation License".</p>
+
+<h2>What is Short Words meant for</h2>
+<p>Short Words for Scribus is a special plug-in for adding non-breaking spaces before or after so called short words.</p>
+<p>These short words are specific to every national typography,  e.g. according to Czech, Polish, and Slovak typographical standards it is not allowed to leave one letter conjunctions at line ends, if the line contains more than 25 signs. A common issue are measure and weight units, where for obvious reasons non-breaking spaces should be put in-between the preceding numbers and the units. Last but not least, there are plenty of abbreviated academic degrees, military ranks etc, which should not be separated from their owners.</p>
+<p>Although Scribus team cannot individually address every one of these national standards, one of the Scribus core team developers, Petr Van&#283;k, decided to provide Scribus users with a plug-in, that can be easily customized to meet their specific needs.</p>
+
+<h2>How it works</h2>
+<p>The screen shot below shows a sample text containing a short word before applying non-breaking spaces.</p>
+<p><b>Text sample before executing Short Words</b></p>
+<img src="before_short_words.png" alt="Text sample before executing Short Words" />
+<p>The same text after applying non-breaking spaces. The red encircled word Mr jumped to the next line, because the normal space between Mr and Justice has been replaced by a non-breaking space.</p>
+<p><b>Text sample after executing Short Words</b></p>
+<img src="after_short_words.png" alt="Text sample after executing Short Words" />
+
+<h2>How to execute Short Words</h2>
+<p>If you successfully installed the plug-in, go to the <code>Extras</code> menu and choose the <code>Short Words...</code> option:</p>
+<p><b>Calling Short Words for Scribus</b></p>
+<img src="menu.png" alt="Calling Short Words for Scribus" />
+<p><b>Short Words dialog window</b></p>
+<img src="dialog.png" alt="Short Words dialog window" />
+
+<dl>
+<dt>Selected frames</dt>
+	<dd><p>Apply non-breaking spaces to selected text frames.</p></dd>
+<dt>Active page</dt>
+	<dd><p>Apply non-breaking spaces to all frames of the current page.</p></dd>
+<dt><p>All items</p></dt>
+	<dd><p>Apply non-breaking spaces to the <em>whole document</em>.</p></dd>
+<dt>Replace defaults by user config</dt>
+	<dd><p>When the user config file exists you can choose if you want to append your config to the global configuration by unchecked button. You can replace predefined values by yours with checked button too.</p></dd>
+</dl>
+
+<h2>Installation</h2>
+<p>The easiest way of installing the plug-in is to check on the Scribus site (http://www.scribus.net), if there are installation packages available for your favourite distribution, e.g. Fedora, SuSE, Gentoo, Mandrake, or PLD.</p>
+<p>Should there be no suitable package for you, try to build the plug-in from source, which in most cases is the matter of the following three statements:</p>
+<pre>
+#./configure
 # make
 # make install
-...
-</pre><p>You can specify <tt class="filename">./configure --prefix=/path/to/scribus/previously/installed</tt>. The default prefix is <tt class="filename">/usr/local</tt> which is the default target when you've installed  <span class="application">Scribus</span>  from source. On my Gentoo, I  use <tt class="filename">./configure --prefix=/usr</tt> to fit my ebuild.</p><p>If you fail to build the plug-in, check first, if you have all the <a href="http://ahnews.music.salford.ac.uk/scribus/documentation/index-2.html#ss2.2" target="_top">required libraries</a>.</p></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2476223"></a>Chapter 5. Configuration</h2></div></div><div></div></div><p><span class="application">Short Words for Scribus</span> provides a system wide configuration file <tt class="filename">scribus-short-words.rc</tt>, which is usually located in the <tt class="filename">/usr/local/lib/scribus/plugins</tt> directory (the actual directory depends on where you or your distribution installed Scribus). This configuration file is self explanatory, basically it contains a list of short words for a given language, preceded or followed by a space and separated by commas. The position of the space, before or after a short word, indicates to the plug-in, where the non-breaking space should be put. Every line with configuration settings has to start with the language it is meant for, e.g. en for English or cs for Czech:
-</p><pre class="programlisting">
+</pre>
+<p>You can specify <code>./configure --prefix=/path/to/scribus/previously/installed</code>. The default prefix is <code>/usr/local</code> which is the default target when you've installed Scribus from source. On my Gentoo, I  use <code>./configure --prefix=/usr</code> to fit my ebuild.</p>
+<p>If you fail to build the plug-in, check first, if you have all the required libraries</a>.</p>
+
+<h2>Configuration</h2>
+<p>Short Words for Scribus provides a system wide configuration file <code>scribus-short-words.rc</code>, which is usually located in the <code>/usr/local/lib/scribus/plugins</code> directory (the actual directory depends on where you or your distribution installed Scribus). This configuration file is self explanatory, basically it contains a list of short words for a given language, preceded or followed by a space and separated by commas. The position of the space, before or after a short word, indicates to the plug-in, where the non-breaking space should be put. Every line with configuration settings has to start with the language it is meant for, e.g. en for English or cs for Czech:
+</p>
+<pre>
 #  English stuff START here
 en=Dr. ,Dr ,Mr. ,Mr ,Mrs. ,Mrs ,Ms. ,Ms ,Prof. ,Prof ,Rev. ,Rev ,
 en= Kg, kg, g, mg, oz, lb, cwt, km, Km, m, cm, mm,
@@ -21,9 +61,15 @@ en= Kg, kg, g, mg, oz, lb, cwt, km, Km, m, cm, mm,
 cs=K ,k ,S ,s ,V ,v ,Z ,z ,O ,o ,U ,u ,I ,i ,A ,
 ## physics and math
 cs= kg, g, m, cm, mm, l, hl, s, %,
+</pre>
+<p>If you want to use self defined short words, e.g. for a new language, create your own configuration file with your own short words, and save the file as <code>scribus-short-words.rc</code> in the <code>~/.scribus</code> directory. <em>You can choose the plugin appends your configuration into the system one or just to replace and use it only itself.</em></p>
 
-</pre><p>If you want to use self defined short words, e.g. for a new language, create your own configuration file with your own short words, and save the file as <tt class="filename">scribus-short-words.rc</tt> in the <tt class="filename">~/.scribus</tt> directory. <span class="emphasis"><em>You can choose the plugin appends your configuration into the system one or just to replace and use it only itself.</em></span></p><div class="important" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Important</h3>The author, Petr Vaněk, is eager to extend the global configuration file to meet your needs, let him know about the short words and standards specific to your language. </div></div><div class="chapter" lang="en" xml:lang="en"><div class="titlepage"><div><div><h2 class="title"><a id="id2428348"></a>Chapter 6. Short Words Copyright</h2></div></div><div></div></div><p>Short Words for Scribus Copyright 2003, 2004 Petr Vaněk,
-<tt class="email">&lt;<a href="mailto:petr@yarpen.cz">petr@yarpen.cz</a>&gt;</tt></p><p>This program is free software; you can redistribute it
+<h3 class="title">Important</h3>
+<p>The author is eager to extend the global configuration file to meet your needs, let him know about the short words and standards specific to your language.</p>
+
+<h2 class="title">Short Words Copyright</h2>
+<p>Short Words for Scribus Copyright 2003, 2004 Petr Van&#283;k, &lt;<a href="mailto:petr@yarpen.cz">petr@yarpen.cz</a>&gt;</p>
+<p>This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; either version 2 of the
 License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be
@@ -31,4 +77,6 @@ useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 General Public License for more details.</p><p>You should have received a copy of the GNU General Public
 License along with this program; if not, write to the Free Software
-Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</p></div></div></body></html>
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</p>
+
+</qt>

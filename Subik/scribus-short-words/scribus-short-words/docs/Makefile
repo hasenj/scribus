@@ -24,7 +24,7 @@ pkgincludedir = $(includedir)/scribus-vlna
 top_builddir = ../..
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
-INSTALL = /bin/install -c -p
+INSTALL = /usr/bin/install -c -p
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
 install_sh_SCRIPT = $(install_sh) -c
@@ -39,13 +39,13 @@ POST_UNINSTALL = :
 build_triplet = i686-pc-linux-gnu
 host_triplet = i686-pc-linux-gnu
 target_triplet = i686-pc-linux-gnu
-ACLOCAL = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run aclocal-1.7
+ACLOCAL = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run aclocal-1.7
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run tar
-AUTOCONF = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run automake-1.7
+AMTAR = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run tar
+AUTOCONF = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run automake-1.7
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -107,7 +107,7 @@ LIB_X11 = -lX11 $(LIBSOCKET)
 LIB_XEXT = -lXext
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run makeinfo
 MOC = /usr/qt/3/bin/moc
 NOOPT_CFLAGS =  -g
 NOOPT_CXXFLAGS =  -fno-exceptions -fno-check-new
@@ -142,14 +142,14 @@ VERSION = 0.3.7
 WOVERLOADED_VIRTUAL = 
 X_EXTRA_LIBS =  -lresolv
 X_INCLUDES = -I/usr/X11R6/include
-X_LDFLAGS = -L/usr/X11R6/lib
+X_LDFLAGS = -L/usr/lib
 X_PRE_LIBS = 
 ac_ct_CC = gcc
-ac_ct_CXX = 
+ac_ct_CXX = g++
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
 all_includes = -I/usr/qt/3/include -I/usr/X11R6/include
-all_libraries = -L/usr/X11R6/lib -L/usr/qt/3/lib
+all_libraries = -L/usr/lib -L/usr/qt/3/lib
 am__fastdepCC_FALSE = #
 am__fastdepCC_TRUE = 
 am__fastdepCXX_FALSE = #
@@ -172,14 +172,14 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/subzero/devel/scribus-short-words-1.2.1/admin/install-sh
+install_sh = /home/subzero/devel/Subik/scribus-short-words/admin/install-sh
 kde_qtver = 3
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 oldincludedir = /usr/include
-prefix = /home/subzero/devel/SCRIBUS
+prefix = /home/subzero/devel/SCRIBUS/
 program_transform_name = s,x,x,
 qt_includes = /usr/qt/3/include
 qt_libraries = /usr/qt/3/lib
@@ -192,9 +192,8 @@ target_cpu = i686
 target_os = linux-gnu
 target_vendor = pc
 x_includes = /usr/X11R6/include
-x_libraries = /usr/X11R6/lib
+x_libraries = /usr/lib
 SUBDIRS = en cs pl fr
-EXTRA_DIST = index.html
 subdir = scribus-short-words/docs
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/admin/mkinstalldirs
@@ -359,7 +358,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 #>- DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 #>+ 4
-KDE_DIST=Makefile.in 
+KDE_DIST=Makefile.in index.html 
 
 DISTFILES= $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 
@@ -456,7 +455,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-data-local
+install-data-am:
 
 install-exec-am:
 
@@ -482,7 +481,7 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-local
+uninstall-am: uninstall-info-am
 
 uninstall-info: uninstall-info-recursive
 
@@ -491,31 +490,26 @@ uninstall-info: uninstall-info-recursive
 	ctags-recursive distclean distclean-generic distclean-libtool \
 	distclean-recursive distclean-tags distdir dvi dvi-am \
 	dvi-recursive info info-am info-recursive install install-am \
-	install-data install-data-am install-data-local \
-	install-data-recursive install-exec install-exec-am \
-	install-exec-recursive install-info install-info-am \
-	install-info-recursive install-man install-recursive \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am installdirs-recursive maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
-	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
-	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
-	tags-recursive uninstall uninstall-am uninstall-info-am \
-	uninstall-info-recursive uninstall-local uninstall-recursive
+	install-data install-data-am install-data-recursive \
+	install-exec install-exec-am install-exec-recursive \
+	install-info install-info-am install-info-recursive install-man \
+	install-recursive install-strip installcheck installcheck-am \
+	installdirs installdirs-am installdirs-recursive \
+	maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-generic \
+	mostlyclean-libtool mostlyclean-recursive pdf pdf-am \
+	pdf-recursive ps ps-am ps-recursive tags tags-recursive \
+	uninstall uninstall-am uninstall-info-am \
+	uninstall-info-recursive uninstall-recursive
 
+#EXTRA_DIST = index.html
 
-install-data-local:
-#>- 	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/
-#>+ 1
-	$(mkinstalldirs) $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/
-#>- 	$(INSTALL_DATA) $(srcdir)/index.html $(prefix)/share/scribus/doc/scribus-short-words/index.html
-#>+ 1
-	$(INSTALL_DATA) $(srcdir)/index.html $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/index.html
+#install-data-local:
+#	$(mkinstalldirs) $(prefix)/share/scribus/doc/scribus-short-words/
+#	$(INSTALL_DATA) $(srcdir)/index.html $(prefix)/share/scribus/doc/scribus-short-words/index.html
 
-uninstall-local:
-#>- 	-rm -f $(prefix)/share/scribus/doc/scribus-short-words/index.html
-#>+ 1
-	-rm -f $(DESTDIR)$(prefix)/share/scribus/doc/scribus-short-words/index.html
+#uninstall-local:
+#	rm -f $(prefix)/share/scribus/doc/scribus-short-words/index.html
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
