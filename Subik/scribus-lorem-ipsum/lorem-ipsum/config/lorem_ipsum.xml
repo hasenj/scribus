@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf8"?>
+<lorem>
+<file name="arabic" url="arabic.xml" description="desc" />
+<file name="chinese" url="chinese.xml" description="desc" />
+<file name="esperanto" url="esperanto.xml" description="desc" />
+<file name="greek" url="greek.xml" description="desc" />
+<file name="hebrew" url="hebrew.xml" description="desc" />
+<file name="hindi" url="hindi.xml" description="desc" />
+<file name="interlingua" url="interlingua.xml" description="desc" />
+<file name="japanese" url="japanese.xml" description="desc" />
+<file name="l33tspeak" url="l33tspeak.xml" description="desc" />
+<file name="latin" url="latin.xml" description="desc" />
+<file name="letzebuergesch" url="letzebuergesch.xml" description="desc" />
+<file name="morsecode" url="morsecode.xml" description="desc" />
+<file name="quenya" url="quenya.xml" description="desc" />
+<file name="russian" url="russian.xml" description="desc" />
+<file name="slovio" url="slovio.xml" description="desc" />
+<file name="sona" url="sona.xml" description="desc" />
+<file name="tokipona" url="tokipona.xml" description="desc" />
+<file name="volapuek" url="volapuek.xml" description="desc" />
+</lorem>

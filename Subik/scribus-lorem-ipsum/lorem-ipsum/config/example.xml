@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf8"?> 
+<lorem>
+<two item="test1"/>
+<two item="test2"/>
+<two item="test3"/>
+<three item="test1"/>
+<three item="test2"/>
+<three item="test3"/>
+<many item="test1"/>
+<many item="test2"/>
+<many item="test3"/>
+</lorem>
+
