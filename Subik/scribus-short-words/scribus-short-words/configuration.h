@@ -46,6 +46,8 @@ public:
 	QString getLangCodeFromHyph(QString hyphenCode);
 
 private:
+	/** Configuration structure */
+	PrefsContext* prefs;
 	/** getShortWords use this one. for each case from GUI select
 	the right config file (or both) */
 	QStringList getShortWordsFromFile(QString lang, QString filename);

@@ -13,13 +13,13 @@ or documentation
 #ifndef _SCRIBUS_SHORTVER_H_
 #define _SCRIBUS_SHORTVER_H_
 
-#define VLNA_VERSION "1.2"
+#define VLNA_VERSION "1.2.1cvs"
 
-#define RC_UI_FILE QDir::homeDirPath() + QDir::convertSeparators("/.scribus/scribus-short-words-ui.rc")
 #define RC_PATH QDir::convertSeparators(QString(PLUGINDIR) + "/scribus-short-words.rc")
-#define RC_PATH_USR QDir::homeDirPath () + QDir::convertSeparators("/.scribus/scribus-short-words.rc")
+#define RC_PATH_USR QDir::homeDirPath() + QDir::convertSeparators("/.scribus/scribus-short-words.rc")
 
-#define UNBREAKABLE_SPACE QString(QChar(0x83))+QString(QChar(0x20))
+//#define UNBREAKABLE_SPACE QString(QChar(0x83))+QString(QChar(0x20))
+#define UNBREAKABLE_SPACE QString(QChar(0xA0))
 #define SPACE QChar(' ')
 
 #endif

@@ -18,42 +18,25 @@ or documentation
 #include "shortwords.h"
 
 #include <scribus.h>
+#include <prefsfile.h>
 #include <qdir.h>
 #include <qstringlist.h>
 
 extern ScribusApp *ScApp;
 extern ShortWords *shortWords;
+extern PrefsFile *prefsFile;
 
 Config::Config()
 {
-	QString actCfg;
-	QFile fConfig(RC_UI_FILE);
-	bool ok;
-
-	if (fConfig.open(IO_ReadOnly))
-	{
-		fConfig.readLine(actCfg, 8);
-		action = actCfg.toInt(&ok, 10);
-		if (!ok)
-			action = 0;
-
-		fConfig.readLine(actCfg, 8);
-		userConfig = actCfg.toInt(&ok, 10);
-		if (!ok)
-			userConfig = 0;
-
-		fConfig.close();
-	} //if
+	prefs = prefsFile->getPluginContext("short-words");
+	action = prefs->getUInt("action", 0);
+	userConfig = prefs->getUInt("userConfig", 0);
 }
 
 Config::~Config()
 {
-	QFile fConfig(RC_UI_FILE);
-	if (fConfig.open(IO_WriteOnly)) {
-		QTextStream stream(&fConfig);
-		stream << action << "\n" << userConfig << "\n";
-		fConfig.close();
-	} // if
+	prefs->set("action", action);
+	prefs->set("userConfig", userConfig);
 }
 
 QStringList Config::getShortWordsFromFile(QString lang, QString filename)

@@ -42,10 +42,10 @@ int ID()
 
 void Run(QWidget *d, ScribusApp *plug)
 {
-	// translator TODO: dont use locale but scribus internal coding
-	QString pPath = QDir::convertSeparators(PLUGINDIR);
+	// translator
 	QTranslator *trans = new QTranslator(0);
-	trans->load(QString("libscribusshortwords.") + QString(QTextCodec::locale()).left(2) +QString(".qm"), pPath);
+	trans->load(QString("libscribusshortwords.") + plug->GuiLanguage + QString(".qm"),
+				QDir::convertSeparators(PLUGINDIR));
 	qApp->installTranslator(trans);
 	// run plug
 	ShortWords *sw = new ShortWords();
@@ -58,12 +58,12 @@ ShortWords::ShortWords()
 	shortWords = this;
 	originalPage = ScApp->doc->ActPage->PageNr;
 	cfg = new Config();
-	parse = new Parse();
 	VlnaDialog *dlg = new VlnaDialog(ScApp, "dlg", TRUE, 0);
 
 	cfg->userConfig ? dlg->userCheckBox->setChecked(TRUE) : dlg->userCheckBox->setChecked(FALSE);
 	dlg->selectAction(cfg->action);
 	if (dlg->exec() == QDialog::Accepted) {
+		parse = new Parse();
 		QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 		ScApp->FMess->setText(shortWords->tr("Short Words processing. Wait please..."));
 		dlg->userCheckBox->isChecked() ? cfg->userConfig = 1 : cfg->userConfig = 0;

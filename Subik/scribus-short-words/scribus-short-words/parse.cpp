@@ -45,7 +45,7 @@ void Parse::parseItem(PageItem *aFrame)
 	// just textframes processed
 	if (aFrame->PType != 4)
 		return;
-	
+
 	// an ugly hack to get the language code from the item language property
 	lang = aFrame->Language;
 	if (ScApp->Sprachen.contains(lang))
@@ -54,7 +54,7 @@ void Parse::parseItem(PageItem *aFrame)
 	shorts = shortWords->cfg->getShortWords(lang);
 	if (shorts.count()==0)
 		return; // no changes
-	
+
 	// get text from frame
 	for (uint i=0; i<aFrame->MaxChars; i++)
 		content += aFrame->Ptext.at(i)->ch;
@@ -63,7 +63,7 @@ void Parse::parseItem(PageItem *aFrame)
 	{
 		unbreak = (*it);
 		// replace ' ' from cfg with '~'
-		unbreak.replace(SPACE, UNBREAKABLE_SPACE);
+		unbreak = unbreak.replace(SPACE, UNBREAKABLE_SPACE);
 		//looking for pattern with word boundaries and more chars
 		// replace hell needed too to remove regexp special chars
 		rx.setPattern("(\\b)" + (*it).replace("*", "\\*").replace("+", "\\+").replace("-", "\\-").replace("$", "\\$").replace(".","\\.") + "(\\b)");
