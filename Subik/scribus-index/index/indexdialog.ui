@@ -72,7 +72,10 @@
                                         <cstring>appendButton</cstring>
                                     </property>
                                     <property name="text">
-                                        <string>&gt;</string>
+                                        <string>&amp;&gt;&gt;</string>
+                                    </property>
+                                    <property name="accel">
+                                        <string>Alt+&gt;</string>
                                     </property>
                                 </widget>
                                 <widget class="QPushButton">
@@ -80,7 +83,10 @@
                                         <cstring>removeButton</cstring>
                                     </property>
                                     <property name="text">
-                                        <string>&lt;</string>
+                                        <string>&amp;&lt;&lt;</string>
+                                    </property>
+                                    <property name="accel">
+                                        <string>Alt+&lt;</string>
                                     </property>
                                 </widget>
                                 <spacer>
@@ -189,9 +195,9 @@
     </connection>
     <connection>
         <sender>stylesBox</sender>
-        <signal>selected(const QString&amp;)</signal>
+        <signal>highlighted(int)</signal>
         <receiver>IndexDialog</receiver>
-        <slot>stylesBox_selected(const QString&amp;)</slot>
+        <slot>stylesBox_highlighted(int)</slot>
     </connection>
 </connections>
 <includes>
@@ -203,7 +209,7 @@
     <slot>okButton_pressed()</slot>
     <slot>appendButton_pressed()</slot>
     <slot>removeButton_pressed()</slot>
-    <slot>stylesBox_selected( const QString &amp; )</slot>
+    <slot>stylesBox_highlighted( int )</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 </UI>

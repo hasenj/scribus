@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form implementation generated from reading ui file 'indexdialog.ui'
 **
-** Created: Čt pro 9 18:28:41 2004
+** Created: Po pro 13 20:11:39 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -76,7 +76,7 @@ IndexDialog::IndexDialog( QWidget* parent, const char* name, bool modal, WFlags 
     connect( okButton, SIGNAL( pressed() ), this, SLOT( okButton_pressed() ) );
     connect( appendButton, SIGNAL( pressed() ), this, SLOT( appendButton_pressed() ) );
     connect( removeButton, SIGNAL( pressed() ), this, SLOT( removeButton_pressed() ) );
-    connect( stylesBox, SIGNAL( selected(const QString&) ), this, SLOT( stylesBox_selected(const QString&) ) );
+    connect( stylesBox, SIGNAL( highlighted(int) ), this, SLOT( stylesBox_highlighted(int) ) );
     init();
 }
 
@@ -95,8 +95,10 @@ IndexDialog::~IndexDialog()
 void IndexDialog::languageChange()
 {
     setCaption( tr( "Index" ) );
-    appendButton->setText( tr( ">" ) );
-    removeButton->setText( tr( "<" ) );
+    appendButton->setText( tr( "&>>" ) );
+    appendButton->setAccel( QKeySequence( tr( "Alt+>" ) ) );
+    removeButton->setText( tr( "&<<" ) );
+    removeButton->setAccel( QKeySequence( tr( "Alt+<" ) ) );
     okButton->setText( tr( "&OK" ) );
     okButton->setAccel( QKeySequence( tr( "Alt+O" ) ) );
     cancelButton->setText( tr( "&Cancel" ) );

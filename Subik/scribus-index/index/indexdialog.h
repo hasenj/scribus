@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form interface generated from reading ui file 'indexdialog.ui'
 **
-** Created: Čt pro 9 18:28:21 2004
+** Created: Po pro 13 20:11:20 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -42,7 +42,7 @@ public slots:
     virtual void okButton_pressed();
     virtual void appendButton_pressed();
     virtual void removeButton_pressed();
-    virtual void stylesBox_selected( const QString & );
+    virtual void stylesBox_highlighted( int );
 
 protected:
     QGridLayout* IndexDialogLayout;
