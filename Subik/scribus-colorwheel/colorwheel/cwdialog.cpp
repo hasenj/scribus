@@ -32,7 +32,6 @@ ColorWheelDialog::ColorWheelDialog(QWidget* parent, const char* name, bool modal
 	colorWheel->setMinimumSize(QSize(300, 300));
 	colorWheel->setMaximumSize(QSize(300, 300));
 	wheelLayout->addWidget(colorWheel);
-	colorWheel->paintWheel(QValueVector<QPoint>());
 
 	previewLabel = new QLabel(this, "previewLabel");
 	previewLabel->setFrameShape(QFrame::Box);
