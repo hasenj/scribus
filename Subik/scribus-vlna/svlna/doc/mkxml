@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo 'XML to HTML'
+#rm ./html/*html
+#xsltproc -stringparam base.dir ./html/ --stringparam html.stylesheet yarpen_docbook.css  ~/Docs/docbook/xhtml/chunk.xsl *.xml
+xsltproc -stringparam base.dir ./ --stringparam html.stylesheet yarpen_docbook.css ~/Docs/docbook/xhtml/docbook.xsl vlna-help.xml > index.cz.html
+xsltproc -stringparam base.dir ./ --stringparam html.stylesheet yarpen_docbook.css ~/Docs/docbook/xhtml/docbook.xsl vlna-help-en.xml > index.en.html

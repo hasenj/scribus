@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="iso-8859-2" ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book lang="en">
+  <bookinfo>
+    <title>Scribus Vlna</title>
+    <author>
+      <firstname>Petr</firstname>
+      <surname>Vaněk</surname>
+      <address><email>petr@yarpen.cz</email></address>
+    </author>
+    <releaseinfo>Online reference.</releaseinfo>
+  </bookinfo>
+
+
+<chapter>
+  <title>Introduction</title>
+
+  <para>There are a lot of special cases in Czech typography. One of these rules is based on using an unbreakable space after a monosyllable preposition. In T<subscript>e</subscript>X, we can use the program vlna to manage text automatically. This plug-in aims enable the same with Scribus text frames.</para>
+  <para>More info at <ulink url="http://www.yarpen.cz">the homepage</ulink></para>
+</chapter>
+
+<chapter>
+    <title>Examples and references</title>
+    <para><ulink url="scribus-vlna.pdf">scribus-vlna.pdf</ulink>, <ulink url="scribus-vlna.sla">scribus-vlna.sla</ulink>. <ulink url="vlna.pdf">vlna.pdf</ulink>, <ulink url="vlna.sla">vlna.sla</ulink>.</para>
+    <para><ulink url="vlna-example.sla">use example (vlna-example.sla)</ulink>.</para>
+</chapter>
+
+
+<chapter>
+    <title>Copyright</title>
+
+    <para>Scribus-Vlna Copyright 2003, 2004 Petr Vaněk, <email>petr@yarpen.cz</email></para>
+
+    <para>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.</para>
+
+    <para>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</para>
+
+    <para>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</para>
+</chapter>
+
+</book>
+

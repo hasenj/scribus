@@ -1,0 +1,13 @@
+MISC NOTES
+
+* Specify right directory in ./configure --prefix=
+* Docs removed from package - available on http://www.yarpen.cz -
+  due package size.
+ 
+
+TODO
+* UI rc file
+
+CHANGES:
+12.01.2004 Rearranged and repackage to make an automake/autoconf compatible Package
+                 Done by Franz Schmid <Franz.Schmid@altmuehlnet.de>

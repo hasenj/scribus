@@ -1,0 +1,63 @@
+MISC NOTES
+
+* Specify the right directory in ./configure --prefix=
+* IMPORTANT:
+  You can use your own short words configuration which can be specified
+  in ~/.scribus/scribus-short-words.rc
+  Please note that it will replace the previous configuration so to
+  append additional words you'll have to copy it from
+  $prefix/lib/scribus/plugins/scribus-short-words.rc first!
+* See the documentation distributed with this plugin in:
+  {prefix}/share/scribus/doc/scribus-short-words
+
+CHANGES:
+14.08.2004 small regexp fix.
+ cfg changes.
+ new French docs.
+ 
+30.07.2004 French configuration, translations and new bright
+ idea from Fredd.
+ After small changes we're using regular expressions for
+ replacement.
+ Now we can accept something like " : " too (French crazy stuff).
+ Polish docs updated.
+
+26.07.2004 Docs distributed in the package - EN, CS, PL.
+
+21.07.2004 English docs draft by Maciej.
+ Rewritten again to polish the code and to fit the Scribus
+ Coding standard and plugin name convention.
+ GUI "user config rewrites defaults".
+ Translations.
+
+11.07.2004 Skel for docs and new web - ask for help too.
+ Lukasz's patch understanding :)
+ Some code cleanups.
+ Translations.
+ English and US stuff.
+
+03.07.2004 Added a patch by Łukasz Jernaś to
+ enable applying user defined short words.
+
+01.07.2004 More Polskie stuff.
+ A little translations update.
+ Re-created distro package
+
+30.06.2004 More variables remove to save memory.
+ Small bugs in cfg and compiller warnings removed.
+
+29.06.2004 Polish config from Maciaj Hanski.
+ 'Scribus-swort-words.pro' for easy translations added (lupdate *pro).
+ Updated Czech and Polish translations.
+ It could be configured in ~/.scribus/scribus-short-words.rc
+ The "physics and math" stuff seems handled well. (e.g. 12~kg).
+
+27.06.2004 Rewritten. Totally :)
+ Prepared configuration for the other languages (Polish now).
+ It can use whole words - not only one character.
+ Uses less memory.
+ Quicker text handling (that's just my oppinion exactly :)).
+ In all words it depends more on the Qt than on my strange algorithms.
+
+12.01.2004 Rearranged and repackage to make an automake/autoconf compatible Package
+ Done by Franz Schmid <Franz.Schmid@altmuehlnet.de>

@@ -1,0 +1,16 @@
+**************************************
+* Scribus-vlna 0.3 (devel unstable)  *
+**************************************
+
+Requirements
+* Scribus >= 1.2 (freetype2)
+* qmake (Qt3 devel package)
+
+Install
+* run ./configure [--prefix=/path/to/scribus]
+* run "make"
+* run "make install"
+
+Feedback
+* report bugs or send me your 2 cents :)
+  <petr@yarpen.cz>

@@ -1,0 +1,114 @@
+# Original Author was Kalle@kde.org
+# I lifted it in some mater. (Stephan Kulow)
+# I used much code from Janos Farkas
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(acinclude.m4) dnl a source file from your sub dir
+
+dnl This is so we can use kde-common
+AC_CONFIG_AUX_DIR(admin)
+
+AC_CANONICAL_SYSTEM 
+AC_ARG_PROGRAM
+
+dnl Automake doc recommends to do this only here. (Janos)
+AM_INIT_AUTOMAKE(scribus-vlna,0.3.7)
+
+dnl KDE_SET_PREFIX
+
+AC_PREFIX_DEFAULT(/usr/local)
+if test "x$prefix" = "xNONE"; then
+  prefix=$ac_default_prefix
+  ac_configure_args="$ac_configure_args --prefix $prefix"
+fi
+
+LIBFREETYPE_LIBS=""
+LIBFREETYPE_CFLAGS=""
+
+FREETYPE_CONFIG=""
+AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, [AC_MSG_WARN([Could not find libfreetype anywhere, check http://www.freetype.org/])], [${prefix}/bin ${exec_prefix}/bin /usr/local/bin /opt/local/bin /usr/bin /usr/X11/bin])
+
+hafree=yes
+if test -n "$FREETYPE_CONFIG"; then
+	LIBFREETYPE_LIBS="`$FREETYPE_CONFIG --libs`"
+  LIBFREETYPE_CFLAGS="`$FREETYPE_CONFIG --cflags`"
+	AC_CHECK_LIB(freetype, FT_Get_Next_Char, [AC_DEFINE_UNQUOTED(HAVE_FREETYPE, 1, [Defines if your system has the libfreetype library])],[hafree=no])
+	AC_SUBST(LIBFREETYPE_LIBS)
+	AC_SUBST(LIBFREETYPE_CFLAGS)
+else
+  AC_MSG_WARN([You need at least libfreetype 5.0])
+fi
+
+AC_CHECK_LIB(socket,socket,
+if test "$uname" != "IRIX"; then
+	LIBS="-lsocket $LIBS"
+else
+	echo "Not using -lsocket since you are running IRIX."
+fi)
+AC_CHECK_LIB(nsl,gethostbyaddr,
+if test "$uname" != "IRIX"; then
+	LIBS="-lnsl $LIBS"
+else
+	echo "Not using -lnsl since you are running IRIX."
+fi)
+LIBCUPS=""
+hacups=
+AC_CHECK_LIB(cups, httpConnect, [LIBCUPS="-lcups";hacups=yes],[LIBCUPS="";hacups=no])
+AC_SUBST(LIBCUPS)
+LIBLCMS=""
+hacms=
+AC_CHECK_LIB(lcms, _cmsChannelsOf, [LIBLCMS="-llcms";hacms=yes],[LIBLCMS="";hacms=no])
+hacmsh=
+AC_CHECK_HEADER(lcms.h, [hacmsh=yes],[hacmsh=no])
+if test $hacmsh = no; then
+	AC_CHECK_HEADER(lcms/lcms.h, [hacmsh=yes],[hacmsh=no])
+	if test $hacmsh = yes; then
+ 		AC_DEFINE_UNQUOTED(CMS_INC, "lcms/lcms.h", [ColorManagementInclude])
+	fi
+else
+ AC_DEFINE_UNQUOTED(CMS_INC, "lcms.h", [ColorManagementInclude])
+fi
+AC_SUBST(LIBLCMS)
+if test $hacms = yes && test $hacmsh = yes; then
+ AC_DEFINE_UNQUOTED(HAVE_CMS, 1, [ColorManagement])
+fi
+LIBDL2=""
+AC_CHECK_LIB(c, dlopen, [LIBDL2="-lc"],[LIBDL2=""])
+AC_SUBST(LIBDL2)
+LIBTIFF=""
+hastif=
+AC_CHECK_LIB(tiff, TIFFOpen, [LIBTIFF="-ltiff";hastif=yes],[LIBTIFF="";hastif=no],[-lm])
+AC_SUBST(LIBTIFF)
+if test $hastif = yes; then
+ AC_DEFINE_UNQUOTED(HAVE_TIFF, 1, [Tifflib])
+fi
+dnl generate the config header
+AM_CONFIG_HEADER(config.h) dnl at the distribution this done
+
+AC_DEFINE_UNQUOTED(PREL, "$prefix", [Dataprefix])
+
+dnl Checks for programs.
+AC_CHECK_COMPILERS
+AC_ENABLE_SHARED(yes)
+AC_ENABLE_STATIC(no)
+KDE_PROG_LIBTOOL
+KDE_CHECK_PYTHON(1.5)
+
+AC_CHECK_HEADER(cups/cups.h, [foo=""],[hacups=no])
+if test $hacups = yes; then
+ AC_DEFINE_UNQUOTED(HAVE_CUPS, 1, [Cups])
+fi
+
+all_libraries="$all_libraries $USER_LDFLAGS"
+all_includes="$all_includes $USER_INCLUDES"
+AC_SUBST(all_includes)
+AC_SUBST(all_libraries)
+
+AC_PATH_QT
+
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([svlna/Makefile])
+AC_CONFIG_FILES([svlna/translation/Makefile])
+AC_CONFIG_FILES([svlna/doc/Makefile])
+AC_OUTPUT

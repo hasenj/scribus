@@ -1,0 +1,86 @@
+/*
+ * CSS2 stylesheet for docbook documents on yarpen.cz
+ */
+body    {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-size: 12pt;
+    font-family: sans-serif;
+    margin: 1em;
+    margin-left: 2em;
+    margin-right: 2em;
+    padding: 0em;
+	width: 70%;
+}
+a   {
+    color: #ff6900;
+    font-weight: bold;
+    text-decoration: underline;
+}
+a:hover  {
+    color: #fe6800;
+    text-decoration: none;
+}
+
+table   {
+    font-size: 80%;
+}
+
+.navheader  {
+    padding-bottom: 1em;
+    margin-bottom: 1em;
+    border: 1px solid #606060;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    text-align: center;
+}
+.navheader a    {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.navfooter  {
+    margin-top: 1em;
+    padding-top: 1em;
+    border: 1px solid #606060;
+    border-bottom: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    text-align: center;
+}
+.navfooter a    {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.application {
+	border: 1px dashed black;
+	border-top: 0px;
+	border-left: 0px;
+	border-right: 0px;
+	background-color: #f0f0f0;
+	font-weight: bold;
+	padding-left: .2em;
+	padding-right: .2em;
+}
+.programlisting {
+    border: 1px solid black;
+    padding: 1em;
+    background-color: #ffefe4;
+}
+
+.important {
+    border: 1px solid red;
+    padding: 1em;
+    background-color: #ffefe4;
+}
+.guimenu {
+    background-color: #ffefe4;
+}
+.term {
+    background-color: #ffefe4;
+    font-weight: bold;
+    padding-left: 1em;
+    padding-right: 2em;
+}

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="iso-8859-2" ?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<book lang="cs">
+  <bookinfo>
+    <title>Scribus Vlna</title>
+    <author>
+      <firstname>Petr</firstname>
+      <surname>Vaněk</surname>
+      <address><email>petr@yarpen.cz</email></address>
+    </author>
+    <releaseinfo>Online manuál k programu.</releaseinfo>
+  </bookinfo>
+
+
+<preface>
+  <title>Úvodem</title>
+
+  <para>Toto je manuál k pluginu <application>Vlna</application> DTP aplikace
+  <application>Scribus</application>. Aktuální informace o Vlně naleznete
+  na <ulink>http://www.yarpen.cz/scribus-vlna</ulink>.</para>
+
+  <para>Co je <ulink url="http://www.scribus.net">Scribus</ulink> se
+  dozvíte na webových stránkách tohoto programu. Aktuální informace v Češtině
+  &ndash; resp. o problematice lokalizace a použití v našem prostředí
+  eviduji na <ulink url="http://www.yarpen.cz/scribus">webu</ulink>.
+  </para>
+
+  <para>Nezvykle přátelští lidé v komunitě, která se kolem Scribusu v
+  průběhu let vytvořila, rádi poradí s vašimi problémy v <ulink
+  url="http://nashi.altmuehlnet.de/mailman/listinfo/scribus">e-mailové konferenci</ulink>
+  nebo v IRC kanále <emphasis>#scribus</emphasis> na serveru
+  <ulink url="irc.freenode.net">freeenode.net</ulink>.</para>
+
+</preface>
+
+<chapter>
+  <title>Co je Vlna pro Scribus</title>
+
+    <para>Pravidla České typografie hovoří jasnou řečí: Jednohláskové
+    neslabičné předložky <emphasis>K, k, S, s, V, v, Z, z,</emphasis>
+    slabičné <emphasis>O, o, U, u, a</emphasis> spojky
+    <emphasis>I, i, A,</emphasis> nesmějí být na konci řádky. Výjimku tvoří
+    spojka <emphasis>a</emphasis>
+    (pozor &ndash; ne verzálka). U ostatních předložek jsou možné výjimky
+    pouze v úzké sazbě (do 25 liter). (více viz. např. <ulink
+    ref="http://www.typo.cz">typo.cz</ulink>)</para>
+
+    <para><application>Scribus</application> umožňuje vkládat nezlomitelnou
+    mezeru pouze manuálně, což velice zdržuje a ve velkých objemech textů
+    nevihnutelně vede k těžko dohledatelným chybám.</para>
+
+    <para>Podle pro systém T<subscript>e</subscript>X určeného programu
+    <application>vlna</application>, resp.
+    <application>vlnka</application>, páně Olšáka, jsem napsal modul, který
+    automatizuje zdlouhavou a nezáživnou <emphasis>robotu.</emphasis></para>
+</chapter>
+
+<chapter>
+    <title>Reference</title>
+    <para><ulink url="scribus-vlna.pdf">scribus-vlna.pdf</ulink>, <ulink url="scribus-vlna.sla">scribus-vlna.sla</ulink>. <ulink url="vlna.pdf">vlna.pdf</ulink>, <ulink url="vlna.sla">vlna.sla</ulink>.</para>
+    <para><ulink url="vlna-example.sla">příklad použití (vlna-example.sla)</ulink>.</para>
+</chapter>
+
+<chapter>
+  <title>Použití</title>
+
+  <para>Po úspěšné instalaci by se v <guimenu>Extra</guimenu> měla objevit
+  nová položka <guimenu>TeX Vlna</guimenu> &ndash; viz. obrázek:</para>
+
+  <figure float="0">
+    <title>Spouštění programu</title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="menu.png" format="PNG"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+  <para>Výběrem položky menu Vlnu spustíte. Následně se zobrazí okno, které
+  vás vyzve k výběru akce, kterou program provede.</para>
+
+  <figure float="0">
+    <title>Nabídka Vlny</title>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="dialog_cs.png" format="PNG"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+  <variablelist>
+    <varlistentry>
+      <term>Vybrané rámce</term>
+      <listitem>
+        <para>Aplikuje nezlomitelnou mezeru pouze na vybrané textové rámce.
+        Ostatní ponechá nedotčené.</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>Aktuální stránka</term>
+      <listitem>
+        <para>Ošetřeny jsou všechny textové rámce na aktuální straně
+        dokumentu.</para>
+      </listitem>
+    </varlistentry>
+    <varlistentry>
+      <term>Celý dokument</term>
+      <listitem>
+        <para>Volba <emphasis>Celý dokument</emphasis> překvapivě probublá
+        celým dokumentem. :)</para>
+      </listitem>
+    </varlistentry>
+  </variablelist>
+
+</chapter>
+
+
+<chapter>
+    <title>Instalace</title>
+
+    <para>Nejsnazší způsob, jak <application>Vlnu</application> nainstalujete,
+    spočívá v tom, že na <ulink url="http://www.scribus.net">scribus.net</ulink>
+    vyhledáte balíček pro vaši distribuci &ndash; měly by být k dospozici pro
+    Fedoru, SuSE a Gentoo.</para>
+
+    <para>Nebo ji můžete přeložit ze <ulink url="http://www.yarpen.cz/scribus-vlna">zdrojových kódů</ulink> klasickým trojpříkazovým postupem:</para>
+
+    <programlisting>
+    # ./configure
+    # make
+    $ make install
+    </programlisting>
+
+    <para>Úspěšný překlad se zdaří, budete-li mít k dispozici potřebné
+    <ulink url="http://ahnews.music.salford.ac.uk/scribus/documentation/index-2.html#ss2.2">vývojové balíky</ulink>.</para>
+</chapter>
+
+
+<chapter>
+    <title>Copyright</title>
+
+    <para>Scribus-Vlna Copyright 2003, 2004 Petr Vaněk, <email>petr@yarpen.cz</email></para>
+
+    <para>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.</para>
+
+    <para>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</para>
+
+    <para>You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.</para>
+</chapter>
+
+</book>
+

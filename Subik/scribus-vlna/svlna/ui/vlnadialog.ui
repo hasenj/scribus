@@ -1,0 +1,225 @@
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<class>VlnaDialog</class>
+<author>Petr Vanek</author>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>VlnaDialog</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>306</width>
+            <height>193</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Vlna</string>
+    </property>
+    <grid>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QLayoutWidget" row="0" column="0">
+            <property name="name">
+                <cstring>layout4</cstring>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout3</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QButtonGroup">
+                            <property name="name">
+                                <cstring>buttonGroup</cstring>
+                            </property>
+                            <property name="sizePolicy">
+                                <sizepolicy>
+                                    <hsizetype>3</hsizetype>
+                                    <vsizetype>3</vsizetype>
+                                    <horstretch>0</horstretch>
+                                    <verstretch>0</verstretch>
+                                </sizepolicy>
+                            </property>
+                            <property name="title">
+                                <string>Select action</string>
+                            </property>
+                            <widget class="QRadioButton">
+                                <property name="name">
+                                    <cstring>frameRadio</cstring>
+                                </property>
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>30</y>
+                                        <width>160</width>
+                                        <height>22</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>&amp;Seleceted frames</string>
+                                </property>
+                            </widget>
+                            <widget class="QRadioButton">
+                                <property name="name">
+                                    <cstring>pageRadio</cstring>
+                                </property>
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>60</y>
+                                        <width>110</width>
+                                        <height>22</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>Active &amp;page</string>
+                                </property>
+                                <property name="accel">
+                                    <string>Alt+P</string>
+                                </property>
+                            </widget>
+                            <widget class="QRadioButton">
+                                <property name="name">
+                                    <cstring>allRadio</cstring>
+                                </property>
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>90</y>
+                                        <width>110</width>
+                                        <height>22</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>&amp;All items</string>
+                                </property>
+                            </widget>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout2</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <spacer>
+                                    <property name="name">
+                                        <cstring>spacer1</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout1</cstring>
+                                    </property>
+                                    <vbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QPushButton">
+                                            <property name="name">
+                                                <cstring>okButton</cstring>
+                                            </property>
+                                            <property name="sizePolicy">
+                                                <sizepolicy>
+                                                    <hsizetype>1</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                    <horstretch>0</horstretch>
+                                                    <verstretch>0</verstretch>
+                                                </sizepolicy>
+                                            </property>
+                                            <property name="text">
+                                                <string>&amp;OK</string>
+                                            </property>
+                                        </widget>
+                                        <widget class="QPushButton">
+                                            <property name="name">
+                                                <cstring>cancelButton</cstring>
+                                            </property>
+                                            <property name="sizePolicy">
+                                                <sizepolicy>
+                                                    <hsizetype>1</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                    <horstretch>0</horstretch>
+                                                    <verstretch>0</verstretch>
+                                                </sizepolicy>
+                                            </property>
+                                            <property name="text">
+                                                <string>&amp;Cancel</string>
+                                            </property>
+                                        </widget>
+                                    </vbox>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLabel">
+                    <property name="name">
+                        <cstring>statusLabel</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Select action...</string>
+                    </property>
+                </widget>
+            </vbox>
+        </widget>
+    </grid>
+</widget>
+<connections>
+    <connection>
+        <sender>okButton</sender>
+        <signal>pressed()</signal>
+        <receiver>VlnaDialog</receiver>
+        <slot>okButton_pressed()</slot>
+    </connection>
+    <connection>
+        <sender>frameRadio</sender>
+        <signal>pressed()</signal>
+        <receiver>VlnaDialog</receiver>
+        <slot>frameRadio_pressed()</slot>
+    </connection>
+    <connection>
+        <sender>pageRadio</sender>
+        <signal>pressed()</signal>
+        <receiver>VlnaDialog</receiver>
+        <slot>pageRadio_pressed()</slot>
+    </connection>
+    <connection>
+        <sender>allRadio</sender>
+        <signal>pressed()</signal>
+        <receiver>VlnaDialog</receiver>
+        <slot>allRadio_pressed()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">vlnadialog.ui.h</include>
+</includes>
+<slots>
+    <slot>okButton_pressed()</slot>
+    <slot>frameRadio_pressed()</slot>
+    <slot>pageRadio_pressed()</slot>
+    <slot>allRadio_pressed()</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

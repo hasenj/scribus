@@ -1,0 +1,15 @@
+**************************************
+* Scribus-vlna 0.3 (devel unstable)  *
+**************************************
+
+Requirements
+* Scribus >= 1.5 (freetype2)
+
+Install
+* run ./configure [--prefix=/path/to/scribus]
+* run "make"
+* run "make install"
+
+Feedback
+* report bugs or send me your 2 cents :)
+  <petr@yarpen.cz>
