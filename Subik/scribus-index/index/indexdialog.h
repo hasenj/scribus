@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form interface generated from reading ui file 'indexdialog.ui'
 **
-** Created: Po pro 13 20:11:20 2004
+** Created: Út pro 14 17:29:16 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!

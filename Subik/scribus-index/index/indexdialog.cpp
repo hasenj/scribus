@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form implementation generated from reading ui file 'indexdialog.ui'
 **
-** Created: Po pro 13 20:11:39 2004
+** Created: Út pro 14 17:29:29 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -68,7 +68,7 @@ IndexDialog::IndexDialog( QWidget* parent, const char* name, bool modal, WFlags 
 
     IndexDialogLayout->addLayout( layout13, 0, 0 );
     languageChange();
-    resize( QSize(321, 286).expandedTo(minimumSizeHint()) );
+    resize( QSize(360, 286).expandedTo(minimumSizeHint()) );
     clearWState( WState_Polished );
 
     // signals and slots connections
@@ -94,13 +94,18 @@ IndexDialog::~IndexDialog()
  */
 void IndexDialog::languageChange()
 {
-    setCaption( tr( "Index" ) );
+    setCaption( tr( "Table of Contents" ) );
+    QToolTip::add( stylesBox, tr( "Available styles in the document" ) );
     appendButton->setText( tr( "&>>" ) );
     appendButton->setAccel( QKeySequence( tr( "Alt+>" ) ) );
+    QToolTip::add( appendButton, tr( "Use style in ToC" ) );
     removeButton->setText( tr( "&<<" ) );
     removeButton->setAccel( QKeySequence( tr( "Alt+<" ) ) );
+    QToolTip::add( removeButton, tr( "Remove style from ToC generator" ) );
+    QToolTip::add( tocStylesBox, tr( "Styles which will be used in the Table of Contents" ) );
     okButton->setText( tr( "&OK" ) );
     okButton->setAccel( QKeySequence( tr( "Alt+O" ) ) );
+    QToolTip::add( okButton, tr( "Create Table of Contents on the new blank page" ) );
     cancelButton->setText( tr( "&Cancel" ) );
     cancelButton->setAccel( QKeySequence( tr( "Alt+C" ) ) );
 }

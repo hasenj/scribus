@@ -10,12 +10,12 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>321</width>
+            <width>360</width>
             <height>286</height>
         </rect>
     </property>
     <property name="caption">
-        <string>Index</string>
+        <string>Table of Contents</string>
     </property>
     <grid>
         <property name="name">
@@ -40,6 +40,9 @@
                         <widget class="QListBox">
                             <property name="name">
                                 <cstring>stylesBox</cstring>
+                            </property>
+                            <property name="toolTip" stdset="0">
+                                <string>Available styles in the document</string>
                             </property>
                         </widget>
                         <widget class="QLayoutWidget">
@@ -77,6 +80,9 @@
                                     <property name="accel">
                                         <string>Alt+&gt;</string>
                                     </property>
+                                    <property name="toolTip" stdset="0">
+                                        <string>Use style in ToC</string>
+                                    </property>
                                 </widget>
                                 <widget class="QPushButton">
                                     <property name="name">
@@ -87,6 +93,9 @@
                                     </property>
                                     <property name="accel">
                                         <string>Alt+&lt;</string>
+                                    </property>
+                                    <property name="toolTip" stdset="0">
+                                        <string>Remove style from ToC generator</string>
                                     </property>
                                 </widget>
                                 <spacer>
@@ -111,6 +120,9 @@
                         <widget class="QListBox">
                             <property name="name">
                                 <cstring>tocStylesBox</cstring>
+                            </property>
+                            <property name="toolTip" stdset="0">
+                                <string>Styles which will be used in the Table of Contents</string>
                             </property>
                         </widget>
                     </hbox>
@@ -149,6 +161,9 @@
                             </property>
                             <property name="accel">
                                 <string>Alt+O</string>
+                            </property>
+                            <property name="toolTip" stdset="0">
+                                <string>Create Table of Contents on the new blank page</string>
                             </property>
                         </widget>
                         <widget class="QPushButton">
