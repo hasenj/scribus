@@ -11,25 +11,14 @@
 *****************************************************************************/
 
 
-void LoremDialog::okButton_clicked()
+void LoremDialog::okButton_pressed()
 {
-
+	return accept();
 }
 
 
-void LoremDialog::cancelButton_clicked()
+void LoremDialog::cancelButton_pressed()
 {
-
+	return reject();
 }
 
-
-void LoremDialog::startWithCheckBox_clicked()
-{
-
-}
-
-
-void LoremDialog::typeBox_textChanged( const QString & )
-{
-
-}

@@ -1,6 +1,12 @@
 #include "loremipsum.h"
-#include "loremipsum.moc"
+#include "loremconfig.h"
+#include "loremnetwork.h"
+#include "loremturkey.h"
 #include "loremdialog.h"
+#include "loremstandard.h"
+
+#include <qcombobox.h>
+#include <qtabwidget.h>
 
 extern ScribusApp *ScApp;
 
@@ -20,6 +26,7 @@ int ID()
 	return 666;
 }
 
+#include <iostream.h>
 void Run(QWidget *d, ScribusApp *plug)
 {
 	// only one selection check
@@ -36,106 +43,81 @@ void Run(QWidget *d, ScribusApp *plug)
 	}
 	// types of the lorems
 	LoremDialog *dia = new LoremDialog(ScApp, 0, TRUE, 0);
-	LoremBase *base = new LoremBase();
+	LoremConfig *config = new LoremConfig();
 	LoremInfo *info;
-	for (info = base->info.first(); info; info = base->info.next())
+	for (info = config->info.first(); info; info = config->info.next())
 	{
-		qDebug(info->name);
+		QListViewItem *listItem = new QListViewItem(dia->dictionaryView, info->name, info->description, info->url);
+		if (info->type == "turkey")
+			dia->dictionaryView->insertItem(listItem);
+		else
+			dia->networkView->insertItem(listItem);
 	}
-	LoremIpsum *li = new LoremIpsum();
-	ScApp->FMess->setText(li->makeText());
-	delete li;
-	delete base;
+	// GUI
+	if (dia->exec() == QDialog::Accepted)
+	{
+		// handling options etc.
+		QString loremText = "";
+		if (dia->tabWidget->currentPage() == dia->turkeyTab)
+		{
+			LoremTurkey *lorem = new LoremTurkey(dia->dictionaryView->currentItem()->text(2),
+												dia->turkeyParagraphs->value(),
+												dia->avgSentences->value(),
+												dia->turkeyStartLorem->isChecked()
+												);
+			loremText = lorem->makeLorem();
+			delete lorem;
+		}
+		if (dia->tabWidget->currentPage() == dia->networkTab)
+		{
+			qDebug(dia->networkView->currentItem()->text(2));
+			LoremNetwork *lorem = new LoremNetwork(dia->networkView->currentItem()->text(2));
+			loremText = lorem->makeLorem();
+			delete lorem;
+		}
+		if (dia->tabWidget->currentPage() == dia->standardTab)
+		{
+			LoremStandard *lorem = new LoremStandard(dia->standardParaBox->value());
+			loremText = lorem->makeLorem();
+			delete lorem;
+		}
+
+		// fill text into frame
+		item->Ptext.clear();
+		for (uint i = 0; i < loremText.length(); ++i)
+		{
+			struct Pti *hg = new Pti;
+			hg->ch = loremText.at(i);
+			if (hg->ch == QChar(10))
+				hg->ch = QChar(13);
+			hg->cfont = item->IFont;
+			hg->csize = item->ISize;
+			hg->ccolor = item->TxtFill;
+			hg->cshade = item->ShTxtFill;
+			hg->cstroke = item->TxtStroke;
+			hg->cshade2 = item->ShTxtStroke;
+			hg->cscale = item->TxtScale;
+			hg->cextra = 0;
+			hg->cselect = false;
+			hg->cstyle = 0;
+			hg->cab = ScApp->doc->CurrentABStil;
+			hg->xp = 0;
+			hg->yp = 0;
+			hg->PRot = 0;
+			hg->PtransX = 0;
+			hg->PtransY = 0;
+			item->Ptext.append(hg);
+		} // for
+	}
+	//ScApp->FMess->setText(resultComment);
+	ScApp->FMess->setText("DONE");
+	delete config;
 	delete dia;
+	delete info;
 }
 
-
-LoremIpsum::LoremIpsum()
-{
-	// init fro rand()
-	QTime time = QTime::currentTime();
-	srand(time.msec());
-	// attributes
-	paragraphs = 5;
-	startWithLorem = true;
-	item = ScApp->doc->ActPage->Items.at(ScApp->doc->ActPage->SelItem.at(0)->ItemNr);
-}
-
-LoremIpsum::~LoremIpsum()
-{
-	item = NULL;
-}
-
-QString LoremIpsum::makeText()
-{
-	QString loremText;
-
-	startWithLorem ? loremText = "Lorem ipsum dolor sit amet. " : loremText = "";
-
-	for (uint i = 0; i <= paragraphs; ++i)
-		loremText += makeParagraph();
-
-	// fill text into frame
-	item->Ptext.clear();
-	for (uint i = 0; i < loremText.length(); ++i)
-	{
-		struct Pti *hg = new Pti;
-		hg->ch = loremText.at(i);
-		if (hg->ch == QChar(10))
-			hg->ch = QChar(13);
-		hg->cfont = item->IFont;
-		hg->csize = item->ISize;
-		hg->ccolor = item->TxtFill;
-		hg->cshade = item->ShTxtFill;
-		hg->cstroke = item->TxtStroke;
-		hg->cshade2 = item->ShTxtStroke;
-		hg->cscale = item->TxtScale;
-		hg->cextra = 0;
-		hg->cselect = false;
-		hg->cstyle = 0;
-		hg->cab = ScApp->doc->CurrentABStil;
-		hg->xp = 0;
-		hg->yp = 0;
-		hg->PRot = 0;
-		hg->PtransX = 0;
-		hg->PtransY = 0;
-		item->Ptext.append(hg);
-	} // for
-	// funny feedback
-	return resultComment();
-}
-
-QString LoremIpsum::makeParagraph()
-{
-	QString loremText = "";
-	for (uint i = 0; i < (rand()%7+1); ++i) // rand 4, 7
-		loremText += makeSentence();
-	return loremText + '\n';
-}
-
-QString LoremIpsum::makeSentence()
-{
-	QString loremText = "";
-	for (uint i = 0; i < (rand()%4+1); ++i) // rand 3, 4
-		loremText += makeClause() + '.';
-	return loremText;
-}
-
-QString LoremIpsum::makeClause()
-{
-	QString loremText = "";
-
-	/* pseudocode
-	for (uint i = 0; i < (rand()%4+1); ++i)
-	{
-		uint wordType= rand()%CNT_CFG_LOREMS+1;
-		loremText += chosenLorem[wordType].at(rand()%chosenLorem[wordType].length()+1);
-	}
-	*/
-	return loremText;
-}
-
-QString LoremIpsum::resultComment()
+/*
+ QString resultComment()
 {
     QStringList comment;
     comment.append("Remarkably well done!");
@@ -155,4 +137,6 @@ QString LoremIpsum::resultComment()
     comment.append("Have a cigar - this $lang1 is sweet!");
 	return(*comment.at(rand()%comment.count()+1));
 }
+
+*/
 
