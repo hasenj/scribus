@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form interface generated from reading ui file 'indexdialog.ui'
 **
-** Created: Po pro 6 20:41:09 2004
+** Created: Čt pro 9 18:28:21 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -17,8 +17,8 @@ class QVBoxLayout;
 class QHBoxLayout;
 class QGridLayout;
 class QSpacerItem;
-class QLabel;
-class QComboBox;
+class QListBox;
+class QListBoxItem;
 class QPushButton;
 
 class IndexDialog : public QDialog
@@ -29,46 +29,28 @@ public:
     IndexDialog( QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags fl = 0 );
     ~IndexDialog();
 
-    QLabel* textLabel1;
-    QComboBox* heading1;
-    QLabel* textLabel2;
-    QComboBox* heading2;
-    QLabel* textLabel3;
-    QComboBox* heading3;
-    QLabel* textLabel4;
-    QComboBox* heading4;
-    QLabel* textLabel5;
-    QComboBox* heading5;
-    QLabel* textLabel6;
-    QComboBox* heading6;
-    QLabel* textLabel7;
-    QComboBox* heading7;
+    QListBox* stylesBox;
+    QPushButton* appendButton;
+    QPushButton* removeButton;
+    QListBox* tocStylesBox;
     QPushButton* okButton;
     QPushButton* cancelButton;
 
 public slots:
+    virtual void init();
     virtual void cancelButton_pressed();
     virtual void okButton_pressed();
-    virtual void heading1_textChanged( const QString & );
-    virtual void heading2_textChanged( const QString & );
-    virtual void heading3_textChanged( const QString & );
-    virtual void heading4_textChanged( const QString & );
-    virtual void heading5_textChanged( const QString & );
-    virtual void heading6_textChanged( const QString & );
-    virtual void heading7_textChanged( const QString & );
-    virtual void init();
+    virtual void appendButton_pressed();
+    virtual void removeButton_pressed();
+    virtual void stylesBox_selected( const QString & );
 
 protected:
     QGridLayout* IndexDialogLayout;
-    QVBoxLayout* layout10;
-    QVBoxLayout* layout9;
-    QHBoxLayout* layout1;
-    QHBoxLayout* layout2;
-    QHBoxLayout* layout3;
-    QHBoxLayout* layout4;
-    QHBoxLayout* layout5;
-    QHBoxLayout* layout6;
-    QHBoxLayout* layout7;
+    QVBoxLayout* layout13;
+    QHBoxLayout* layout12;
+    QVBoxLayout* layout11;
+    QSpacerItem* spacer3;
+    QSpacerItem* spacer2;
     QHBoxLayout* layout8;
     QSpacerItem* spacer1;
 

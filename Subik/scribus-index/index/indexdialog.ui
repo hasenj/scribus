@@ -23,7 +23,7 @@
         </property>
         <widget class="QLayoutWidget" row="0" column="0">
             <property name="name">
-                <cstring>layout10</cstring>
+                <cstring>layout13</cstring>
             </property>
             <vbox>
                 <property name="name">
@@ -31,192 +31,83 @@
                 </property>
                 <widget class="QLayoutWidget">
                     <property name="name">
-                        <cstring>layout9</cstring>
+                        <cstring>layout12</cstring>
                     </property>
-                    <vbox>
+                    <hbox>
                         <property name="name">
                             <cstring>unnamed</cstring>
                         </property>
-                        <widget class="QLayoutWidget">
+                        <widget class="QListBox">
                             <property name="name">
-                                <cstring>layout1</cstring>
+                                <cstring>stylesBox</cstring>
                             </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel1</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 1:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading1</cstring>
-                                    </property>
-                                </widget>
-                            </hbox>
                         </widget>
                         <widget class="QLayoutWidget">
                             <property name="name">
-                                <cstring>layout2</cstring>
+                                <cstring>layout11</cstring>
                             </property>
-                            <hbox>
+                            <vbox>
                                 <property name="name">
                                     <cstring>unnamed</cstring>
                                 </property>
-                                <widget class="QLabel">
+                                <spacer>
                                     <property name="name">
-                                        <cstring>textLabel2</cstring>
+                                        <cstring>spacer3</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>appendButton</cstring>
                                     </property>
                                     <property name="text">
-                                        <string>Heading 2:</string>
+                                        <string>&gt;</string>
                                     </property>
                                 </widget>
-                                <widget class="QComboBox">
+                                <widget class="QPushButton">
                                     <property name="name">
-                                        <cstring>heading2</cstring>
+                                        <cstring>removeButton</cstring>
                                     </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
+                                    <property name="text">
+                                        <string>&lt;</string>
                                     </property>
                                 </widget>
-                            </hbox>
+                                <spacer>
+                                    <property name="name">
+                                        <cstring>spacer2</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </vbox>
                         </widget>
-                        <widget class="QLayoutWidget">
+                        <widget class="QListBox">
                             <property name="name">
-                                <cstring>layout3</cstring>
+                                <cstring>tocStylesBox</cstring>
                             </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel3</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 3:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading3</cstring>
-                                    </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
-                                    </property>
-                                </widget>
-                            </hbox>
                         </widget>
-                        <widget class="QLayoutWidget">
-                            <property name="name">
-                                <cstring>layout4</cstring>
-                            </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel4</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 4:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading4</cstring>
-                                    </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
-                                    </property>
-                                </widget>
-                            </hbox>
-                        </widget>
-                        <widget class="QLayoutWidget">
-                            <property name="name">
-                                <cstring>layout5</cstring>
-                            </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel5</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 5:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading5</cstring>
-                                    </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
-                                    </property>
-                                </widget>
-                            </hbox>
-                        </widget>
-                        <widget class="QLayoutWidget">
-                            <property name="name">
-                                <cstring>layout6</cstring>
-                            </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel6</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 6:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading6</cstring>
-                                    </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
-                                    </property>
-                                </widget>
-                            </hbox>
-                        </widget>
-                        <widget class="QLayoutWidget">
-                            <property name="name">
-                                <cstring>layout7</cstring>
-                            </property>
-                            <hbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <widget class="QLabel">
-                                    <property name="name">
-                                        <cstring>textLabel7</cstring>
-                                    </property>
-                                    <property name="text">
-                                        <string>Heading 7:</string>
-                                    </property>
-                                </widget>
-                                <widget class="QComboBox">
-                                    <property name="name">
-                                        <cstring>heading7</cstring>
-                                    </property>
-                                    <property name="enabled">
-                                        <bool>false</bool>
-                                    </property>
-                                </widget>
-                            </hbox>
-                        </widget>
-                    </vbox>
+                    </hbox>
                 </widget>
                 <widget class="QLayoutWidget">
                     <property name="name">
@@ -285,62 +176,34 @@
         <slot>okButton_pressed()</slot>
     </connection>
     <connection>
-        <sender>heading1</sender>
-        <signal>textChanged(const QString&amp;)</signal>
+        <sender>appendButton</sender>
+        <signal>pressed()</signal>
         <receiver>IndexDialog</receiver>
-        <slot>heading1_textChanged(const QString&amp;)</slot>
+        <slot>appendButton_pressed()</slot>
     </connection>
     <connection>
-        <sender>heading2</sender>
-        <signal>textChanged(const QString&amp;)</signal>
+        <sender>removeButton</sender>
+        <signal>pressed()</signal>
         <receiver>IndexDialog</receiver>
-        <slot>heading2_textChanged(const QString&amp;)</slot>
+        <slot>removeButton_pressed()</slot>
     </connection>
     <connection>
-        <sender>heading3</sender>
-        <signal>textChanged(const QString&amp;)</signal>
+        <sender>stylesBox</sender>
+        <signal>selected(const QString&amp;)</signal>
         <receiver>IndexDialog</receiver>
-        <slot>heading3_textChanged(const QString&amp;)</slot>
-    </connection>
-    <connection>
-        <sender>heading4</sender>
-        <signal>textChanged(const QString&amp;)</signal>
-        <receiver>IndexDialog</receiver>
-        <slot>heading4_textChanged(const QString&amp;)</slot>
-    </connection>
-    <connection>
-        <sender>heading5</sender>
-        <signal>textChanged(const QString&amp;)</signal>
-        <receiver>IndexDialog</receiver>
-        <slot>heading5_textChanged(const QString&amp;)</slot>
-    </connection>
-    <connection>
-        <sender>heading6</sender>
-        <signal>textChanged(const QString&amp;)</signal>
-        <receiver>IndexDialog</receiver>
-        <slot>heading6_textChanged(const QString&amp;)</slot>
-    </connection>
-    <connection>
-        <sender>heading7</sender>
-        <signal>textChanged(const QString&amp;)</signal>
-        <receiver>IndexDialog</receiver>
-        <slot>heading7_textChanged(const QString&amp;)</slot>
+        <slot>stylesBox_selected(const QString&amp;)</slot>
     </connection>
 </connections>
 <includes>
     <include location="local" impldecl="in implementation">indexdialog.ui.h</include>
 </includes>
 <slots>
+    <slot>init()</slot>
     <slot>cancelButton_pressed()</slot>
     <slot>okButton_pressed()</slot>
-    <slot>heading1_textChanged( const QString &amp; )</slot>
-    <slot>heading2_textChanged( const QString &amp; )</slot>
-    <slot>heading3_textChanged( const QString &amp; )</slot>
-    <slot>heading4_textChanged( const QString &amp; )</slot>
-    <slot>heading5_textChanged( const QString &amp; )</slot>
-    <slot>heading6_textChanged( const QString &amp; )</slot>
-    <slot>heading7_textChanged( const QString &amp; )</slot>
-    <slot>init()</slot>
+    <slot>appendButton_pressed()</slot>
+    <slot>removeButton_pressed()</slot>
+    <slot>stylesBox_selected( const QString &amp; )</slot>
 </slots>
 <layoutdefaults spacing="6" margin="11"/>
 </UI>

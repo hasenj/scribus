@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Form implementation generated from reading ui file 'indexdialog.ui'
 **
-** Created: Po pro 6 20:41:15 2004
+** Created: Čt pro 9 18:28:41 2004
 **      by: The User Interface Compiler ($Id$)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -11,8 +11,7 @@
 
 #include <qvariant.h>
 #include <qpushbutton.h>
-#include <qlabel.h>
-#include <qcombobox.h>
+#include <qlistbox.h>
 #include <qlayout.h>
 #include <qtooltip.h>
 #include <qwhatsthis.h>
@@ -32,79 +31,29 @@ IndexDialog::IndexDialog( QWidget* parent, const char* name, bool modal, WFlags 
 	setName( "IndexDialog" );
     IndexDialogLayout = new QGridLayout( this, 1, 1, 11, 6, "IndexDialogLayout"); 
 
-    layout10 = new QVBoxLayout( 0, 0, 6, "layout10"); 
+    layout13 = new QVBoxLayout( 0, 0, 6, "layout13"); 
 
-    layout9 = new QVBoxLayout( 0, 0, 6, "layout9"); 
+    layout12 = new QHBoxLayout( 0, 0, 6, "layout12"); 
 
-    layout1 = new QHBoxLayout( 0, 0, 6, "layout1"); 
+    stylesBox = new QListBox( this, "stylesBox" );
+    layout12->addWidget( stylesBox );
 
-    textLabel1 = new QLabel( this, "textLabel1" );
-    layout1->addWidget( textLabel1 );
+    layout11 = new QVBoxLayout( 0, 0, 6, "layout11"); 
+    spacer3 = new QSpacerItem( 20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding );
+    layout11->addItem( spacer3 );
 
-    heading1 = new QComboBox( FALSE, this, "heading1" );
-    layout1->addWidget( heading1 );
-    layout9->addLayout( layout1 );
+    appendButton = new QPushButton( this, "appendButton" );
+    layout11->addWidget( appendButton );
 
-    layout2 = new QHBoxLayout( 0, 0, 6, "layout2"); 
+    removeButton = new QPushButton( this, "removeButton" );
+    layout11->addWidget( removeButton );
+    spacer2 = new QSpacerItem( 20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding );
+    layout11->addItem( spacer2 );
+    layout12->addLayout( layout11 );
 
-    textLabel2 = new QLabel( this, "textLabel2" );
-    layout2->addWidget( textLabel2 );
-
-    heading2 = new QComboBox( FALSE, this, "heading2" );
-    heading2->setEnabled( FALSE );
-    layout2->addWidget( heading2 );
-    layout9->addLayout( layout2 );
-
-    layout3 = new QHBoxLayout( 0, 0, 6, "layout3"); 
-
-    textLabel3 = new QLabel( this, "textLabel3" );
-    layout3->addWidget( textLabel3 );
-
-    heading3 = new QComboBox( FALSE, this, "heading3" );
-    heading3->setEnabled( FALSE );
-    layout3->addWidget( heading3 );
-    layout9->addLayout( layout3 );
-
-    layout4 = new QHBoxLayout( 0, 0, 6, "layout4"); 
-
-    textLabel4 = new QLabel( this, "textLabel4" );
-    layout4->addWidget( textLabel4 );
-
-    heading4 = new QComboBox( FALSE, this, "heading4" );
-    heading4->setEnabled( FALSE );
-    layout4->addWidget( heading4 );
-    layout9->addLayout( layout4 );
-
-    layout5 = new QHBoxLayout( 0, 0, 6, "layout5"); 
-
-    textLabel5 = new QLabel( this, "textLabel5" );
-    layout5->addWidget( textLabel5 );
-
-    heading5 = new QComboBox( FALSE, this, "heading5" );
-    heading5->setEnabled( FALSE );
-    layout5->addWidget( heading5 );
-    layout9->addLayout( layout5 );
-
-    layout6 = new QHBoxLayout( 0, 0, 6, "layout6"); 
-
-    textLabel6 = new QLabel( this, "textLabel6" );
-    layout6->addWidget( textLabel6 );
-
-    heading6 = new QComboBox( FALSE, this, "heading6" );
-    heading6->setEnabled( FALSE );
-    layout6->addWidget( heading6 );
-    layout9->addLayout( layout6 );
-
-    layout7 = new QHBoxLayout( 0, 0, 6, "layout7"); 
-
-    textLabel7 = new QLabel( this, "textLabel7" );
-    layout7->addWidget( textLabel7 );
-
-    heading7 = new QComboBox( FALSE, this, "heading7" );
-    heading7->setEnabled( FALSE );
-    layout7->addWidget( heading7 );
-    layout9->addLayout( layout7 );
-    layout10->addLayout( layout9 );
+    tocStylesBox = new QListBox( this, "tocStylesBox" );
+    layout12->addWidget( tocStylesBox );
+    layout13->addLayout( layout12 );
 
     layout8 = new QHBoxLayout( 0, 0, 6, "layout8"); 
     spacer1 = new QSpacerItem( 40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum );
@@ -115,9 +64,9 @@ IndexDialog::IndexDialog( QWidget* parent, const char* name, bool modal, WFlags 
 
     cancelButton = new QPushButton( this, "cancelButton" );
     layout8->addWidget( cancelButton );
-    layout10->addLayout( layout8 );
+    layout13->addLayout( layout8 );
 
-    IndexDialogLayout->addLayout( layout10, 0, 0 );
+    IndexDialogLayout->addLayout( layout13, 0, 0 );
     languageChange();
     resize( QSize(321, 286).expandedTo(minimumSizeHint()) );
     clearWState( WState_Polished );
@@ -125,13 +74,9 @@ IndexDialog::IndexDialog( QWidget* parent, const char* name, bool modal, WFlags 
     // signals and slots connections
     connect( cancelButton, SIGNAL( pressed() ), this, SLOT( cancelButton_pressed() ) );
     connect( okButton, SIGNAL( pressed() ), this, SLOT( okButton_pressed() ) );
-    connect( heading1, SIGNAL( textChanged(const QString&) ), this, SLOT( heading1_textChanged(const QString&) ) );
-    connect( heading2, SIGNAL( textChanged(const QString&) ), this, SLOT( heading2_textChanged(const QString&) ) );
-    connect( heading3, SIGNAL( textChanged(const QString&) ), this, SLOT( heading3_textChanged(const QString&) ) );
-    connect( heading4, SIGNAL( textChanged(const QString&) ), this, SLOT( heading4_textChanged(const QString&) ) );
-    connect( heading5, SIGNAL( textChanged(const QString&) ), this, SLOT( heading5_textChanged(const QString&) ) );
-    connect( heading6, SIGNAL( textChanged(const QString&) ), this, SLOT( heading6_textChanged(const QString&) ) );
-    connect( heading7, SIGNAL( textChanged(const QString&) ), this, SLOT( heading7_textChanged(const QString&) ) );
+    connect( appendButton, SIGNAL( pressed() ), this, SLOT( appendButton_pressed() ) );
+    connect( removeButton, SIGNAL( pressed() ), this, SLOT( removeButton_pressed() ) );
+    connect( stylesBox, SIGNAL( selected(const QString&) ), this, SLOT( stylesBox_selected(const QString&) ) );
     init();
 }
 
@@ -150,13 +95,8 @@ IndexDialog::~IndexDialog()
 void IndexDialog::languageChange()
 {
     setCaption( tr( "Index" ) );
-    textLabel1->setText( tr( "Heading 1:" ) );
-    textLabel2->setText( tr( "Heading 2:" ) );
-    textLabel3->setText( tr( "Heading 3:" ) );
-    textLabel4->setText( tr( "Heading 4:" ) );
-    textLabel5->setText( tr( "Heading 5:" ) );
-    textLabel6->setText( tr( "Heading 6:" ) );
-    textLabel7->setText( tr( "Heading 7:" ) );
+    appendButton->setText( tr( ">" ) );
+    removeButton->setText( tr( "<" ) );
     okButton->setText( tr( "&OK" ) );
     okButton->setAccel( QKeySequence( tr( "Alt+O" ) ) );
     cancelButton->setText( tr( "&Cancel" ) );
