@@ -1,0 +1,16 @@
+#!/bin/bash
+
+echo 'XML to HTML'
+#rm ./html/*
+xsltproc -stringparam base.dir ./html/ --stringparam html.stylesheet /css/yarpen_docbook.css     ~/Docs/docbook/xhtml/chunk.xsl *.xml
+
+#echo 'LaTeX'
+#xsltproc ~/Docs/docbook/db2latex/latex/csdocbook.xsl *.xml > scribus-plugin.tex
+
+#echo 'PDF'
+#rm ./pdf/*
+#xsltproc  \
+#          -stringparam base.dir ./pdf/ \
+#          ~/Docs/docbook/fo/docbook.xsl  \
+#          *.xml > ./pdf/scribus-plugin.fo
+#fop -fo ./pdf/scribus-plugin.fo -pdf ./pdf/scribus-plugin.pdf

@@ -1,0 +1,336 @@
+<?xml version='1.0' encoding="iso-8859-2"?>
+<!DOCTYPE book PUBLIC '-//OASIS//DTD Docbook XML V4.2//EN'
+    'http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd'>
+
+<book lang="en">
+
+<bookinfo>
+    <title><application>Scribus</application> plugin small howto</title>
+    <subtitle>How to write an addon for <application>Scribus</application></subtitle>
+    <authorgroup>
+        <author>
+            <firstname>Petr</firstname>
+            <surname>Vanek</surname>
+            <affiliation>
+                <address><ulink><email>petr@yarpen.cz</email></ulink></address>
+            </affiliation>
+        </author>
+    </authorgroup>
+    <publisher>
+        <publishername><ulink url="http://www.yarpen.cz">yarpen.cz</ulink></publishername>
+    </publisher>
+    <copyright>
+        <year>2003</year>
+        <holder>Petr Vanek (as published in <ulink>http://www.opencontent.org/openpub/</ulink>)</holder>
+    </copyright>
+    <releaseinfo>Release 0.5</releaseinfo>
+    <releaseinfo>This document is avalable in <ulink url="http://www.yarpen.cz/scribus-plugin">XHTML</ulink> and in <ulink url="http://www.yarpen.cz/scribus-plugin/scribus-plugin.pdf">PDF</ulink>.</releaseinfo>
+</bookinfo>
+
+<preface>
+    <title>Preface</title>
+    <para>This article shows you how to write plugins for <application>Scribus</application> &mdash; GPL DTP software. Plugins are dynamic loaded libraries in "so" format.</para>
+    <para>Following paragraph is here just for fun.</para>
+    <para><emphasis><quote>Why did it exactly you?</quote></emphasis> (real question from real email from real man) Dear Derek, I wrote one public plugin, this example one and three special plugins I use for my specific tasks. Let's count &mdash; it's sort of much more than <emphasis>you ever did</emphasis> :).</para>
+    <section>
+        <title>Changes</title>
+        <variablelist>
+	<varlistentry>
+            <term>0.5</term>
+            <listitem>
+            <para>More plugin types handling.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>0.4</term>
+            <listitem>
+            <para><emphasis>Automagic</emphasis> added, links updated.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>0.3</term>
+            <listitem>
+            <para><quote>H</quote> file bug removed. Links added.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>0.2</term>
+            <listitem>
+            <para>Docbook sources, examples added.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>0.1</term>
+            <listitem>
+            <para>First snapshot.</para>
+            </listitem>
+        </varlistentry>
+        </variablelist>
+    </section>
+</preface>
+
+<chapter>
+    <title>Where I find them?</title>
+    <para>On your filesystem :) If you remember as you've <application>Scribus</application> installed with</para>
+
+<programlisting>#./configure [--prefix=/your/selected/path]
+#make
+#make install
+</programlisting>
+
+    <para>esp. <filename>/your/selected/path</filename> - here are some directories, some of them related to <application>Scribus</application>. Now change directory to <filename>lib/<application>Scribus</application>/plugins</filename> and list its files. You should see a lot of <filename>*.la</filename> and <filename>*.so*</filename> files and some <filename>*.qm</filename> too.</para>
+    <para>Qm files contains language tranlsations and localisation - la and so are loadable libraries which are topic of this article.</para>
+</chapter>
+
+<chapter>
+    <title>Before you start coding</title>
+    <para>Let's suppose you've got a great idea to improve <application>Scribus</application> and you cannot wait to start writting some excellent C++ constructs.</para>
+    <important>Wait here for a while! Maybe you are at the edge of <quote>reinventing the wheel</quote> &mdash; so join the <ulink url="http://nashi.altmuehlnet.de/mailman/listinfo/scribus">mailing-list</ulink> or <emphasis>#scribus</emphasis> channel at <ulink url="http://www.freenode.net">irc.freenode.net</ulink>. Your topic will be discussed and you'll get support too.</important>
+    <para>We cannot stop you to write anything you want &mdash; sure. :)))</para>
+</chapter>
+
+<chapter>
+    <title>Example plugin</title>
+    <section>
+        <para>Now we'll try to write some <emphasis>do-nothing-plugin</emphasis>.</para>
+    </section>
+
+    <section>
+        <title>myplugin.h</title>
+
+<programlisting>
+#ifndef MYPLUGIN_H
+#define MYPLUGIN_H
+
+#include &lt;scribus.h&gt;
+
+/** Calls the Plugin with the main Application window as parent
+  * and the main Application Class as parameter */
+extern "C" void Run(QWidget *d, ScribusApp *plug);
+
+
+/** Returns the Name of the Plugin.
+  * This name appears in the relevant Menue-Entrys */
+extern "C" QString Name();
+
+
+/** Returns the Type of the Plugin.
+  * 1 = the Plugin is a normal Plugin, which appears in the Extras Menue
+  * 2 = the Plugin is a Import Plugin, which appears in the Import Menue
+  * 3 = the Plugin is a Export Plugin, which appears in the Export Menue
+  * 4 = the Plugin is a resident Plugin   */
+extern "C" int Type();
+
+#endif
+</programlisting>
+
+        <para>Now let's describe the source code. <emphasis>MYPLUGIN_H</emphasis> declaration is the standard way to ensure only one insertion of the header file. <emphasis><application>Scribus</application>.h</emphasis> is required to access Scribus objects. The function <emphasis>Run()</emphasis> is called when the plugin is loaded, resp. called from <application>Scribus</application> menu - depending on <emphasis>Type()</emphasis> return value.</para>
+        <para><emphasis>Name()</emphasis> returns the string to display in menu.</para>
+        <para>In this example we're working on <emphasis>normal plugin (1)</emphasis>. <emphasis>Import and Export plugins (2, 3)</emphasis> you can study reading the code of e.g. <emphasis>SVG import/export plugin</emphasis> distributed in <application>Scribus</application> tarball and <emphasis>resident plugin (4)</emphasis> is e.g. <emphasis>Python scripting plugin</emphasis> aka. <application>Scripter</application> from distro too.</para>
+	<para>You can use the very special type of plugin when you use number not listed in the example above &mdash;  e.g. 5. In this cas you have to handle the plugin integration into <application>Scribus</application> menues yourself. The <emphasis>newfromtempate</emphasis> addon with its:</para>
+<programlisting>
+plug->fileMenu->insertItem(QObject::tr("New &amp;from Template..."));
+</programlisting>
+	<para>is a good example.</para>
+
+    </section>
+
+<section>
+    <title>myplugin.cpp</title>
+    
+<programlisting>
+#include "myplugin.h"
+#include &lt;qstring.h&gt;
+
+QString Name()
+{
+    return "Do Nothing Plugin";
+}
+
+
+int Type()
+{
+    return 1;
+}
+
+
+void Run(QWidget *d, ScribusApp *plug)
+{
+}
+
+</programlisting>
+
+        <para>And source code explaining again. Qt <filename>qtstring.h</filename> is required as the function <emphasis>Name()</emphasis> returns QString instance - text for user interface. Sure it should be prepared for translations with <methodname>QObject::tr()</methodname>.</para>
+        <para>As said above - <function>Type()</function> of this plugin is 1.</para>
+        <para>And <function>Run(QWidget*, ScribusApp*)</function> is empty while we write nothing-doing-plugin :). Cleverer people now know that there has to be what serve the plugin logic&hellip; &mdash; Custom class initializations, dilogs calling etc.</para>
+</section>
+</chapter>
+
+<chapter>
+    <title>Compile it!</title>
+
+    <warning>Beware &mdash; as is <application>qmake</application> project easy to use it isn't the standard way to distribute software on the Linux platform. I suggest this process only for development. When you create bug-free functional package then save the time to prepare full featured <emphasis>automagic</emphasis> distributon as described in the next chapter.</warning>
+
+    <para>Let's compile it, but you're sure it isn't so easy as writing <filename>gcc myplugin.cpp</filename> ;) I've found one easy way (because I <emphasis>really really</emphasis> hate <filename>autoconf</filename> and <filename>automake</filename> in their hard to use complexity) to build it - Qt <filename>qmake</filename>.</para>
+
+<programlisting>#qmake -project</programlisting>
+
+    <para>Now the project file is created and we'll make just a few changes
+into it.</para>
+
+<programlisting>
+######################################################################
+# Automatically generated by qmake (1.06c) Sun Dec 14 13:32:11 2003
+######################################################################
+
+#change TEMPLATE = app. We aren't working on application just plugin
+TEMPLATE = lib
+INCLUDEPATH += .
+#As working with <application>Scribus</application>, we need <application>Scribus</application> includes too.
+INCLUDEPATH += /home/subzero/devel/<application>Scribus</application>/include/<application>Scribus</application>/
+#And <application>Scribus</application> have to use freetype2.
+#So we should link it too. Use paths returned from
+##freetype-config --cflags and --libs
+INCLUDEPATH += /usr/include/freetype2
+LIBS += -lfreetype -lz
+
+# Input
+#create empty config.h file
+HEADERS += myplugin.h config.h
+SOURCES += myplugin.cpp
+</programlisting>
+
+        <para>After these changes you're ready to compile</para>
+
+<programlisting>
+#qmake
+#make
+</programlisting>
+
+        <para>Command <filename>qmake</filename> you call to create Makefile and by <filename>make</filename> you compile finally.</para>
+        <para>Then just copy <filename>*so*</filename> files into <application>Scribus</application> plugin directory and run <application>Scribus</application>. You'll see <emphasis>"Do Nothing Plugin"</emphasis> in Extra menu.</para>
+        <para>It is clear that you have to use some other way to distribute your source code to the others - I use autogenerated qmake pro file. Autoconf guidance would be welcomed.</para>
+</chapter>
+
+
+<chapter>
+    <title>Distribute it! (a.k.a. compile it! 2nd edition)</title>
+    <para>As is <application>qmake</application> user frendly and useful for rapid development, there is one standard way to compile/distribute software for Linux, *BSD etc. &mdash; <application>autoconf</application> and <application>automake</application>. I'll use the <emphasis>automagic</emphasis> acronym for them in the following text.</para>
+    <para>To use automagic successfully you'll need chalk drawed to the north oriented pentagram on the floor (Carrefour, 2&euro;), red-black daemonic dress (Hugo Boss, 2000&euro;) and sacrificed penguin on the home altar (one hour of the fear in Prague ZOO).</para>
+    <para>Back to business&hellip;</para>
+    <para>Download the <ulink url="donothingplugin-1.0.tar.gz">example</ulink>, unpack it and browse it.</para>
+    <para>When you enter the main directory you can see a lot of files and directories. <warning>Do not change anything in the <filename>admin</filename> directory. It's content is TABOO for you!</warning></para>
+    <para>As you read the automagic docs (surely) you know that there is important file in every directory of your project called <filename>Makefile.am</filename>. Here is a short commented example:</para>
+<programlisting>
+# set where will be plugin installed
+pluginsdir = $(prefix)/lib/scribus/plugins
+# specify additional includes for compilation
+AM_CPPFLAGS = -I$(prefix)/include/scribus
+# specify directories to dive in
+SUBDIRS = translation doc
+# name of the plugin = library
+plugins_LTLIBRARIES = libscribusvlna.la
+# join all includes
+INCLUDES = $(LIBFREETYPE_CFLAGS) $(all_includes)
+# library related trash - symlinks etc.
+libscribusvlna_la_LDFLAGS = -version-info 0:0:0
+libscribusvlna_la_METASOURCES = AUTO
+#
+# list of the source files of your project
+libscribusvlna_la_SOURCES = frame.cpp selection.cpp vlnadialog.cpp vlnapage.cpp svlna.cpp
+EXTRA_DIST = frame.cpp selection.cpp svlna.cpp vlnadialog.cpp vlnapage.cpp frame.h selection.h svlna.h vlnadialog.h vlnapage$
+# how to compile
+KDE_OPTIONS = qtonly
+AM_LDFLAGS =    -s $(LIBFREETYPE_LIBS)
+</programlisting>
+    <para>Shortly &mdash; if you take <filename>donothingplugin-1.0.tar.gz</filename> file and parse content (and rename it of course :)) of <filename>Makefile.am</filename> files you'll get a functional package.</para>
+    <para>There is one more thing to do. You have to specify directory structure in <filename>configure.in</filename> in project root directory to:</para>
+    <programlisting>
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([svlna/Makefile])
+AC_CONFIG_FILES([svlna/translation/Makefile])
+AC_CONFIG_FILES([svlna/doc/Makefile])
+    </programlisting>
+    <para>And now how it works&hellip;</para>
+    <para>First run <filename>make -f Makefile.dist</filename> in the root directory. It creates <filename>Makefile.in</filename> templates (some kind of the black magic).</para>
+    <para>And then obligatory <filename>./configure;make;make install</filename> should work for you.</para>
+    <para>Enjoy.</para>
+</chapter>
+
+
+<chapter>
+    <title><application>Scribus</application> object model</title>
+    
+        <para>Read doxygen documentation for <application>Scribus</application>-API and <application>Scribus</application> source code in the same time. It's the only rule today because of very poor<footnote id="doc"><para>As is it before 2/1/2004. The Scribus team is working hard on this task.</para></footnote> developer documentation and the absence of comments in code.</para>
+
+    <section>
+        <title>Some (useful) code examples</title>
+        <para>Some pieces of the code I've searched hard in source code follows.</para>
+
+        <programlisting>plug-&gt;FMess-&gt;setText(QString(aText));</programlisting>
+        <para>Show what are you doing to the user in <application>Scribus</application>'s statusbar.</para>
+
+        <programlisting>
+PageItem *aFrame;
+if (aFrame-&gt;PType==4) {}
+        </programlisting>
+        <para>Item is a text frame.</para>
+
+        <programlisting>
+for (uint i=0; i&lt;plug-&gt;view-&gt;Pages.count(); i++) {
+    plug-&gt;FMess-&gt;setText(QObject::tr("Page: ")
+            + i
+            + plug-&gt;view-&gt;Pages.at(i)-&gt;PageNam);
+    // do something with active page
+    parse(plug-&gt;view-&gt;Pages.at(i));
+}
+        </programlisting>
+        <para>Navigation through the pages.</para>
+
+    </section>
+
+</chapter>
+
+
+<chapter>
+    <title>Plugin related links</title>
+
+    <variablelist>
+        <varlistentry>
+            <term>
+                <ulink url="http://ahnews.music.salford.ac.uk/scribus/documentation/index-2.html#ss2.2">
+                    Requirements
+                </ulink>
+            </term>
+            <listitem>
+                <para>List of the requirements for Scribus and plugins building.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><ulink url="http://web2.altmuehlnet.de/fschmid/mlist.html">Scribus API</ulink></term>
+            <listitem>
+                <para>Poor Doxygen generated documentation.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><ulink url="http://doc.trolltech.com/">Qt docs</ulink></term>
+            <listitem>
+                <para>Large documentation for Qt library.</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><ulink url="http://www.murrayc.com/learning/linux/automake/automake.shtml">Automake/autoconf example</ulink></term>
+            <listitem>
+                <para>Propably the best a/a documentation I've ever see&hellip;</para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><ulink url="http://doc.trolltech.com/3.2/qmake-manual.html">qmake</ulink></term>
+            <listitem>
+                <para>Manual for <application>qmake</application> utility.</para>
+            </listitem>
+        </varlistentry>
+    </variablelist>
+</chapter>
+
+</book>
