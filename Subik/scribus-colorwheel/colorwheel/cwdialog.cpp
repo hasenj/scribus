@@ -1,3 +1,4 @@
+/* $Id$ */
 #include "cwdialog.h"
 
 #include <qvariant.h>
@@ -11,24 +12,22 @@
 #include <qspinbox.h>
 #include <qpainter.h>
 
-/*
- *  Constructs a ColorWheel as a child of 'parent', with the
- *  name 'name' and widget flags set to 'f'.
- *
- *  The dialog will by default be modeless, unless you set 'modal' to
- *  TRUE to construct a modal dialog.
- */
-ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool modal, WFlags fl )
-	: QDialog( parent, name, modal, fl )
+#include <prefsfile.h>
+
+extern PrefsFile *prefsFile;
+extern ScribusApp *ScApp;
+
+ColorWheelDialog::ColorWheelDialog(QWidget* parent, const char* name, bool modal, WFlags fl)
+	: QDialog(parent, name, modal, fl)
 {
-	if ( !name )
-		setName( "ColorWheelDialog" );
+	if (!name)
+		setName("ColorWheelDialog");
 
-	formLayout = new QGridLayout( this, 1, 1, 11, 6, "formLayout");
-	mainLayout = new QHBoxLayout( 0, 0, 6, "mainLayout");
-	wheelLayout = new QVBoxLayout( 0, 0, 6, "wheelLayout");
+	formLayout = new QGridLayout(this, 1, 1, 11, 6, "formLayout");
+	mainLayout = new QHBoxLayout(0, 0, 6, "mainLayout");
+	wheelLayout = new QVBoxLayout(0, 0, 6, "wheelLayout");
 
-	colorWheel = new ColorWheel( this, "colorWheel" );
+	colorWheel = new ColorWheel(this, "colorWheel");
 	colorWheel->setFrameShape(QFrame::Box);
 	colorWheel->setMinimumSize(QSize(300, 300));
 	colorWheel->setMaximumSize(QSize(300, 300));
@@ -41,19 +40,19 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	previewLabel->setMaximumSize(QSize(300, 120));
 	wheelLayout->addWidget(previewLabel);
 
-	spacer1 = new QSpacerItem( 20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding );
+	spacer1 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
 	wheelLayout->addItem(spacer1);
 	mainLayout->addLayout(wheelLayout);
 
-	listLayout = new QVBoxLayout( 0, 0, 6, "listLayout");
+	listLayout = new QVBoxLayout(0, 0, 6, "listLayout");
 
 	typeLabel = new QLabel(this, "typeLabel");
 	listLayout->addWidget(typeLabel);
-	typeCombo = new QComboBox( FALSE, this, "typeCombo" );
+	typeCombo = new QComboBox(FALSE, this, "typeCombo");
 	listLayout->addWidget(typeCombo);
 
 	angleLabel = new QLabel(this, "angleLabel");
-	angleLayout = new QHBoxLayout( 0, 0, 6, "angleLayout");
+	angleLayout = new QHBoxLayout(0, 0, 6, "angleLayout");
 	angleLayout->addWidget(angleLabel);
 
 	angleSpin = new QSpinBox(this, "angleSpin");
@@ -63,10 +62,10 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	angleLayout->addWidget(angleSpin);
 	listLayout->addLayout(angleLayout);
 
-	colorList = new QListView( this, "colorList" );
+	colorList = new QListView(this, "colorList");
 	listLayout->addWidget(colorList);
 
-	buttonLayout = new QHBoxLayout( 0, 0, 6, "buttonLayout");
+	buttonLayout = new QHBoxLayout(0, 0, 6, "buttonLayout");
 	addButton = new QPushButton(this, "addButton");
 	buttonLayout->addWidget(addButton);
 	cancelButton = new QPushButton(this, "cancelButton");
@@ -77,8 +76,8 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	formLayout->addLayout(mainLayout, 0, 0);
 
 	languageChange();
-	resize( QSize(600, 480).expandedTo(minimumSizeHint()) );
-	clearWState( WState_Polished );
+	resize(QSize(600, 480).expandedTo(minimumSizeHint()));
+	clearWState(WState_Polished);
 
 	// setup combobox
 	typeCombo->insertItem(colorWheel->getTypeDescription(colorWheel->Monochromatic), colorWheel->Monochromatic);
@@ -87,9 +86,22 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	typeCombo->insertItem(colorWheel->getTypeDescription(colorWheel->Split), colorWheel->Split);
 	typeCombo->insertItem(colorWheel->getTypeDescription(colorWheel->Triadic), colorWheel->Triadic);
 	typeCombo->insertItem(colorWheel->getTypeDescription(colorWheel->Tetradic), colorWheel->Tetradic);
-	typeCombo_activated(typeCombo->currentItem());
 
-    // signals and slots connections
+	// preferences
+	prefs = prefsFile->getPluginContext("colorwheel");
+	typeCombo->setCurrentItem(prefs->getInt("cw_type", 0));
+	angleSpin->setValue(prefs->getInt("cw_angle", 15));
+	QValueVector<QPoint> vp;
+	int x = prefs->getInt("cw_x", 0);
+	int y = prefs->getInt("cw_y", 0);
+	vp.append(QPoint(x, y));
+	colorWheel->actualPoint = QPoint(x, y);
+	colorWheel->actualRgb = QColor(prefs->getInt("cw_r", 0), prefs->getInt("cw_g", 0), prefs->getInt("cw_b", 0)).rgb();
+	colorWheel->paintWheel(vp);
+
+	// actions
+	typeCombo_activated(typeCombo->currentItem());
+	// signals and slots connections
 	connect(typeCombo, SIGNAL(activated(int)), this, SLOT(typeCombo_activated(int)));
 	connect(colorWheel, SIGNAL(clicked(int, const QPoint&)), this, SLOT(colorWheel_clicked(int, const QPoint&)));
 	colorWheel_clicked(0, QPoint(0, 0));
@@ -103,7 +115,15 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
  */
 ColorWheelDialog::~ColorWheelDialog()
 {
-    // no need to delete child widgets, Qt does it all for us
+	// no need to delete child widgets, Qt does it all for us
+	// preferences
+	prefs->set("cw_type", typeCombo->currentItem());
+	prefs->set("cw_angle", angleSpin->value());
+	prefs->set("cw_x", colorWheel->actualPoint.x());
+	prefs->set("cw_y", colorWheel->actualPoint.y());
+	prefs->set("cw_r", qRed(colorWheel->actualRgb));
+	prefs->set("cw_g", qGreen(colorWheel->actualRgb));
+	prefs->set("cw_b", qBlue(colorWheel->actualRgb));
 }
 
 /*
@@ -114,8 +134,12 @@ void ColorWheelDialog::languageChange()
 {
 	setCaption(tr("Color Wheel"));
 	colorList->addColumn(tr("Color"));
-	colorList->addColumn(tr("Value"));
 	colorList->addColumn(tr("Name"));
+	colorList->addColumn(tr("C"));
+	colorList->addColumn(tr("M"));
+	colorList->addColumn(tr("Y"));
+	colorList->addColumn(tr("K"));
+	colorList->setSorting(1);
 	typeLabel->setText(tr("Select Method:"));
 	angleLabel->setText(tr("Angle (0 - 365 degrees):"));
 	addButton->setText(tr("&Add Colors"));
@@ -126,12 +150,17 @@ void ColorWheelDialog::languageChange()
 void ColorWheelDialog::fillColorList()
 {
 	colorList->clear();
-	for (QMap<QString,CMYKColor>::iterator it = colorWheel->colorList.begin(); it != colorWheel->colorList.end(); ++it )
+	for (ColorList::iterator it = colorWheel->colorList.begin(); it != colorWheel->colorList.end(); ++it)
 	{
+		int c, m, y, k;
 		QListViewItem *item = new QListViewItem(colorList);
 		item->setPixmap(0, colorWheel->sample(it.data().getRGBColor()));
-		item->setText(1, it.data().name());
-		item->setText(2, it.key());
+		item->setText(1, it.key());
+		it.data().getCMYK(&c, &m, &y, &k);
+		item->setText(2, QString("%1").arg(c));
+		item->setText(3, QString("%1").arg(m));
+		item->setText(4, QString("%1").arg(y));
+		item->setText(5, QString("%1").arg(k));
 	}
 }
 
@@ -191,14 +220,25 @@ void ColorWheelDialog::angleSpin_valueChanged(int value)
 
 void ColorWheelDialog::addButton_clicked()
 {
-	qDebug("TODO: implement ColorWheel::addButton_clicked");
+	QString status("<qt><h2>" + tr("Merging colors") + "</h2><p>");
+	for (ColorList::iterator it = colorWheel->colorList.begin(); it != colorWheel->colorList.end(); ++it)
+	{
+		if (ScApp->doc->PageColors.contains(it.key()))
+			status += "<b>" + tr("Error: ") + "</b>" + tr(QString("Color %1 exists already!").arg(it.key())) + "<br/>";
+		else
+		{
+			status += tr(QString("Color %1 appended.").arg(it.key())) + "<br/>";
+			ScApp->doc->PageColors[it.key()] = it.data();
+		}
+	}
+	status += "<p>" + tr("Use <i>Edit/Colors...</i> for more color management.") + "</p></qt>";
+	QMessageBox::information(this, tr("Color Merging"), status);
 	accept();
 }
 
 
 void ColorWheelDialog::cancelButton_clicked()
 {
-	qDebug("TODO: implement ColorWheel::cancelButton_clicked");
 	reject();
 }
 

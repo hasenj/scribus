@@ -1,9 +1,11 @@
+/* $Id$ */
 #ifndef CWDIALOG_H
 #define CWDIALOG_H
 
 #include <qvariant.h>
 #include <qdialog.h>
 #include "colorwheelwidget.h"
+#include <scribus.h>
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -42,6 +44,8 @@ class ColorWheelDialog : public QDialog
 		QHBoxLayout* angleLayout;
 		QVBoxLayout* listLayout;
 		QHBoxLayout* buttonLayout;
+		/** Configuration structure */
+		PrefsContext* prefs;
 		void setPreview();
 
 	public slots:

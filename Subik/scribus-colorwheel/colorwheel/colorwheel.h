@@ -1,3 +1,4 @@
+/* $Id$ */
 #ifndef COLORWHEEL_H
 #define COLORWHEEL_H
 

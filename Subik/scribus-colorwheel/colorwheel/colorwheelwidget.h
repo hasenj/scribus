@@ -1,9 +1,11 @@
+/* $Id$ */
 #ifndef COLORWHEELWIDGET_H
 #define COLORWHEELWIDGET_H
 
 #include <qlabel.h>
 #include <qvaluevector.h>
 #include <cmykcolor.h>
+#include <scribusstructs.h>
 
 
 class ColorWheel : public QLabel
@@ -29,7 +31,7 @@ class ColorWheel : public QLabel
 
 		QPoint actualPoint;
 		QRgb actualRgb;
-		QMap<QString, CMYKColor> colorList;
+		ColorList colorList;
 
 		void paintWheel(QValueVector<QPoint>);
 		QString getTypeDescription(MethodType aType);
@@ -51,6 +53,7 @@ class ColorWheel : public QLabel
 		void sampleByAngle(double, QString);
 		double pointAngle(QPoint);
 		void baseColor();
+		CMYKColor cmykColor(QRgb rgb);
 
 };
 

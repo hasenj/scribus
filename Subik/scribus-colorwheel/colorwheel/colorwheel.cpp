@@ -1,3 +1,4 @@
+/* $Id$ */
 #include "colorwheel.h"
 #include "cwdialog.h"
 #include "pluginmanager.h"

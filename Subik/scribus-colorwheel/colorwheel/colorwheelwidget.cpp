@@ -1,20 +1,10 @@
+/* $Id$ */
 #include "colorwheelwidget.h"
 #include <qpainter.h>
 #include <qpixmap.h>
 #include <qimage.h>
 #include <math.h>
 
-
-QPixmap ColorWheel::sample(QColor c)
-{
-	QPixmap pmap(30, 10);
-	QPainter p(&pmap);
-	p.setPen(Qt::black);
-	p.setBrush(c);
-	p.drawRect(0, 0, 30, 10);
-	p.end();
-	return pmap;
-}
 
 ColorWheel::ColorWheel(QWidget * parent, const char * name) : QLabel(parent, name, 0)
 {
@@ -26,6 +16,17 @@ ColorWheel::ColorWheel(QWidget * parent, const char * name) : QLabel(parent, nam
 
 ColorWheel::~ColorWheel()
 {
+}
+
+QPixmap ColorWheel::sample(QColor c)
+{
+	QPixmap pmap(30, 10);
+	QPainter p(&pmap);
+	p.setPen(Qt::black);
+	p.setBrush(c);
+	p.drawRect(0, 0, 30, 10);
+	p.end();
+	return pmap;
 }
 
 QRgb ColorWheel::getPointColor(QPoint p1)
@@ -154,31 +155,30 @@ void ColorWheel::sampleByAngle(double angle, QString name)
 	//cout << "dxy: " << dx << " " << dy << endl;
 	QRgb rgb = getPointColor(QPoint(dx + xsize/2, dy + ysize/2));
 	//cout << "nxy: " << dx + xsize/2 << " " << dy + ysize/2 << endl;
-
 	// create color
+	colorList[name] = cmykColor(rgb);
+}
+
+CMYKColor ColorWheel::cmykColor(QRgb rgb)
+{
 	CMYKColor c = CMYKColor();
 	c.fromQColor(QColor(rgb));
-	colorList[name] = c;
+	c.setColorModel(colorModelCMYK);
+	return c;
 }
 
 void ColorWheel::baseColor()
 {
 	colorList.clear();
-	CMYKColor c = CMYKColor();
-	c.fromQColor(QColor(actualRgb));
-	colorList["Base Color"] = c;
+	colorList["Base Color"] = cmykColor(actualRgb);
 }
 
 void ColorWheel::makeMonochromatic()
 {
 	baseColor();
 	QColor c = QColor(actualRgb);
-	CMYKColor c1 = CMYKColor();
-	c1.fromQColor(c.light());
-	colorList["Monochromatic Light"] = c1;
-	CMYKColor c2 = CMYKColor();
-	c2.fromQColor(c.dark());
-	colorList["Monochromatic Dark"] = c2;
+	colorList["Monochromatic Light"] = cmykColor(c.light().rgb());
+	colorList["Monochromatic Dark"] = cmykColor(c.dark().rgb());
 }
 
 void ColorWheel::makeAnalogous()
