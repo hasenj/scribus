@@ -49,8 +49,8 @@ void Run(QWidget *d, ScribusApp *plug)
 	qApp->installTranslator(trans);
 	// run plug
 	ShortWords *sw = new ShortWords();
-	delete sw;
-	delete trans;
+	/*delete sw;
+	delete trans;*/
 }
 
 ShortWords::ShortWords()
