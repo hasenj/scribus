@@ -35,14 +35,17 @@ int Type()
 	return 1;
 }
 
+int ID()
+{
+	return 11;
+}
+
 void Run(QWidget *d, ScribusApp *plug)
 {
-	QString pPath = PREL; // PREL defined in Makefiles
-	// translator
-	pPath += QDir::convertSeparators("/lib/scribus/plugins/");
+	// translator TODO: dont use locale but scribus internal coding
+	QString pPath = QDir::convertSeparators(PLUGINDIR);
 	QTranslator *trans = new QTranslator(0);
-	trans->load(QString("libscribusshortwords.") + QString(QTextCodec::locale()).left(2)
-		+QString(".qm"), pPath);
+	trans->load(QString("libscribusshortwords.") + QString(QTextCodec::locale()).left(2) +QString(".qm"), pPath);
 	qApp->installTranslator(trans);
 	// run plug
 	ShortWords *sw = new ShortWords();

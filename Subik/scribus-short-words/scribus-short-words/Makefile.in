@@ -194,7 +194,17 @@ target_vendor = @target_vendor@
 x_includes = @x_includes@
 x_libraries = @x_libraries@
 pluginsdir = $(prefix)/lib/scribus/plugins
-AM_CPPFLAGS = -I$(prefix)/include/scribus
+
+AM_CPPFLAGS = \
+	-I$(prefix)/include/scribus \
+	-DDOCDIR=\"$(datadir)/scribus/doc/\" \
+	-DICONDIR=\"$(datadir)/scribus/icons/\" \
+	-DSAMPLESDIR=\"$(datadir)/scribus/samples/\" \
+	-DSCRIPTSDIR=\"$(datadir)/scribus/scripts/\" \
+	-DTEMPLATEDIR=\"$(datadir)/scribus/templates/\" \
+	-DLIBDIR=\"$(libdir)/scribus/\" \
+	-DPLUGINDIR=\"$(libdir)/scribus/plugins/\"
+
 
 SUBDIRS = translation cfg docs
 
@@ -496,7 +506,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 #>- DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 #>+ 4
-KDE_DIST=Makefile.in configuration.h 
+KDE_DIST=Makefile.in shortwords.loT configuration.h vlnadialog.loT 
 
 DISTFILES= $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 

@@ -36,6 +36,10 @@ extern "C" QString Name();
   */
 extern "C" int Type();
 
+/** Returns the Id of the Plugin.
+  \retval 11 = id from the plugin registry
+ */
+extern "C" int ID();
 
 class Parse;
 

@@ -19,6 +19,7 @@ or documentation
 
 #include <scribus.h>
 #include <qdir.h>
+#include <qstringlist.h>
 
 extern ScribusApp *ScApp;
 extern ShortWords *shortWords;

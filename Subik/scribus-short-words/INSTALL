@@ -1,9 +1,7 @@
-**************************************
-* Scribus-vlna 0.3 (devel unstable)  *
-**************************************
+ SW4S 1.2.1
 
 Requirements
-* Scribus >= 1.5 (freetype2)
+* Scribus >= 1.2.1 (freetype2)
 
 Install
 * run ./configure [--prefix=/path/to/scribus]

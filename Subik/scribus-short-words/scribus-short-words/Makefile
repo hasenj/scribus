@@ -24,7 +24,7 @@ pkgincludedir = $(includedir)/scribus-vlna
 top_builddir = ..
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
-INSTALL = /bin/install -c -p
+INSTALL = /usr/bin/install -c -p
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
 install_sh_SCRIPT = $(install_sh) -c
@@ -39,13 +39,13 @@ POST_UNINSTALL = :
 build_triplet = i686-pc-linux-gnu
 host_triplet = i686-pc-linux-gnu
 target_triplet = i686-pc-linux-gnu
-ACLOCAL = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run aclocal-1.7
+ACLOCAL = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run aclocal-1.7
 AMDEP_FALSE = #
 AMDEP_TRUE = 
-AMTAR = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run tar
-AUTOCONF = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run automake-1.7
+AMTAR = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run tar
+AUTOCONF = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run automake-1.7
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -107,7 +107,7 @@ LIB_X11 = -lX11 $(LIBSOCKET)
 LIB_XEXT = -lXext
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/subzero/devel/scribus-short-words-1.2.1/admin/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/subzero/devel/Subik/scribus-short-words/admin/missing --run makeinfo
 MOC = /usr/qt/3/bin/moc
 NOOPT_CFLAGS =  -g
 NOOPT_CXXFLAGS =  -fno-exceptions -fno-check-new
@@ -145,7 +145,7 @@ X_INCLUDES = -I/usr/X11R6/include
 X_LDFLAGS = -L/usr/X11R6/lib
 X_PRE_LIBS = 
 ac_ct_CC = gcc
-ac_ct_CXX = 
+ac_ct_CXX = g++
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
 all_includes = -I/usr/qt/3/include -I/usr/X11R6/include
@@ -172,7 +172,7 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/subzero/devel/scribus-short-words-1.2.1/admin/install-sh
+install_sh = /home/subzero/devel/Subik/scribus-short-words/admin/install-sh
 kde_qtver = 3
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
@@ -194,7 +194,17 @@ target_vendor = pc
 x_includes = /usr/X11R6/include
 x_libraries = /usr/X11R6/lib
 pluginsdir = $(prefix)/lib/scribus/plugins
-AM_CPPFLAGS = -I$(prefix)/include/scribus
+
+AM_CPPFLAGS = \
+	-I$(prefix)/include/scribus \
+	-DDOCDIR=\"$(datadir)/scribus/doc/\" \
+	-DICONDIR=\"$(datadir)/scribus/icons/\" \
+	-DSAMPLESDIR=\"$(datadir)/scribus/samples/\" \
+	-DSCRIPTSDIR=\"$(datadir)/scribus/scripts/\" \
+	-DTEMPLATEDIR=\"$(datadir)/scribus/templates/\" \
+	-DLIBDIR=\"$(libdir)/scribus/\" \
+	-DPLUGINDIR=\"$(libdir)/scribus/plugins/\"
+
 
 SUBDIRS = translation cfg docs
 
@@ -496,7 +506,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 #>- DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 #>+ 4
-KDE_DIST=Makefile.in configuration.h 
+KDE_DIST=Makefile.in shortwords.loT configuration.h vlnadialog.loT 
 
 DISTFILES= $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST) $(KDE_DIST)
 

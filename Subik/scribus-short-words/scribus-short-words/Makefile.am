@@ -15,3 +15,13 @@ EXTRA_DIST = parse.h vlnadialog.h shortwords.h version.h configuration config.h
 
 KDE_OPTIONS = qtonly
 AM_LDFLAGS =	-s $(LIBFREETYPE_LIBS)
+
+AM_CPPFLAGS = \
+    -I$(prefix)/include/scribus \
+    -DDOCDIR=\"$(datadir)/scribus/doc/\" \
+    -DICONDIR=\"$(datadir)/scribus/icons/\" \
+    -DSAMPLESDIR=\"$(datadir)/scribus/samples/\" \
+    -DSCRIPTSDIR=\"$(datadir)/scribus/scripts/\" \
+    -DTEMPLATEDIR=\"$(datadir)/scribus/templates/\" \
+    -DLIBDIR=\"$(libdir)/scribus/\" \
+    -DPLUGINDIR=\"$(libdir)/scribus/plugins/\"
