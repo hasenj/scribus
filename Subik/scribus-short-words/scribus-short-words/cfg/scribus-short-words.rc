@@ -7,6 +7,7 @@
 # 2004/07/28 French by fredd
 # 2004/08/25 Slovak by Zdenko Podobny
 # 2004/09/13 more polish by Mikolaj Machowski <mikmach@wp.pl>  (vim-LaTeX-Suite)
+# 2004/12/31 more English by <bart@solozone.com> (edit pv)
 #
 # Use UTF8 as coding of this file!
 # Character "#" begins a comment line, empty lines ignored too.
@@ -17,12 +18,18 @@
 #xx=q ,w ,e ,r ,t ,y ,or ,short ,word ,etc ,
 
 
-
 #  English stuff START here
 en=Dr. ,Dr ,Mr. ,Mr ,Mrs. ,Mrs ,Ms. ,Ms ,Prof. ,Prof ,Rev. ,Rev ,
 en= Kg, kg, g, mg, oz, lb, cwt, km, Km, m, cm, mm,
+en=Pfc. ,Cpl. ,Sgt. ,S. ,M. ,1st. ,2nd. ,Lt. ,
+en=Capt. ,Maj. ,Col. ,Brig. ,Gen. ,Ens. ,Cmdr. ,R. ,V .,Adm. ,Secy. ,Asst. ,
+en=Sup. ,Supv. ,Sen. ,Rep. ,Gov. ,Pres. ,Prof. ,Assoc. ,Fr. ,Msgr. ,
+en=Abp. ,Card. ,
+en=Pfc ,Cpl ,Sgt ,Lt ,
+en=Capt ,Maj ,Col ,Brig ,Gen ,Ens ,Cmdr ,Adm ,Secy ,Asst ,
+en=Sup ,Supv ,Sen ,Rep ,Gov ,Pres ,Prof ,Assoc ,Fr ,Msgr ,
+en=Abp ,
 #  English stuff - THE END
-
 
 #  Czech short words START here
 ## hanging conjunctions (TeX ~)
