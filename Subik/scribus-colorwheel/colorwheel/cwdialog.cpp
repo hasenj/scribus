@@ -9,6 +9,7 @@
 #include <qwhatsthis.h>
 #include <qpushbutton.h>
 #include <qspinbox.h>
+#include <qpainter.h>
 
 /*
  *  Constructs a ColorWheel as a child of 'parent', with the
@@ -34,29 +35,11 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	wheelLayout->addWidget(colorWheel);
 	colorWheel->paintWheel(QValueVector<QPoint>());
 
-	angleLabel = new QLabel(this, "angleLabel");
-
-	angleLayout = new QHBoxLayout( 0, 0, 6, "angleLayout");
-	angleLayout->addWidget(angleLabel);
-
-	angleSpin = new QSpinBox(this, "angleSpin");
-	angleSpin->setValue(15);
-	angleSpin->setMinValue(0);
-	angleSpin->setMaxValue(365);
-	angleLayout->addWidget(angleSpin);
-	wheelLayout->addLayout(angleLayout);
-
-	brightnessLabel = new QLabel(this, "brightnessLabel");
-
-	brightnessLayout = new QHBoxLayout( 0, 0, 6, "brightnessLayout");
-	brightnessLayout->addWidget(brightnessLabel);
-
-	brightnessSpin = new QSpinBox(this, "brightnessSpin");
-	brightnessSpin->setMinValue(0);
-	brightnessSpin->setMaxValue(255);
-	brightnessSpin->setValue(255);
-	brightnessLayout->addWidget(brightnessSpin);
-	wheelLayout->addLayout(brightnessLayout);
+	previewLabel = new QLabel(this, "previewLabel");
+	previewLabel->setFrameShape(QFrame::Box);
+	previewLabel->setMinimumSize(QSize(300, 120));
+	previewLabel->setMaximumSize(QSize(300, 120));
+	wheelLayout->addWidget(previewLabel);
 
 	spacer1 = new QSpacerItem( 20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding );
 	wheelLayout->addItem(spacer1);
@@ -68,6 +51,17 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	listLayout->addWidget(typeLabel);
 	typeCombo = new QComboBox( FALSE, this, "typeCombo" );
 	listLayout->addWidget(typeCombo);
+
+	angleLabel = new QLabel(this, "angleLabel");
+	angleLayout = new QHBoxLayout( 0, 0, 6, "angleLayout");
+	angleLayout->addWidget(angleLabel);
+
+	angleSpin = new QSpinBox(this, "angleSpin");
+	angleSpin->setValue(15);
+	angleSpin->setMinValue(0);
+	angleSpin->setMaxValue(365);
+	angleLayout->addWidget(angleSpin);
+	listLayout->addLayout(angleLayout);
 
 	colorList = new QListView( this, "colorList" );
 	listLayout->addWidget(colorList);
@@ -100,7 +94,6 @@ ColorWheelDialog::ColorWheelDialog( QWidget* parent, const char* name, bool moda
 	connect(colorWheel, SIGNAL(clicked(int, const QPoint&)), this, SLOT(colorWheel_clicked(int, const QPoint&)));
 	colorWheel_clicked(0, QPoint(0, 0));
 	connect(angleSpin, SIGNAL(valueChanged(int)), this, SLOT(angleSpin_valueChanged(int)));
-	connect(brightnessSpin, SIGNAL(valueChanged(int)), this, SLOT(brightnessSpin_valueChanged(int)));
 	connect(addButton, SIGNAL(clicked()), this, SLOT(addButton_clicked()));
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelButton_clicked()));
 }
@@ -125,7 +118,6 @@ void ColorWheelDialog::languageChange()
 	colorList->addColumn(tr("Name"));
 	typeLabel->setText(tr("Select Method:"));
 	angleLabel->setText(tr("Angle (0 - 365 degrees):"));
-	brightnessLabel->setText(tr("Brightness (0 - 255):"));
 	addButton->setText(tr("&Add Colors"));
 	cancelButton->setText(tr("&Cancel"));
 
@@ -137,7 +129,7 @@ void ColorWheelDialog::fillColorList()
 	for (QMap<QString,CMYKColor>::iterator it = colorWheel->colorList.begin(); it != colorWheel->colorList.end(); ++it )
 	{
 		QListViewItem *item = new QListViewItem(colorList);
-		item->setPixmap(0, colorWheel->sample(it.data().getShadeColorProof(brightnessSpin->value())));
+		item->setPixmap(0, colorWheel->sample(it.data().getRGBColor()));
 		item->setText(1, it.data().name());
 		item->setText(2, it.key());
 	}
@@ -149,58 +141,52 @@ void ColorWheelDialog::typeCombo_activated(int index)
 	if (index == colorWheel->Monochromatic)
 	{
 		angleSpin->setEnabled(false);
+		angleLabel->setEnabled(false);
 		colorWheel->makeMonochromatic();
 	}
 	if (index == colorWheel->Analogous)
 	{
 		angleSpin->setEnabled(true);
+		angleLabel->setEnabled(true);
 		colorWheel->makeAnalogous();
 	}
 	if (index == colorWheel->Complementary)
 	{
 		angleSpin->setEnabled(false);
+		angleLabel->setEnabled(false);
 		colorWheel->makeComplementary();
 	}
 	if (index == colorWheel->Split)
 	{
 		angleSpin->setEnabled(true);
+		angleLabel->setEnabled(true);
 		colorWheel->makeSplit();
 	}
 	if (index == colorWheel->Triadic)
 	{
 		angleSpin->setEnabled(false); //TODO
+		angleLabel->setEnabled(false);
 		colorWheel->makeTriadic();
 	}
 	if (index == colorWheel->Tetradic)
 	{
 		angleSpin->setEnabled(false); //TODO
+		angleLabel->setEnabled(false);
 		colorWheel->makeTetradic();
 	}
 	fillColorList();
+	setPreview();
 }
 
 void ColorWheelDialog::colorWheel_clicked(int, const QPoint&)
 {
 	typeCombo_activated(typeCombo->currentItem());
-	//fillColorList();
 }
 
 void ColorWheelDialog::angleSpin_valueChanged(int value)
 {
 	colorWheel->angle = value;
 	typeCombo_activated(typeCombo->currentItem());
-}
-
-void ColorWheelDialog::brightnessSpin_valueChanged(int value)
-{
-	for (QMap<QString,CMYKColor>::iterator it = colorWheel->colorList.begin(); it != colorWheel->colorList.end(); ++it )
-	{
-		CMYKColor c = CMYKColor();
-		c.fromQColor(it.data().getShadeColorProof(value));
-		it.data() = c;
-	}
-	fillColorList();
-
 }
 
 void ColorWheelDialog::addButton_clicked()
@@ -214,4 +200,35 @@ void ColorWheelDialog::cancelButton_clicked()
 {
 	qDebug("TODO: implement ColorWheel::cancelButton_clicked");
 	reject();
+}
+
+void ColorWheelDialog::setPreview()
+{
+	int x = previewLabel->width();
+	int y = previewLabel->height();
+	QValueList<CMYKColor> cols = colorWheel->colorList.values();
+	int xstep = x / cols.count();
+	QPixmap pm = QPixmap(x, y);
+	QPainter *p = new QPainter(&pm);
+	QFontMetrics fm = p->fontMetrics();
+
+	pm.fill(Qt::white);
+	p->setPen(Qt::white);
+	p->drawRect(0, 0, x, y);
+	for (uint i = 0; i < cols.count(); ++i)
+	{
+		p->setPen(cols[i].getRGBColor());
+		p->setBrush(cols[i].getRGBColor());
+		p->drawRect(i * xstep, 0, xstep, y);
+	}
+	p->setPen(Qt::black);
+	p->setBrush(Qt::black);
+	p->drawText(15, 5 + fm.height(), "Lorem ipsum dolor sit amet");
+	p->setPen(Qt::white);
+	p->setBrush(Qt::white);
+	p->drawText(25, y - 5 - fm.height(), "Lorem ipsum dolor sit amet");
+	p->end();
+	delete(p);
+	previewLabel->clear();
+	previewLabel->setPixmap(pm);
 }

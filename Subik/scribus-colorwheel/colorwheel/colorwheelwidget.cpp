@@ -70,10 +70,20 @@ void ColorWheel::paintWheel(QValueVector<QPoint> selectedPoints)
 		p->setWorldMatrix(matrix);
 		QColor c;
 		c.setHsv(i, 255, 255);
-		p->setPen(c);
+		p->setPen(QPen(c.dark(), 5));
+		p->setBrush(c.dark());
+		p->drawLine(0, 0, 130, 0);
+		p->setPen(QPen(c, 7));
 		p->setBrush(c);
-		p->drawRect(70, -10, 80, 10);
+		p->drawLine(0, 0, 90, 0);
+		p->setPen(QPen(c.light(), 9));
+		p->setBrush(c.light());
+		p->drawLine(0, 0, 50, 0);
 	}
+	p->setPen(QPen(Qt::black, 2));
+	p->setBrush(QColor(actualRgb));
+	p->drawEllipse(-10, -10, 20, 20);
+
 	QWMatrix matrix;
 	matrix.translate(0, 0);
 	p->setWorldMatrix(matrix);
@@ -83,7 +93,7 @@ void ColorWheel::paintWheel(QValueVector<QPoint> selectedPoints)
 		p->setBrush(Qt::white);
 		QValueVector<QPoint>::iterator it;
 		for(it = selectedPoints.begin(); it != selectedPoints.end(); ++it)
-			p->drawEllipse(it->x()-5, it->y()-5, 5, 5);
+			p->drawEllipse(it->x()-2, it->y()-2, 4, 4);
 	}
 
 	p->end();
