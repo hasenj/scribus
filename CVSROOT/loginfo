@@ -25,4 +25,4 @@
 # or
 #DEFAULT (echo ""; id; echo %{sVv}; date; cat) >> $CVSROOT/CVSROOT/commitlog
 ALL      /usr/local/bin/cvs-log $CVSROOT/CVSROOT/commitlog $USER
-^Scribus /usr/local/bin/cvs-mail -s %{sVv} scribus-commit
+^Scribus mail -s %{sVv} scribus-commit
