@@ -1,3 +1,24 @@
+/*
+ * Copyright (c) Petr Vanek <petr@yarpen.cz>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
+
+/* $Id$ */
+
 #include "loremconfig.h"
 #include "prefsfile.h"
 
@@ -31,11 +52,8 @@ LoremConfig::LoremConfig()
 	// cfg
 	prefs = prefsFile->getPluginContext("lorem-ipsum");
 	paragraphs = prefs->getUInt("paragraphs", 4);
-	cout << endl << endl << paragraphs << endl;
 	avgSentences = prefs->getUInt("avgSentences", 4);
-	cout << avgSentences << endl;
 	shouldStartWith = prefs->getBool("shouldStartWith", TRUE);
-	cout << shouldStartWith << endl;
 	errMsg = "OK";
 	// parse the main config
 	QXmlSimpleReader reader;
@@ -52,8 +70,8 @@ LoremConfig::LoremConfig()
 LoremConfig::~LoremConfig()
 {
 	prefs->set("paragraphs", paragraphs);
-	prefs->getUInt("avgSentences", avgSentences);
-	prefs->getBool("shouldStartWith", shouldStartWith);
+	prefs->set("avgSentences", avgSentences);
+	prefs->set("shouldStartWith", shouldStartWith);
 }
 
 bool LoremConfig::startElement(const QString&, const QString&, const QString &name, const QXmlAttributes &attrs)

@@ -30,13 +30,14 @@ QString LoremStandard::makeLorem()
 
 	QString lorem = sentences[0];
 	uint turn = 1;
-	for (uint i = 1; i < paragraphs; ++i)
+	for (uint i = 1; i < paragraphs; ++i, ++turn)
 	{
 		if (turn >= sentences.count() - 1)
 			turn = 0;
-		else
-			++turn;
+		/*else
+			++turn;*/
 		lorem += sentences[turn] + "\n";
 	}// for
 	return lorem.stripWhiteSpace();
 }
+

@@ -1,10 +1,34 @@
+/*
+ * Copyright (c) Petr Vanek <petr@yarpen.cz>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */ 
+
+/* $Id$ */
+
 #ifndef _SCRIBUS_LOREMIPSUM_H_
 #define _SCRIBUS_LOREMIPSUM_H_
 
 #include "scribus.h"
 
 /*! Calls the Plugin with the main Application window as parent
-	and the main Application Class as parameter */
+	and the main Application Class as parameter.
+    \param d Parent QWidget
+    \param plug reference to the main Scribus app.
+ */
 extern "C" void Run(QWidget *d, ScribusApp *plug);
 
 
