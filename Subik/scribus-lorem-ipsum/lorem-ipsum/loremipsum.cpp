@@ -1,5 +1,6 @@
 #include "loremipsum.h"
 #include "loremipsum.moc"
+#include "loremdialog.h"
 
 extern ScribusApp *ScApp;
 
@@ -33,9 +34,19 @@ void Run(QWidget *d, ScribusApp *plug)
 		ScApp->FMess->setText("Cannot replace text in the frame");
 		return;
 	}
+	// types of the lorems
+	LoremDialog *dia = new LoremDialog(ScApp, 0, TRUE, 0);
+	LoremBase *base = new LoremBase();
+	LoremInfo *info;
+	for (info = base->info.first(); info; info = base->info.next())
+	{
+		qDebug(info->name);
+	}
 	LoremIpsum *li = new LoremIpsum();
 	ScApp->FMess->setText(li->makeText());
 	delete li;
+	delete base;
+	delete dia;
 }
 
 
@@ -110,7 +121,6 @@ QString LoremIpsum::makeSentence()
 	return loremText;
 }
 
-#declare CNT_CFG_LOREMS 3
 QString LoremIpsum::makeClause()
 {
 	QString loremText = "";
@@ -127,15 +137,22 @@ QString LoremIpsum::makeClause()
 
 QString LoremIpsum::resultComment()
 {
-	/* TODO: phrases
-	"Remarkably well done!","Beautiful execution, what a fabulous $lang1!!",
-	  "Extremely well done!","Very well done!","Magnificently well done!",
-	  "Superb performance, exquisite $lang1 delivered!",
-	  "No doubt, the mother of all $lang1\s! Perfect.","Brilliant execution, this is a beauty!",
-	  "Extraordinary performance!","This $lang1 is perfect!","Congratulate yourself ...the mother of 'em $lang1\s!",
-	  "Fella, you now how to press a button, respect!","Best $lang1 ever generated, governor!",
-	  "Awesome result, give yourself a hand!","Have a cigar - this $lang1 is sweet!"
-	*/
-	return QString("Remarkably well done!");
+    QStringList comment;
+    comment.append("Remarkably well done!");
+    comment.append("Beautiful execution, what a fabulous $lang1!!");
+    comment.append("Extremely well done!");
+    comment.append("Very well done!");
+    comment.append("Magnificently well done!");
+    comment.append("Superb performance, exquisite $lang1 delivered!");
+    comment.append("No doubt, the mother of all $lang1! Perfect.");
+    comment.append("Brilliant execution, this is a beauty!");
+    comment.append("Extraordinary performance!");
+    comment.append("This $lang1 is perfect!");
+    comment.append("Congratulate yourself ...the mother of 'em $lang1!");
+    comment.append("Fella, you now how to press a button, respect!");
+    comment.append("Best $lang1 ever generated, governor!");
+    comment.append("Awesome result, give yourself a hand!");
+    comment.append("Have a cigar - this $lang1 is sweet!");
+	return(*comment.at(rand()%comment.count()+1));
 }
 

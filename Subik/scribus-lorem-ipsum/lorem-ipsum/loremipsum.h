@@ -5,6 +5,7 @@
 #include <qstring.h>
 #include <qfiledialog.h>
 #include "scribus.h"
+#include "lorembase.h"
 
 /*! Calls the Plugin with the main Application window as parent
 	and the main Application Class as parameter */
@@ -23,10 +24,12 @@ extern "C" QString Name();
   \retval 4 = the Plugin is a resident Plugin	*/
 extern "C" int Type();
 
+/*! ID number of the plug. */
 extern "C" int ID();
 
 
-/*! Handles export. */
+/*! This is the main Lorem creator. It takes data from LoremData.
+ */
 class LoremIpsum: public QObject
 {
 	Q_OBJECT
@@ -40,6 +43,8 @@ public:
 	uint paragraphs;
 	bool startWithLorem;
 	PageItem *item;
+    // selected lorem ipsum data
+    LoremData *data;
 
 	QString makeText();
 private:
