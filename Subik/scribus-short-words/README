@@ -11,6 +11,9 @@ MISC NOTES
   {prefix}/share/scribus/doc/scribus-short-words
 
 CHANGES:
+09.01.2005 documentation and fixes for Scribus 1.2.1
+ english stuff
+
 14.08.2004 small regexp fix.
  cfg changes.
  new French docs.
