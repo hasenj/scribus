@@ -44,40 +44,43 @@ void Run(QWidget *d, ScribusApp *plug)
 	// types of the lorems
 	LoremDialog *dia = new LoremDialog(ScApp, 0, TRUE, 0);
 	LoremConfig *config = new LoremConfig();
+	// setup gui.
+	dia->turkeyParagraphs->setValue(config->paragraphs);
+	dia->avgSentences->setValue(config->avgSentences);
+	dia->shouldStartLorem->setChecked(config->shouldStartWith);
+	// setup dicts.
 	LoremInfo *info;
 	for (info = config->info.first(); info; info = config->info.next())
 	{
-		QListViewItem *listItem = new QListViewItem(dia->dictionaryView, info->name, info->description, info->url);
-		if (info->type == "turkey")
-			dia->dictionaryView->insertItem(listItem);
-		else
-			dia->networkView->insertItem(listItem);
+		QListViewItem *listItem = new QListViewItem(dia->dictionaryView,
+				info->name, info->type, info->description, info->url);
+		dia->dictionaryView->insertItem(listItem);
 	}
-	// GUI
+	// start GUI
 	if (dia->exec() == QDialog::Accepted)
 	{
 		// handling options etc.
 		QString loremText = "";
-		if (dia->tabWidget->currentPage() == dia->turkeyTab)
+		if (dia->dictionaryView->currentItem()->text(1) == "turkey")
 		{
-			LoremTurkey *lorem = new LoremTurkey(dia->dictionaryView->currentItem()->text(2),
-												dia->turkeyParagraphs->value(),
-												dia->avgSentences->value(),
-												dia->turkeyStartLorem->isChecked()
-												);
+			LoremTurkey *lorem = new LoremTurkey(dia->dictionaryView->currentItem()->text(3),
+					dia->turkeyParagraphs->value(),
+					dia->avgSentences->value(),
+					dia->shouldStartLorem->isChecked()
+					);
 			loremText = lorem->makeLorem();
 			delete lorem;
 		}
-		if (dia->tabWidget->currentPage() == dia->networkTab)
+		if (dia->dictionaryView->currentItem()->text(1) == "network")
 		{
-			qDebug(dia->networkView->currentItem()->text(2));
-			LoremNetwork *lorem = new LoremNetwork(dia->networkView->currentItem()->text(2));
+			LoremNetwork *lorem = new LoremNetwork(dia->dictionaryView->currentItem()->text(3));
 			loremText = lorem->makeLorem();
 			delete lorem;
 		}
-		if (dia->tabWidget->currentPage() == dia->standardTab)
+		if (dia->dictionaryView->currentItem()->text(1) == "static")
 		{
-			LoremStandard *lorem = new LoremStandard(dia->standardParaBox->value());
+			LoremStandard *lorem = new LoremStandard(dia->dictionaryView->currentItem()->text(3),
+					dia->turkeyParagraphs->value());
 			loremText = lorem->makeLorem();
 			delete lorem;
 		}
@@ -109,6 +112,13 @@ void Run(QWidget *d, ScribusApp *plug)
 			item->Ptext.append(hg);
 		} // for
 	}
+	// save prefs from gui
+	config->paragraphs = dia->turkeyParagraphs->value();
+	config->avgSentences = dia->avgSentences->value();
+	config->shouldStartWith = dia->shouldStartLorem->isChecked();
+/*	config->prefs->set("paragraphs", dia->turkeyParagraphs->value());
+	config->prefs->set("avgSentences", dia->avgSentences->value());
+	config->prefs->set("shouldStartWith", dia->shouldStartLorem->isChecked());*/
 	//ScApp->FMess->setText(resultComment);
 	ScApp->FMess->setText("DONE");
 	delete config;

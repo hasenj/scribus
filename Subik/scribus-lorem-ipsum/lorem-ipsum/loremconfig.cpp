@@ -1,6 +1,10 @@
 #include "loremconfig.h"
+#include "prefsfile.h"
 
-#define CFG "/home/subzero/devel/Subik/scribus-lorem-ipsum/lorem-ipsum/config/"
+#include <qdir.h>
+
+extern PrefsFile *prefsFile;
+
 
 LoremInfo::LoremInfo(QString n, QString u, QString d, QString t)
 {
@@ -21,14 +25,22 @@ LoremInfo::LoremInfo()
 LoremInfo::~LoremInfo()
 {
 }
-
+#include <iostream.h>
 LoremConfig::LoremConfig()
 {
+	// cfg
+	prefs = prefsFile->getPluginContext("lorem-ipsum");
+	paragraphs = prefs->getUInt("paragraphs", 4);
+	cout << endl << endl << paragraphs << endl;
+	avgSentences = prefs->getUInt("avgSentences", 4);
+	cout << avgSentences << endl;
+	shouldStartWith = prefs->getBool("shouldStartWith", TRUE);
+	cout << shouldStartWith << endl;
 	errMsg = "OK";
 	// parse the main config
 	QXmlSimpleReader reader;
 	reader.setContentHandler(this);
-	QFile *f = new QFile(QString(CFG) + QString("/lorem-ipsum.xml"));
+	QFile *f = new QFile(PREL + QDir::convertSeparators("/share/scribus/lorem-ipsum/lorem-ipsum.xml"));
 	if (!f->exists())
 		errMsg = "Config file doesn't exists";
 	QXmlInputSource* source = new QXmlInputSource(f);
@@ -39,6 +51,9 @@ LoremConfig::LoremConfig()
 
 LoremConfig::~LoremConfig()
 {
+	prefs->set("paragraphs", paragraphs);
+	prefs->getUInt("avgSentences", avgSentences);
+	prefs->getBool("shouldStartWith", shouldStartWith);
 }
 
 bool LoremConfig::startElement(const QString&, const QString&, const QString &name, const QXmlAttributes &attrs)

@@ -3,15 +3,17 @@
 
 #include <qstringlist.h>
 
-class LoremStandard
+class LoremStandard//: public QObject
 {
-	public:
-		uint paragraphs;
-		QStringList sentences;
+	//Q_OBJECT
+public:
+	QString url;
+	uint paragraphs;
+	QStringList sentences;
 
-		LoremStandard(uint para);
-		~LoremStandard();
-		QString makeLorem();
+	LoremStandard(QString u, uint para);
+	~LoremStandard();
+	QString makeLorem();
 };
 
 

@@ -1,10 +1,14 @@
 #include "loremstandard.h"
+#include "scribus.h"
 #include <qfile.h>
+#include <qdir.h>
 #include <qtextstream.h>
 
-LoremStandard::LoremStandard(uint para)
+
+LoremStandard::LoremStandard(QString u, uint para)
 {
 	paragraphs = para;
+	url = u;
 }
 
 LoremStandard::~LoremStandard()
@@ -13,7 +17,7 @@ LoremStandard::~LoremStandard()
 
 QString LoremStandard::makeLorem()
 {
-	QFile f("/home/subzero/devel/SCRIBUS/share/scribus/samples/LoremIpsum.txt");
+	QFile f(PREL + QDir::convertSeparators(url));
 	if (f.open(IO_ReadOnly))
 	{
 		QTextStream stream(&f);

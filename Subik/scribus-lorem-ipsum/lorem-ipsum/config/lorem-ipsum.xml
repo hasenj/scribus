@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf8"?>
 <lorem>
+<file name="Default" url="/share/scribus/samples/LoremIpsum.txt" description="Standard Scribus Lorem" type="static"/>
+
 <file name="Bass" url="turkey-bass.txt" description="Yo, man!" type="turkey"/>
 <file name="czech" url="turkey-czech.txt" description="Czech with specials" type="turkey"/>
 <file name="czech ASCII" url="turkey-czech-ascii.txt" description="Czech L.I. in ASCII - without any special chars" type="turkey"/>
