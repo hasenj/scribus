@@ -91,6 +91,7 @@ ShortWords::ShortWords()
 		ScApp->view->GotoPage(originalPage);
 	} // action
 	delete dlg;
+	cfg->saveConfig();
 } // constructor
 
 ShortWords::~ShortWords()

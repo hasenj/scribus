@@ -35,6 +35,10 @@ Config::Config()
 
 Config::~Config()
 {
+}
+
+void Config::saveConfig()
+{
 	prefs->set("action", action);
 	prefs->set("userConfig", userConfig);
 }

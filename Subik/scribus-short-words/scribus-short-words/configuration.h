@@ -44,6 +44,8 @@ public:
 	/** get lang code (en, cs, pl) from Scribus hyphenator configuration
 	structure */
 	QString getLangCodeFromHyph(QString hyphenCode);
+	/** Save cfg. */
+	void saveConfig();
 
 private:
 	/** Configuration structure */
