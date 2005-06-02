@@ -51,10 +51,10 @@ fi
 
 # Sanity check - see if the scribus binary is present and
 # executable
-scribus_bin="${scribusdir}/${EXEPATH}"
-if [ ! -x "${scribus_bin}" ] ; then
-	echo "Error: Real scribus binary not found or not executable"
-	echo "I think the scribus binary is: \"${scribus_bin}\""
+exe_bin="${scribusdir}/${EXEPATH}"
+if [ ! -x "${exe_bin}" ] ; then
+	echo "Error: Real binary not found or not executable"
+	echo "I think the binary is: \"${exe_bin}\""
 	echo "Aborting."
 	exit 1
 fi
@@ -87,10 +87,10 @@ if [ "${BUNDLED_LIBC}" = "yes" ]; then
 	echo "Using bundled libc"
 	"${libdir}/libc/ld-linux.so.2" \
 		--library-path "${libdir}/libc:${libdir}" \
-		"${scribus_bin}"
+		"${exe_bin}"
 else
 	# Tell ld-linux where to find our libs, but use the system libc etc.
 	echo "Using system libc"
 	export LD_LIBRARY_PATH="${libdir}"
-	exec "${scribus_bin}"
+	exec "${exe_bin}"
 fi
