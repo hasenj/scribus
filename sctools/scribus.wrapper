@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# Craig Ringer, June 2005
 
 set -e -u
 
