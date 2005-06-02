@@ -81,7 +81,7 @@ if [ -z "${BUNDLED_LIBC}" ] ; then
 	# glibc on glibc2.4 and newer systems too. Not that that's a problem
 	# quite yet...
 	if [ -x "${libdir}/libc" ] ; then
-		if /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
+		if ! /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
 		then
 			BUNDLED_LIBC=yes
 		else
