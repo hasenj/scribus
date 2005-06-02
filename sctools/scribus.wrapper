@@ -18,7 +18,7 @@ if (( $# == 1 )) ; then
 	EXEPATH="bin/$1"
 else
 	name=`basename "$0"`
-	if [ "${name}" == "run.sh" ]; then
+	if [ "${name}" = "run.sh" ] || [ "${name}" = "scribus.wrapper" ]; then
 		echo "This script must be run as a symlink"
 		exit 1
 	fi
