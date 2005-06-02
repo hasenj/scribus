@@ -1,13 +1,23 @@
 #!/bin/bash
 #
 # Craig Ringer, June 2005
+#
+# To get a build that'll work with this script, you need to:
+#    collectdeps_libc $PREFIX $PREFIX/extra_libs
+#    cd $PREFIX/bin
+#    mv scribus scribus.bin
+#    ln -s run.sh scribus
+#    ln -s run.sh qtconfig
+#    mkdir $PREFIX/etc
+#    cp -r /etc/fonts $PREFIX/etc
+#    cp `which qtconfig` $PREFIX/bin/qtconfig.bin
 
 set -e -u
 
 # Prefix scribus is installed to. If blank, make a weak
 # attempt to detect it.
 PREFIX=
-BUNDLED_LIBC=yes
+BUNDLED_LIBC=
 
 # Decide what to run. If we're given an argument, run a
 # program by that name in the bin/ dir.
@@ -67,7 +77,9 @@ if [ -z "${BUNDLED_LIBC}" ] ; then
 	#     (a) we have one; and
 	#     (b) we're not running glibc >= 2.3
 	# and use it if both are true.
-	# FIXME: need better glibc version check
+	# FIXME: need better glibc version check, this one uses the bundled
+	# glibc on glibc2.4 and newer systems too. Not that that's a problem
+	# quite yet...
 	if [ -x "${libdir}/libc" ] ; then
 		if /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
 		then
@@ -79,6 +91,9 @@ if [ -z "${BUNDLED_LIBC}" ] ; then
 		BUNDLED_LIBC=no
 	fi
 fi
+
+# Set other env vars
+export FONTCONFIG_FILE="${scribusdir}/etc/fonts/fonts.conf"
 
 # Try to run the darn thing
 if [ "${BUNDLED_LIBC}" = "yes" ]; then
