@@ -4,13 +4,13 @@
 #
 # To get a build that'll work with this script, you need to:
 #    collectdeps_libc $PREFIX $PREFIX/extra_libs
-#    cd $PREFIX/bin
-#    mv scribus scribus.bin && ln -s run.sh scribus
-#    cp `which qtconfig` qtconfig.bin && ln -s run.sh qtconfig
-#    cp `which fc-cache` fc-cache.bin && ln -s run.sh fc-cache
-#    cp `which fc-list` fc-list.bin && ln -s run.sh fc-list
-#    mkdir $PREFIX/etc
+#    mkdir $PREFIX/etc $PREFIX/libexec
 #    cp -r /etc/fonts $PREFIX/etc
+#    cd $PREFIX/bin
+#    mv scribus ../libexec/scribus.bin && ln -s run.sh scribus
+#    cp `which qtconfig` ../libexec/qtconfig.bin && ln -s run.sh qtconfig
+#    cp `which fc-cache` ../libexec/fc-cache.bin && ln -s run.sh fc-cache
+#    cp `which fc-list` ../libexec/fc-list.bin && ln -s run.sh fc-list
 
 set -e -u
 
@@ -25,14 +25,14 @@ BUNDLED_LIBC=
 # suffix. For example, if we were called as "scribus",
 # run "bin/scribus.bin" .
 if (( $# == 1 )) ; then
-	EXEPATH="bin/$1"
+	EXEPATH="libexec/$1.bin"
 else
 	name=`basename "$0"`
 	if [ "${name}" = "run.sh" ] || [ "${name}" = "scribus.wrapper" ]; then
 		echo "This script must be run as a symlink"
 		exit 1
 	fi
-	EXEPATH="bin/${name}.bin"
+	EXEPATH="libexec/${name}.bin"
 fi
 
 # Attempt to detect where we're installed.
