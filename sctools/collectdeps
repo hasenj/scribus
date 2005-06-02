@@ -9,19 +9,28 @@
 #
 
 # Exclude libs matching this `egrep' regex
-# Mostly we exclude libs that come with libc, gcc, or other core stuff.
-EXCLUDE_LIBS='lib(ld-linux|c|dl|gcc_s|m|nsl|pthread|util|z)\.so'
+# Mostly we exclude libs that come with libc, gcc, xlibs, or other core stuff.
+#
+# Also exclude libpython - if the user doesn't have it, the script plugin
+# won't load. We don't want to bundle a full Python install, and libpython
+# is useless without it.
+#
+EXCLUDE_LIBS="c|dl|gcc_s|m|nsl|pthread|util|z|X11|Xext|Xft|Xt|python"
 
 set -e -u
 
 if (( $# != 2)); then
-	echo "Usage: $0 /path/to/scribus/prefix target_dir"
+	echo "Usage: ${0} /path/to/scribus/prefix target_dir"
 	exit 1
 fi
 
-scribus_dir="$1"
-target_dir="$2"
+scribus_dir="${1}"
+target_dir="${2}"
 
-mkdir "$target_dir" >&/dev/null || true
-
-cp $(./getdeps "$scribus_dir" | awk '{ print $3 }') "$target_dir"
+mkdir "${target_dir}" >&/dev/null || true
+EXCLUDE_LIBS_RE="(lib(${EXCLUDE_LIBS})|ld-linux)\.so"
+cp $( \
+		./getdeps "${scribus_dir}" | \
+		awk '{ print $3 }' | \
+		egrep -v "${EXCLUDE_LIBS_RE}"
+	) "${target_dir}"
