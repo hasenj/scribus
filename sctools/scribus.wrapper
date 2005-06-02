@@ -1,0 +1,6 @@
+#!/bin/bash
+
+INSTALLDIR=/usr/local/scribus
+
+export LD_LIBRARY_PATH="${INSTALLDIR}:${LD_LIBRARY_PATH}"
+exec "${INSTALLDIR}/bin/scribus"
