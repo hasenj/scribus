@@ -5,12 +5,12 @@
 # To get a build that'll work with this script, you need to:
 #    collectdeps_libc $PREFIX $PREFIX/extra_libs
 #    cd $PREFIX/bin
-#    mv scribus scribus.bin
-#    ln -s run.sh scribus
-#    ln -s run.sh qtconfig
+#    mv scribus scribus.bin && ln -s run.sh scribus
+#    cp `which qtconfig` qtconfig.bin && ln -s run.sh qtconfig
+#    cp `which fc-cache` fc-cache.bin && ln -s run.sh fc-cache
+#    cp `which fc-list` fc-list.bin && ln -s run.sh fc-list
 #    mkdir $PREFIX/etc
 #    cp -r /etc/fonts $PREFIX/etc
-#    cp `which qtconfig` $PREFIX/bin/qtconfig.bin
 
 set -e -u
 
@@ -34,6 +34,67 @@ else
 	fi
 	EXEPATH="bin/${name}.bin"
 fi
+
+# Function to whine at the user to get a newer ghostscript
+function getgs() {
+	echo "You can get GhostScript from http://www.ghostscript.org"
+	echo "GhostScript 8.14 or newer is strongly recommended."
+}
+
+function findgs() {
+	# See if there's a sane version of gs around
+	gs=`which gs` || true
+	if [ -x "${gs}" ] ; then
+		gs_major_version=`"${gs}" --version | cut -c 1`
+	else
+		gs_major_version=
+	fi
+
+	gsafpl=`which gs-afpl` || true
+	if [ -x "${gsafpl}" ] ; then
+		gsafpl_major_version=`"${gsafpl}" --version | cut -c 1`
+	else
+		gsafpl_major_version=
+	fi
+
+	# If we found gs-afpl as well as gs, try to see which is
+	# newer and use that. Otherwise, just use the one we found.
+	if [ -n "${gs_major_version}" ] && [ -n "${gsafpl_major_version}" ] ; then
+		if (( "${gs_major_version}" <= "${gsafpl_major_version}")) ; then
+			export GS="${gs}"
+		else
+			export GS="${gsafpl}"
+		fi
+	elif [ -n "${gsafpl_major_version}" ] ; then
+		GS="${gsafpl}"
+		GS_MAJOR_VERSION="${gsafpl_major_version}"
+	else
+		GS="${gs}"
+		GS_MAJOR_VERSION="${gs_major_version}"
+	fi
+
+	# Now check if gs looks sensible
+	if [ -z "${GS}" ]; then
+		echo "Couldn't find GhostScript"
+		echo "You won't be able to import EPS or PostScript documents and"
+		echo "printing will be limited to PostScript level 3 only."
+		getgs
+	elif (( "${GS_MAJOR_VERSION}" < 7 )) ; then
+		echo "Your installed copy of GhostScript, at:"
+		echo "${GS} , is older than version 7. It appears to be version ${GS_MAJOR_VERSION}."
+		echo "You will need to install a newer version to use Scribus."
+		getgs
+		exit 1
+	elif (( "${GS_MAJOR_VERSION}" < 8 )) ; then
+		echo "Your installed copy of GhostScript, at:"
+		echo "${GS} , is older than version 8. It appears to be version ${GS_MAJOR_VERSION}."
+		echo "You should install a newer version if you plan to print or import"
+		echo "EPS or PostScript documents."
+		getgs
+	else
+		echo "Found a sensible looking copy of GhostScript, version ${GS_MAJOR_VERSION}"
+	fi
+}
 
 # Attempt to detect where we're installed.
 #
@@ -100,6 +161,8 @@ elif [ -r '/etc/fonts.conf' ] ; then
 else
 	export FONTCONFIG_FILE="${scribusdir}/etc/fonts/fonts.conf"
 fi
+
+findgs
 
 # Try to run the darn thing
 if [ "${BUNDLED_LIBC}" = "yes" ]; then
