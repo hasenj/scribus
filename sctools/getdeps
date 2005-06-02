@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Craig Ringer, June 2005
+#
 # Search a Scribus install for library dependencies and
 # report a sorted list of all dependencies. Takes
 # path to $PREFIX as first argument.
