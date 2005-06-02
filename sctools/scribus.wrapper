@@ -145,14 +145,11 @@ function checklibc() {
 		# we haven't been told explicitly whether to use our bundled
 		# copy of libc. Check to see if:
 		#     (a) we have one; and
-		#     (b) we're not running glibc >= 2.3
+		#     (b) we're not running glibc 2.3
 		# and use it if both are true.
-		# FIXME: need better glibc version check, this one uses the bundled
-		# glibc on glibc2.4 and newer systems too. Not that that's a problem
-		# quite yet...
 		if [ -x "${libdir}/libc" ] ; then
-			if ! /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
-			then
+			libc=$(find /lib -name libc-2.3.\*.so\*)
+			if [ -z "${libc}" ] ; then
 				BUNDLED_LIBC=yes
 			else
 				BUNDLED_LIBC=no
