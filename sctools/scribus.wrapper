@@ -45,7 +45,7 @@ fi
 if [ -n "${0}" ] ; then
 	if [ -h "${0}" ] ; then
 		# We've been called with a symlink
-		ourpath="$(readlink ${0})"
+		ourpath="$(dirname $0)/$(readlink ${0})"
 	else
 		# direct call to this script - hopefully
 		ourpath="${0}"
