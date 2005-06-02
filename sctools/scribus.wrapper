@@ -23,9 +23,8 @@ if [ -n "${0}" ] ; then
 	fi
 	# chdir() to the dir containing the script
 	cd "$(dirname ${ourpath})"
-	scriptdir="$(dirname `pwd`)"
 	# and get the parent directory path
-	scribusdir="$(dirname ${scriptdir})"
+	scribusdir="$(dirname `pwd`)"
 else
 	# install dir configured; use that
 	scribusdir="${PREFIX}"
@@ -42,5 +41,6 @@ if [ ! -x "${scribus_bin}" ] ; then
 fi
 
 # Try to run the darn thing
+set +u
 export LD_LIBRARY_PATH="${scribusdir}/extra_libs:${LD_LIBRARY_PATH}"
 exec "${scribus_bin}"
