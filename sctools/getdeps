@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Search a Scribus install for library dependencies and
+# report a sorted list of all dependencies. Takes
+# path to $PREFIX as first argument.
+#
+
+set -e -u
+
+if (( $# != 1)); then
+	echo "Usage: $0 /path/to/scribus/prefix"
+	exit 1
+fi
+
+ldd $(find $1 -type f -name scribus -o -type f -name \*.so.\*) | \
+	egrep -v '(:|gate)' | \
+	sort | \
+	sed 's/ (.*)//g' | \
+	uniq
