@@ -1,6 +1,46 @@
 #!/bin/bash
 
-INSTALLDIR=/usr/local/scribus
+set -e -u
 
-export LD_LIBRARY_PATH="${INSTALLDIR}:${LD_LIBRARY_PATH}"
-exec "${INSTALLDIR}/bin/scribus"
+# Prefix scribus is installed to. If blank, make a weak
+# attempt to detect it.
+PREFIX=
+
+# Attempt to detect where we're installed.
+#
+# This is painful and unreliable. If INSTALLDIR is set,
+# we just use that instead. This method will break
+# if the script is run from execve() etc with anything
+# but the right relative or absolute path to the script.
+#
+if [ -n "${0}" ] ; then
+	if [ -h "${0}" ] ; then
+		# We've been called with a symlink
+		ourpath="$(readlink ${0})"
+	else
+		# direct call to this script - hopefully
+		ourpath="${0}"
+	fi
+	# chdir() to the dir containing the script
+	cd "$(dirname ${ourpath})"
+	scriptdir="$(dirname `pwd`)"
+	# and get the parent directory path
+	scribusdir="$(dirname ${scriptdir})"
+else
+	# install dir configured; use that
+	scribusdir="${PREFIX}"
+fi
+
+# Sanity check - see if the scribus binary is present and
+# executable
+scribus_bin="${scribusdir}/bin/scribus"
+if [ ! -x "${scribus_bin}" ] ; then
+	echo "Error: Real scribus binary not found or not executable"
+	echo "I think the scribus binary is: \"${scribus_bin}\""
+	echo "Aborting."
+	exit 1
+fi
+
+# Try to run the darn thing
+export LD_LIBRARY_PATH="${scribusdir}/extra_libs:${LD_LIBRARY_PATH}"
+exec "${scribus_bin}"
