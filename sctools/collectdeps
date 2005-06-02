@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+# Craig Ringer, June 2005
+#
+# Search a Scribus install for library dependencies and
+# copy all dependencies to the specified directory.
+# Takes path to $PREFIX as first argument, target dir
+# (which will be created if missing) as second arg.
+#
+
+# Exclude libs matching this `egrep' regex
+# Mostly we exclude libs that come with libc, gcc, or other core stuff.
+EXCLUDE_LIBS='lib(ld-linux|c|dl|gcc_s|m|nsl|pthread|util|z)\.so'
+
+set -e -u
+
+if (( $# != 2)); then
+	echo "Usage: $0 /path/to/scribus/prefix target_dir"
+	exit 1
+fi
+
+scribus_dir="$1"
+target_dir="$2"
+
+mkdir "$target_dir" >&/dev/null || true
+
+cp $(./getdeps "$scribus_dir" | awk '{ print $3 }') "$target_dir"
