@@ -7,7 +7,7 @@ set -e -u
 # Prefix scribus is installed to. If blank, make a weak
 # attempt to detect it.
 PREFIX=
-BUNDLED_LIBC=no
+BUNDLED_LIBC=yes
 
 # Attempt to detect where we're installed.
 #
@@ -45,26 +45,27 @@ fi
 
 libdir="${scribusdir}/extra_libs"
 
-if [ -n "${BUNDLED_LIBC}" ] ; then
+if [ -z "${BUNDLED_LIBC}" ] ; then
 	# we haven't been told explicitly whether to use our bundled
 	# copy of libc. Check to see if:
 	#     (a) we have one; and
 	#     (b) we're not running glibc >= 2.3
 	# and use it if both are true.
-	BUNDLED_LIBC="no"
+	# FIXME: need better glibc version check
 	if [ -x "${libdir}/libc" ] ; then
-		# FIXME: need better glibc version check
-		/lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
-		if [ ! $? ]; then
-			# Looks like glibc isn't version 2.3
-			# For now, that's good enough
-			BUNDLED_LIBC="yes"
+		if /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
+		then
+			BUNDLED_LIBC=yes
+		else
+			BUNDLED_LIBC=no
 		fi
+	else
+		BUNDLED_LIBC=no
 	fi
 fi
 
 # Try to run the darn thing
-if "${BUNDLED_LIBC}" = "yes"; then
+if [ "${BUNDLED_LIBC}" = "yes" ]; then
 	# Use a godawful hack to run scribus using our own bundled
 	# copy of libc and friends
 	echo "Using bundled libc"

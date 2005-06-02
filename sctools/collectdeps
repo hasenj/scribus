@@ -15,7 +15,8 @@
 # won't load. We don't want to bundle a full Python install, and libpython
 # is useless without it.
 #
-EXCLUDE_LIBS="c|dl|gcc_s|m|nsl|pthread|util|z|X11|Xext|Xft|Xt|python"
+CXX_LIBS="gcc_s|stdc++"
+EXCLUDE_LIBS="c|dl|${CXX_LIBS}|m|nsl|pthread|util|z|X11|Xext|Xt|python.*?\..*?"
 
 set -e -u
 
