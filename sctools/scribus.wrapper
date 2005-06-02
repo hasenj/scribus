@@ -93,8 +93,10 @@ function findgs() {
 	if [ -n "${gs_major_version}" ] && [ -n "${gsafpl_major_version}" ] ; then
 		if (( "${gs_major_version}" <= "${gsafpl_major_version}")) ; then
 			export GS="${gs}"
+			GS_MAJOR_VERSION="${gs_major_version}"
 		else
 			export GS="${gsafpl}"
+			GS_MAJOR_VERSION="${gsafpl_major_version}"
 		fi
 	elif [ -n "${gsafpl_major_version}" ] ; then
 		GS="${gsafpl}"
