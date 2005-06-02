@@ -3,7 +3,7 @@
 # Craig Ringer, June 2005
 #
 # To get a build that'll work with this script, you need to:
-#    collectdeps_libc $PREFIX $PREFIX/extra_libs
+#    collectdeps_libc $PREFIX $PREFIX/lib/extra_libs
 #    mkdir $PREFIX/etc $PREFIX/libexec
 #    cp -r /etc/fonts $PREFIX/etc
 #    cd $PREFIX/bin
@@ -138,7 +138,7 @@ function exeok() {
 	fi
 }
 
-libdir="${scribusdir}/extra_libs"
+libdir="${scribusdir}/lib/extra_libs"
 
 function checklibc() {
 	if [ -z "${BUNDLED_LIBC}" ] ; then
