@@ -35,6 +35,37 @@ else
 	EXEPATH="bin/${name}.bin"
 fi
 
+# Attempt to detect where we're installed.
+#
+# This is painful and unreliable. If INSTALLDIR is set,
+# we just use that instead. This method will break
+# if the script is run from execve() etc with anything
+# but the right relative or absolute path to the script.
+#
+if [ -n "${0}" ] ; then
+	if [ -h "${0}" ] ; then
+		# We've been called with a symlink
+		ourpath="$(readlink ${0})"
+	else
+		# direct call to this script - hopefully
+		ourpath="${0}"
+	fi
+	# chdir() to the dir containing the script
+	cd "$(dirname ${ourpath})"
+	# and get the parent directory path
+	scribusdir="$(dirname `pwd`)"
+else
+	# install dir configured; use that
+	scribusdir="${PREFIX}"
+fi
+
+echo
+echo "This script is an alpha release, and the Scribus static"
+echo "build is also in early testing. Please do not report bugs"
+echo "when using this build, though feel free to ask about it"
+echo "on IRC."
+echo
+
 # Function to whine at the user to get a newer ghostscript
 function getgs() {
 	echo "You can get GhostScript from http://www.ghostscript.org"
@@ -82,9 +113,8 @@ function findgs() {
 	elif (( "${GS_MAJOR_VERSION}" < 7 )) ; then
 		echo "Your installed copy of GhostScript, at:"
 		echo "${GS} , is older than version 7. It appears to be version ${GS_MAJOR_VERSION}."
-		echo "You will need to install a newer version to use Scribus."
+		echo "You will need to install a newer version to use Scribus reliably."
 		getgs
-		exit 1
 	elif (( "${GS_MAJOR_VERSION}" < 8 )) ; then
 		echo "Your installed copy of GhostScript, at:"
 		echo "${GS} , is older than version 8. It appears to be version ${GS_MAJOR_VERSION}."
@@ -96,85 +126,73 @@ function findgs() {
 	fi
 }
 
-# Attempt to detect where we're installed.
-#
-# This is painful and unreliable. If INSTALLDIR is set,
-# we just use that instead. This method will break
-# if the script is run from execve() etc with anything
-# but the right relative or absolute path to the script.
-#
-if [ -n "${0}" ] ; then
-	if [ -h "${0}" ] ; then
-		# We've been called with a symlink
-		ourpath="$(readlink ${0})"
-	else
-		# direct call to this script - hopefully
-		ourpath="${0}"
+function exeok() {
+	# Sanity check - see if the scribus binary is present and
+	# executable
+	exe_bin="${scribusdir}/${EXEPATH}"
+	if [ ! -x "${exe_bin}" ] ; then
+		echo "Error: Real binary not found or not executable"
+		echo "I think the binary is: \"${exe_bin}\""
+		echo "Aborting."
+		exit 1
 	fi
-	# chdir() to the dir containing the script
-	cd "$(dirname ${ourpath})"
-	# and get the parent directory path
-	scribusdir="$(dirname `pwd`)"
-else
-	# install dir configured; use that
-	scribusdir="${PREFIX}"
-fi
-
-# Sanity check - see if the scribus binary is present and
-# executable
-exe_bin="${scribusdir}/${EXEPATH}"
-if [ ! -x "${exe_bin}" ] ; then
-	echo "Error: Real binary not found or not executable"
-	echo "I think the binary is: \"${exe_bin}\""
-	echo "Aborting."
-	exit 1
-fi
+}
 
 libdir="${scribusdir}/extra_libs"
 
-if [ -z "${BUNDLED_LIBC}" ] ; then
-	# we haven't been told explicitly whether to use our bundled
-	# copy of libc. Check to see if:
-	#     (a) we have one; and
-	#     (b) we're not running glibc >= 2.3
-	# and use it if both are true.
-	# FIXME: need better glibc version check, this one uses the bundled
-	# glibc on glibc2.4 and newer systems too. Not that that's a problem
-	# quite yet...
-	if [ -x "${libdir}/libc" ] ; then
-		if ! /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
-		then
-			BUNDLED_LIBC=yes
+function checklibc() {
+	if [ -z "${BUNDLED_LIBC}" ] ; then
+		# we haven't been told explicitly whether to use our bundled
+		# copy of libc. Check to see if:
+		#     (a) we have one; and
+		#     (b) we're not running glibc >= 2.3
+		# and use it if both are true.
+		# FIXME: need better glibc version check, this one uses the bundled
+		# glibc on glibc2.4 and newer systems too. Not that that's a problem
+		# quite yet...
+		if [ -x "${libdir}/libc" ] ; then
+			if ! /lib/libc.so.6 | grep 'GNU C Library stable release version' | grep -q 2.3
+			then
+				BUNDLED_LIBC=yes
+			else
+				BUNDLED_LIBC=no
+			fi
 		else
 			BUNDLED_LIBC=no
 		fi
-	else
-		BUNDLED_LIBC=no
 	fi
-fi
+}
 
-# Set up fontconfig environment
-if [ -r '/etc/fonts/fonts.conf' ] ; then
-	export FONTCONFIG_FILE="/etc/fonts/fonts.conf"
-elif [ -r '/etc/fonts.conf' ] ; then
-	export FONTCONFIG_FILE="/etc/fonts.conf"
-else
-	export FONTCONFIG_FILE="${scribusdir}/etc/fonts/fonts.conf"
-fi
+function checkfcconfig() {
+	# Set up fontconfig environment
+	if [ -r '/etc/fonts/fonts.conf' ] ; then
+		export FONTCONFIG_FILE="/etc/fonts/fonts.conf"
+	elif [ -r '/etc/fonts.conf' ] ; then
+		export FONTCONFIG_FILE="/etc/fonts.conf"
+	else
+		export FONTCONFIG_FILE="${scribusdir}/etc/fonts/fonts.conf"
+	fi
+}
 
+function run() {
+	# Try to run the darn thing
+	if [ "${BUNDLED_LIBC}" = "yes" ]; then
+		# Use a godawful hack to run scribus using our own bundled
+		# copy of libc and friends
+		echo "Using bundled libc"
+		"${libdir}/libc/ld-linux.so.2" \
+			--library-path "${libdir}/libc:${libdir}" \
+			"${exe_bin}"
+	else
+		# Tell ld-linux where to find our libs, but use the system libc etc.
+		echo "Using system libc"
+		export LD_LIBRARY_PATH="${libdir}"
+		exec "${exe_bin}"
+	fi
+}
+
+exeok
+checklibc
 findgs
-
-# Try to run the darn thing
-if [ "${BUNDLED_LIBC}" = "yes" ]; then
-	# Use a godawful hack to run scribus using our own bundled
-	# copy of libc and friends
-	echo "Using bundled libc"
-	"${libdir}/libc/ld-linux.so.2" \
-		--library-path "${libdir}/libc:${libdir}" \
-		"${exe_bin}"
-else
-	# Tell ld-linux where to find our libs, but use the system libc etc.
-	echo "Using system libc"
-	export LD_LIBRARY_PATH="${libdir}"
-	exec "${exe_bin}"
-fi
+checkfcconfig
+run
