@@ -51,14 +51,17 @@ ifndef EXESUFFIX
 EXESUFFIX=
 endif
 
-MAKEARGS=BASEDIR=$(BASEDIR) LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) INCDIR=$(INCDIR) DOCDIR=$(DOCDIR) QTDIR=$(QTDIR) QT_BINDIR=$(QT_BINDIR) UIC=$(UIC) MOC=$(MOC) QT_INCDIR=$(QT_INCDIR) QT_LIBDIR=$(QT_LIBDIR) EXESUFFIX=$(EXESUFFIX)
+all:
 
-all clean install uninstall test:: 
-	@echo "little cms profiler construction set 1.09 being made $@."
-	@echo "please wait ..."
-	( cd src ; $(MAKE) $(MAKEARGS) $@ )
-	( cd doc ; $(MAKE) $(MAKEARGS) $@ )
+clean:
+
+test:
+
+install:
+	mkdir -p $(DOCDIR)
+	cp manual.txt $(DOCDIR)
+
+uninstall:
+	rm -f $(DOCDIR)/manual.txt
 
 FORCE:
-
-
