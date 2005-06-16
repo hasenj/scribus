@@ -77,10 +77,23 @@
 
   if something goes wrong, try the gcc compiler by using
 
-	make CC=gcc all
+    make CC=gcc all
 
+  You may also need to tell lprof where your Qt headers, binaries, etc
+  are installed. If they're all under one directory, use:
 
-  
+    make QTDIR=/usr/qt3
+
+  (assuming your Qt directory is /usr/qt3 of course). If they're scattered
+  around like some Linux distributors do, you can instead specify the location
+  of the bits:
+
+    make QT_BINDIR=/usr/bin QT_INCDIR=/usr/include/qt3
+
+  (the above is correct for Debian Sarge, with libqt3-mt-dev installed)
+
+  All binaries will be placed in bin/ when the compile finishes.
+
   KDE
   ===
 
