@@ -2,6 +2,22 @@
 # The measurement tool Makefile
 #
 
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
+BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
+LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
+INCDIR  = $(BASEDIR)/include
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
@@ -26,6 +42,10 @@ ifndef QT_LIBDIR
 QT_LIBDIR=$(QTDIR)/lib
 endif
 
+ifndef EXESUFFIX
+EXESUFFIX=
+endif
+
 PROGRAM=qtmeasurementtool
 
 ifdef USE_KDE
@@ -42,11 +62,10 @@ LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -llcms -lm -lqtlcmswidgets -llprof
 
-BINDIR   = ../../bin
 OBJECTS=main.o qtmeasurementtooldialog.o qtmeasurementtooldialogbase.o moc_qtmeasurementtooldialog.o moc_qtmeasurementtooldialogbase.o
 
 # Targets
-all: $(PROGRAM) install
+all: $(PROGRAM)
 
 $(PROGRAM):  $(OBJECTS)
 	@echo "Building measurement tool program ..."
@@ -75,10 +94,11 @@ qtmeasurementtooldialogbase.o: qtmeasurementtooldialogbase.cpp qtmeasurementtool
 
 
 install: $(PROGRAM)
-	-cp $(PROGRAM) $(BINDIR)
-# nothing to install
+	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
 
 clean:
 	rm -f moc_*.* *.o qtmeasurementtooldialogbase.cpp qtmeasurementtooldialogbase.h \
-	$(PROGRAM) $(PROGRAM).exe $(BINDIR)$(PROGRAM) \
-	$(BINDIR)$(PROGRAM).exe 
+	$(PROGRAM)$(EXESUFFIX)
+
+uninstall:
+	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)

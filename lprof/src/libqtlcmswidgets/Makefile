@@ -1,6 +1,22 @@
 #
 # The measurement tool Makefile
 
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
+BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
+LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
+INCDIR  = $(BASEDIR)/include
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
@@ -23,6 +39,10 @@ endif
 
 ifndef QT_LIBDIR
 QT_LIBDIR=$(QTDIR)/lib
+endif
+
+ifndef EXESUFFIX
+EXESUFFIX=
 endif
 
 ifdef USE_KDE
@@ -70,3 +90,6 @@ libqtlcmswidgets.a: qtlcmswidgets.o moc_qtlcmswidgets.o
 
 clean:
 	rm -f moc_*.* *.o qtlcmswidgets.o liblcmswidgets.a
+
+install:
+	cp libqtlcmswidgets.a $(LIBDIR)

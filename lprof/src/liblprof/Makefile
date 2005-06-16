@@ -1,10 +1,27 @@
 SHELL = /bin/sh
 
 CFLAGS  = -g -O4 -fomit-frame-pointer -Wall
-BASEDIR = $(DESTDIR)/usr
+
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
 LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
 INCDIR  = $(BASEDIR)/include
+endif
+
+ifndef EXESUFFIX
+EXESUFFIX=
+endif
+
 VERSION = 1.09
 
 .c.o:	
@@ -21,14 +38,17 @@ liblprof.a: $(OBJS)
 	ar -cru liblprof.a $(OBJS)
 	ranlib liblprof.a
 
-install: liblprof.a  
+install: liblprof.a
 	mkdir -p $(BINDIR) $(LIBDIR) $(INCDIR)
 	cp -a liblprof.a $(LIBDIR)
-	cp ../include/lcmsprf.h $(INCDIR)
+	cp lcmsprf.h $(INCDIR)
 	chmod 644 $(INCDIR)/lcmsprf.h
 
 test:
 	# we are doing nothing for the test target
 
 clean:
-	-rm $(OBJS) liblprof.a 
+	-rm -f $(OBJS) liblprof.a
+
+uninstall:
+	-rm -f $(LIBDIR)/liblprof.a $(INCDIR)/lcmsprf.h

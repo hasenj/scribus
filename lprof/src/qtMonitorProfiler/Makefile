@@ -2,6 +2,22 @@
 # The monitor profiler Makefile
 #
 
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
+BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
+LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
+INCDIR  = $(BASEDIR)/include
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
@@ -26,6 +42,10 @@ ifndef QT_LIBDIR
 QT_LIBDIR=$(QTDIR)/lib
 endif
 
+ifndef EXESUFFIX
+EXESUFFIX=
+endif
+
 PROGRAM=qtmonitorprofiler
 
 ifdef USE_KDE
@@ -42,11 +62,10 @@ INCLUDES = -I../liblprof -I../libqtlcmswidgets -I$(QT_INCDIR) -I. $(KDEINCLUDE)
 LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
-BINDIR   = ../../bin
 OBJECTS=main.o qtmonitorprofilerdialog.o qtmonitorprofilerdialogbase.o moc_qtmonitorprofilerdialog.o moc_qtmonitorprofilerdialogbase.o
 
 # Targets
-all: $(PROGRAM) install
+all: $(PROGRAM)
 
 $(PROGRAM):  $(OBJECTS)
 	@echo "Building monitor profiler ..."
@@ -75,7 +94,11 @@ qtmonitorprofilerdialogbase.o: qtmonitorprofilerdialogbase.cpp qtmonitorprofiler
 
 
 install: $(PROGRAM)
-	-cp $(PROGRAM) $(BINDIR)
+	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
 
 clean:
-	rm -f moc_*.* *.o qtmonitorprofilerdialogbase.cpp qtmonitorprofilerdialogbase.h $(PROGRAM) $(PROGRAM).exe $(BINDIR)$(PROGRAM) $(BINDIR)$(PROGRAM).exe
+	rm -f moc_*.* *.o qtmonitorprofilerdialogbase.cpp qtmonitorprofilerdialogbase.h \
+	$(PROGRAM)$(EXESUFFIX)
+
+uninstall:
+	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
