@@ -1,0 +1,122 @@
+
+
+ THIS SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+ IN NO EVENT SHALL MARTI MARIA BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+ INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+ OF THIS SOFTWARE.
+
+ The lprof library is distributed under
+
+                GNU GENERAL PUBLIC LICENSE
+
+
+ As a special exception, Klas Kalass and Marti Maria gives permission to link 
+ this program with Qt non-commercial edition, and distribute the resulting 
+ executable, without including the source code for the Qt non-commercial 
+ edition in the source distribution.
+
+ See file COPYING. for details
+
+
+   This is the 2nd. public release the profilers. It has not been 
+   tested extensively, so is possible some bugs still arises. 
+   If so, sorry for the inconvenience, and please feel free to submit 
+   any suggestion/solution (if you can find it) at:
+
+                       marti@littlecms.com
+
+ 
+   The main site for the package is located at
+
+           http://www.littlecms.com
+        or
+           http://www.lcms.coloraid.de
+
+
+
+   Looking forward the lcms project would grow in future, I will 
+   welcome any contribution/optimization/enhancement.
+
+   Enjoy!
+
+
+  Requeriments
+  ============
+
+  In order to execute the profiling utilities, you will need:
+
+  - Trolltech's Qt installed (www.trolltech.com)
+  - Littlecms color engine installed (www.littlecms.com)
+  - GNU C compiler gcc or equivalent installed. MS VC++ 6 in Windows 
+    systems required in order to use Qt.
+  - A working make utility. (not required on windows)
+
+  Additionaly, in order to calibrate scanner, you will need an IT8 target.
+
+
+  
+  Installation
+  ============
+
+  Untar the package (you already did it) and then type 'make'. The
+  binaries will be placed on root of distribution. There are no files
+  installed outside distribution directory. You will end with 5 programs:
+
+	- Measurement tool 
+	- Monitor profiler
+	- Scanner profiler
+	- Profile checker
+	- ICC2IT8 program
+
+
+  if something goes wrong, try the gcc compiler by using
+
+	make CC=gcc all
+
+
+  
+  KDE
+  ===
+
+  For obtainig KDE specific programs, type
+
+  make USE_KDE=yes all
+
+ 
+  After installation, see MANUAL.TXT for a guided tour.
+
+ 
+
+ Installing new target reference files
+ =====================================
+ If the target vendor gives you a diskette, press the "..." button on right 
+ and select the floppy drive.  You can add references by copying reference 
+ files into the directory.
+
+ IMPORTANT: DON'T PLACE ANY SPARE FILES, ONLY TARGET REFERENCES.
+
+   
+   
+ Final notes
+ ===========
+
+ Don't expect magic. These profilers does build ICC profiles for your
+ devices, but is up to the application to use this profiles in order to
+ accomplish color management. Adobe's PhotoShop, for example does 
+ understand these profiles. Littlecms comes also with a utility for
+ converting tiff files. If you want to see how can better this system
+ the color reproduction, convert a scanned image to monitor space
+
+    tifficc /iscanner.icm /omonitor.icm image_in.tif image_out.tif
+
+ Also note that Qt does not support any type of image, TIFF, for example
+ is not supported. JPEG, BMP are generally available. The list of 
+ supported formats does vary on platform and Qt version.
+ 
+ 

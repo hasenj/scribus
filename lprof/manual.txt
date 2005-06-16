@@ -1,0 +1,551 @@
+
+
+                        little cms Engine
+                    http://www.littlecms.com
+
+           lprof - A profile construction set library
+
+               How to use the the sample profilers
+
+                         by Marti Maria
+
+                            Ver 1.09
+
+        ---------------------------------------------------
+
+
+ Welcome to this small guided tour on littlecms sample profilers.
+ The goal of this document is to show how these programs can be
+ used to generate ICC profiles for your monitor, scanner, digital
+ camera, film projector or input device. It has also some advice
+ on color management in general, as well as some guidelines on
+ how to handle several littlecms utilities.
+
+
+ Since the best way to see how it works seems to be by example, we
+ will step by step make a whole calibration procedure for monitor
+ and scanner.
+
+ In all this tour, we will make extensive use of the measurement
+ and proof utility: qtMeasurementTool. You will also need a IT8
+ target, available from several vendors. If you plan to do scanner
+ profiling, make sure to get one of these.
+
+ qtMeasurementTool is a "virtual colorimeter" that used in
+ conjunction with a proper scanner profile can be used as a cheap
+ replacement of expensive hardware. It can also be used to proof
+ an Image across two profiles. The most simple way to check if
+ all is going fine is by visual inspection. You can load a Image
+ in the measurement tool, and apply a transform between your
+ input profile (AKA, scanner or camera) and your monitor profile.
+ Since right now we have no profiles to check, we should first
+ create a profile for our monitor.
+
+ This is done by qtMonitorProfiler. This program can work in two
+ different modes. The "advanced" mode, that gives accurate
+ profiles by using hardware devices like X-Rite DP92 or EyeOne,
+ and the "simple" mode, that allow to build reasonably accurate
+ profiles without any additional hardware.
+
+
+ Building a monitor profile: a coarse approximation
+ ==================================================
+
+ So, let's build our first monitor profile to check how all this
+ stuff works. We don't need right now a big accuracy. We want to
+ calibrate coarsely, just to visually check if is all going ok.
+
+ After installing the package, type
+
+                    ./qtmonitorprofiler
+
+ This will start the monitor profiler application. As said, we
+ need only a coarse profile, so, we select the radio button
+ labeled:
+
+  "I want to build a coarse profile, giving approximate values"
+
+ This is selected by default. We need not any measurement right
+ now, only a few visual adjusts. Press the button labeled:
+
+                     "Enter monitor values"
+
+ You will see the monitor values page. In order to obtain maximum
+ performance, we need to adjust first the physical monitor
+ controls.
+
+ Set contrast to near maximum, (yes, near maximum. This is the
+ gain of monitor and we need as many as monitor can deliver) and
+ then adjust brightness until you can see all grays of a
+ grayscale. Leave the monitor alone, and return to monitor
+ profiler program.
+
+ Now we will adjust gamma correction. This is by far the most
+ important setting. On our first approach, we will try with only
+ one gray channel (make sure "Link channels" is checked).
+
+ Move the slide until the central frame seems to "fade" on background. 
+ Don't  spend too much time adjust it, gamma varies with many factors.
+ A coarse adjust will be enough right now.
+
+ You should obtain a typical value of 2.1-2.4, in some cases it
+ could be even lower.
+
+ Now we go on the white point stuff. Some monitors refers white
+ point as "temperature". Most users does have white point set to
+ D93 in order to get more bright, unfortunately this  restricts
+ the gamut and adds a big quantity of blue, so my advice would be
+ to select something lower.
+
+ If you can switch temperature of your monitor, D65 (near 6500K)
+ could be a good choice for multiuse. For proofing devices, D50
+ is almost a must, but it adds too yellow for a unadapted used.
+ D50 requires a dim or dark room to give the best results. If you
+ don't know which temperature your monitor has, select D65 or
+ D93. On our fist approach both these will give reasonable
+ results.
+
+
+
+ If your monitor has any other white point, you can select "User
+ defined", the last option. You can then select your particular
+ white point as a temperature in Kelvin degree.
+
+ Don't use CIE illuminants. They are intended for  workspace 
+ construction, and will be discussed latter.
+
+ Next adjust is primaries set. For the primaries, select the
+ default ITU/R BT.709 if you are profiling a CRT monitor. There
+ are primaries for Samsung TFT and LCD, but these devices are not
+ fully supported by the profiler. The reason to not support them
+ is the angular dependence, which makes them unusable for color
+ management tasks.
+
+ Other primaries are for building workspaces. If you don't know
+ the primaries, don't worry. Use the default ITU/R BT.709. There
+ are 6 or 7 CRT tube manufacturers in the world, and all them
+ does use this set.
+
+ Now you can fill the info about your monitor. Although this is
+ not strictly required, it could prevent a lot of pain when you
+ have more than a couple of profiles.  For filling the info field, 
+ select the "profile identification" tab, and be creative on your 
+ comments!
+
+ Now we are ready to generate our profile. We must specify the
+ output filename, so, select the "Main" tab, and press the "..."
+ button on right side of the "output profile file" edit.
+
+ Select "profiles" directory. This is where other tools will look
+ for monitor profile. There are a couple of profiles there, leave
+ them alone. For the name, we could use "CoarseMonitor.icm" So,
+ type in the name and then proceed to generate the profile by
+ pressing the "GO!" button. If all is ok, the status console will
+ show "Profile DONE!"
+
+ Let's now check how well is working our profile by eye. For
+ that, we need another tool. So, close the monitor profile and
+ start the measurement tool by typing
+
+                       ./qtMeasurementTool
+
+ This utility has many usage. One would be to "proof" a color
+ transform. Let's first configure the measurement tool. Select
+ the "Options" tab. Adjust the default settings as following:
+
+          On "Pick template"   --> "Empty Picker"
+
+          On "Input profile"   --> "Tutorial Workspace"
+
+ On "Monitor profile" should appear your profile. If you filled
+ the info fields, here will be your description. If you didn't
+ enter description it will be"(unknown) - Little cms construction
+ set", which is the default string. Now you know why to fill
+ information fields!
+
+
+
+ We are going to check your profile with a highly tweaked sample
+ Image This is a counterexample on what a good workspace should
+ be. NEVER use this profile for practical purposes!
+
+ Ok, let's see how a Image looks in this tweaked colorspace.
+ Select the "Image" tab, and press "Load Image" button.
+
+ Select "pics" directory. There is a "party_4s.png" Load it. You
+ will see the raw, non color managed picture. Since the encoding
+ space of this Image is quite different of any monitor, the
+ images looks "flat" and "washed out" Now press the "Proof"
+ button. The Image is shown using color management. Color
+ changes should be noticeable, despite gamma of image is
+ near gamma of monitor.
+
+
+ Building scanner profile
+ ========================
+
+ We have now our monitor calibrated, and will try to generate a
+ scanner profile. For this, we will also need the measurement
+ tool.
+
+ Scanner profiles are built by using a thing known as "IT8
+ target". IT8 targets are just a photo with a set of color
+ patches. There are known colorimetric measurements for each
+ of these patches. There is also a standard way to specify 
+ these measurements, the IT8/CGATS format.
+
+
+ IT8/CGATS is a way to encode data that is both, human and
+ machine readable. You can open any of these IT8 reference sheets
+ with your text editor to see it. You can even modify the
+ contents. Since it is a standard, most color management systems
+ does accept it. For these reasons, seems a good way to store
+ measurement data.
+
+
+ A IT8 file does contain measurements for a set of color patches.
+ The measurement of each patch can be the device colorant values
+ (the RGB or CMYK in 0..255 range) the tristimulous values (XYZ
+ or Lab) and some statistic data.
+
+
+A IT8 sheet looks like:
+
+-----------------------------------------------------------
+IT8.7/2
+ORIGINATOR "Wolf Faust"
+DESCRIPTOR "L* a* b* Batch average data (light D50, viewing angle 2)"
+MANUFACTURER "Wolf Faust - http://www.coloraid.de"
+CREATED "January 07, 2002"
+PROD_DATE "2001:12"
+SERIAL "DIN A4  R012020"
+MATERIAL "Kodak Professional Digital 3 - Non-Glossy"
+NUMBER_OF_FIELDS 9
+BEGIN_DATA_FORMAT
+SAMPLE_ID   XYZ_X   XYZ_Y   XYZ_Z          LAB_L   LAB_A   LAB_B          LAB_C   LAB_H
+END_DATA_FORMAT
+NUMBER_OF_SETS 288
+BEGIN_DATA
+A1           3.25    2.71    1.94          18.86   11.18    2.87          11.55   14.41
+A2           4.07    2.73    1.60          18.91   23.59    6.54          24.49   15.48
+A3           5.79    3.42    1.75          21.67   33.38    9.60          34.73   16.05
+A4           4.28    2.66    1.46          18.62   27.73    7.59          28.75   15.32
+A5          11.97   10.30    7.42          38.38   15.04    4.16          15.61   15.47
+.... etc ...
+------------------------------------------------------------
+
+
+ The target manufacturer does provide a IT8 file containing these
+ measurements for the target. So, the target is giving to us a set
+ of KNOWN colors. We must then, tell to the profiler which RGB
+ values our scanner returns for each of these patches.
+
+ Measurement tool can generate sheets with the RGB values of each
+ patch grabbing them from a Image. In order to generate a
+ profile, we need the RGB and Lab values for each patch.
+
+ let's outline the scanner profiling procedure:
+
+      * First (and very important!) adjust controls of scanner to
+        obtain a proper exchange space.
+
+      * Scan by means of you scanning software a Image of your
+        target.
+
+      * By using measurement tool, grab the RGB values of each
+        patch. Store them in a IT8 file
+
+      * The scanner profile then will compare the RGB
+        obtained by the scanner, with the known colorimetric
+        measurement of target, as stored in vendor's reference
+        sheet.
+
+      * The scanner profiler will create a model for the
+        translation RGB -> Lab or RGB -> XYZ and will store it in
+        a profile.
+
+
+ The math behind this model is not trivial. There is a big
+ quantity of factors taken into account. Don't worry for the
+ apparent missing of data. Yes, there are colors not present in
+ target, however the scanner profiler is capable to "guess" or
+ extrapolate them, and should produce a profile handling all
+ gradients between these colors in a smooth and pleasant way.
+
+ Lets' discuss each step in detail:
+
+      * Step 1: Adjust controls of scanner.
+
+ You will need 24 bits per pixel at least. Gray profiles
+ are NOT supported in this revision.
+
+ There is a big amount of controversy about how to set the
+ scanner controls. Some people does advice to use linear gamma
+ (gamma=1.0), which is a wrong advice unless you are working with
+ 16 bits per sample (48 bits per pixel)
+
+ If you are going to scan in 8 bits per sample (24 or 32 bits)
+ your best choice is a gamma between 2.2 and 3.0
+
+ Gamma 2.2 has the additional benefit of being close to sRGB, and
+ this means the uncorrected Image will "look nice" on average
+ monitors. It is also near to perceptual gamma.
+
+ Gamma 2.4 has the additional benefit of being closest to
+ perceptual space, and this is a very good reason to use this
+ value.
+
+ Less that 2.2 (and of course the infamous 1.0) can generate huge
+ loss of detail in shadows, only to give a slight bettering of
+ highlights. Don't use this unless your are using 16 bits per
+ sample, and even in such case, don't do it unless you know what
+ are you doing!
+
+ More that 2.4 (up to 3.0) drops too much highlight to be safe,
+ despite you will still see the Image quite correct.
+
+ More on controls: Turn off all color management, color enhancing
+ and tweaking on scanner driver. Set brightness contrast and hue
+ (if available) to default values. It is supposed this will be your 
+ working scanning mode, so set all to reasonable defaults.
+
+ IMPORTANT: The profile will only be valid with those settings!
+
+
+      * Step 2: Scan the IT8 target.
+
+ Store it in PNG, TIFF, BMP on depending of supported formats of
+ your platform. DON'T use JPEG! Its lousy nature makes it
+ unsuitable for this purpose. You could use JPEG on final images,
+ but not in profiling process.
+
+      * Step 3: Extract the RGB values for each patch.
+
+ Without help, this could be a huge task. There are plenty of
+ patches and taking each sample by hand would be tedious. With
+ the help of measurement tool, this is a easy task.
+
+ Start the measurement tool by typing
+
+        ./qtMeasurementTool
+
+ Press "Load Image" button. Select the Image of target you scanned 
+ in step 2. I will use the scandmo.png image sited on "pics" 
+ directory as sample. This is a Kodak film target, scanned with a 
+ scanner that adds a huge violet cast. Don't worry, the profile 
+ will turn this one to a nice looking Image.
+
+ Since this is a Kodak target that has some additional patches
+ (those on I,J,K,L - 20,21,22) we can choose a picker template
+ according the nature of target. Press "Options" tab, and in the
+ combo labeled "Pick template" select:
+
+               "IT8.7 19+3 (Kodak) column picker"
+
+ Press "Image" tab.
+
+ You will see a lot of green rectangles. Using the mouse you 
+ must place the pick template over the patches. Use left button to
+ move whole template and right button to resize it. Since this
+ Image is not perfectly horizontal, you may want to "unshear" the 
+ layout: You can do it by pressing "Ctrl" key while dragging with 
+ left mouse button.
+
+ The "hot area" is marked with green rectangle. Assure all green
+ rectangles are inside patches. Failure to do so could result in
+ wrong profile! You can also adjust the relative size of "hot
+ areas" by setting the % in "safe frame" on "Options" tab.
+ Normally there is no need to touch anything.
+
+ Once you were happy with the location of patch grabber zones,
+ press the "Pick" button, placed on left side of window.
+
+ The measurement tool will build a IT8 sheet containing RGB
+ values of each of your patches. Now you can save this sheet by
+ pressing the "Save IT8 sheet" button. For our tutorial I will
+ name this measurement "scandmo.it8" and will place it on
+ "pics" directory. (There is already one scandmo.it8, that you
+ can overwrite)
+
+ Our work with measurement tool is now done. We have right now
+ the reference sheet of target, which is given by Kodak, and the
+ RGB values obtained by our scanner. Now we can compare these
+ files to create a profile.
+
+  * Step 4: Close the measurement tool, and launch the 
+    scanner profiler by typing:
+
+         ./qtScannerProfiler
+
+ From here is quite easy. First we must select the target
+ reference. In this tutorial, we have used a film target of
+ reference 1996-08, so, press the "Select target & vendor type"
+ button and select "targets", "Kodak" folder, then "Emissive"
+ folder (since it is film). Press Ok. The left combo will be
+ filled with all target references. Then select 1996-08 (is on
+ last part of list)
+
+ Once selected, you need to specify your measurement. Press the
+ "..." button placed on right side of "Measurement" edit. Select
+ "picts" folder and "scandmo.it8" file.
+
+ Now we have to specify the profile filename. Press the "..." button
+ placed on right of "output profile file", select the "profiles"
+ folder. The name could be "scandmo.icm"
+
+ You can now, as we did in the monitor profile, fill some info to
+ help us to locate the profile latter. Press the "profile
+ identification" tab, and fill in the fields.
+
+ You are ready to generate the profile. Press "GO!" button to
+ launch the profiler process. After a few seconds, you will have
+ a small profile for your scanner. In the demo, the obtained dE is
+ about 1.24, which is reasonably. Now,  we can better a lot the 
+ error level, but this will take more time to generate the profile.
+ Press the "Parameters and tweaking" tab, and select on
+ "Resolution" group "33 points". Then check the checkbox labeled
+ "local convergence analysis". Press the "GO!" button. Now the
+ generation will take a while, but the obtained profile has
+ bettered a lot... maximum dE is about 0.7 and the peak value is
+ as small as 3!!!
+
+    * Step 5: Let's check how this profile does affect the 
+     original Image.
+
+ Start the measurement tool, select "options" tab and make sure
+ picker template is set to "empty picker", "input profile" should
+ be set to this newly created scanner profile, and "monitor
+ profile" should be the profile we have made for monitor. Press
+ "Image" tab, press "Load Image" button, load the scanned Image
+ (scandmo.png in our sample) and then press the "proof" button to
+ see the results. The girl's Image is dark, this is normal.
+ However, rest of patches are hugely modified, the grayscale
+ should appear smooth and without any cast, as well as all violet
+ tint should disappear.
+
+
+
+  Making workspace profiles
+  =========================
+
+ Some applications, for example Adobe Photoshop, does use what is
+ called "Workspaces". These are RGB color spaces, which are not
+ intended to be representing any device, nor storage but a
+ "working space". That is, Image processing operations are
+ performed in such space, and also can be used as a way to 
+ interchange image data between applications.
+ 
+
+ The monitor profiler, despite its name, can be effectively used
+ to build such profiles. 
+
+ Just select the gamma, primaries set and white point. Press GO!
+ and the workspace profile will be generated.
+
+
+ Building accurate monitor profiles by hardware measurement devices
+ ===================================================================
+
+ To measure your monitor, you need to fill a IT8 sheet,
+ containing XYZ measurements for several RGB combinations. A
+ sample sheet of this kind can be found in "pics" directory. The
+ file is called "sRGB.IT8" and it measures an ideal sRGB monitor.
+
+ You need to change the XYZ values by those read by your
+ measurement device. Don't put any Lab value, just RGB and XYZ.
+
+ Please keep the RGB values the sRGB.IT8 has. Optionally, you can 
+ use more patches to assure consistent color reproduction, but make 
+ sure to include at least that ones.
+
+ Note the big amount of gray patches needed. You can also add as
+ many as you wish, on more gray patches, better linearization
+ curves control. You must specify at least 16 gray patches.
+
+ Now we will try this procedure, no matter you have not any
+ hardware device. As we will see below, this method could be used
+ to dissect profiles and do some tweaking.
+
+ We are going to generate a sRGB profile, by using the sRGB.IT8
+ measurement sheet. For that, we will use monitor profiler, so
+ start it by typing:
+
+                       ./qtMonitorProfiler
+
+ Now, we are going to use it in advanced mode. Select the radio
+ button labeled:
+
+    "I want to build accurate profile from measurement sheet"
+
+
+ Then press the "..." button located at right of edit. Select in
+ "pics" directory the file called "sRGB.IT8". In the "Output
+ profile file", select a new profile in "profiles" directory.
+ Call it "my_sRGB.icm".
+
+ I will use this sample to present another utility, the profile
+ checker. Since the profile checker can understand advanced tags,
+ we want to include all information in the profile, so select the
+ "parameters and tweaking" tab, and make sure to select "Verbose,
+ store anything" in the "profile verbosity level" group.
+
+ Now, fill the info fields if you want (again, I recommend to do
+ that) and press the GO button. A new "my_srgb.icm" profile will
+ be created.
+
+ We will check now how accurate is this profile. Start the
+ profile checker program by typing
+
+                       ./qtProfileChecker
+
+ The profile checker is a tool for inspecting some of profile
+ internals. In our case, we want to check the accurancy. For
+ selecting the profile, press the ".." button on the right side
+ of the "profile" edit. Select "pics" directory, and choose
+ "my_srgb.icm" profile. Press "GO!" button.
+
+ On "dE report tab" you will see the error statistics. (unless
+ you forgot to set the profile verbosity to "store anything") 
+ Our sample scored 0.18, which is a incredibly low value, not 
+ to be even reached in real world cases, but this could give 
+ an idea of the precision the profiler can give with only a 
+ very few measurements.
+
+
+ The profile checker has also the capability of draw chromaticity
+ diagram, to show primaries, color displacements, to guess the
+ gamma of the profile and many other functionality. Feel free to
+ experiment, the profile checker will never write on your
+ profile, so you can play with it in a safe way.
+
+ Additional utilities
+ ====================
+
+ Finally, there is a additional command-line utility that can be
+ used in conjunction of monitor profiler. It is called icc2it8
+ and is placed on ICCtoIT8 directory. This utility is capable of
+ generate IT8 measurements from profiles, so, it can be used as a
+ "profile tweacker". You can generate a IT8 sheet from a given
+ profile, then edit manually XYZ values and then build a new
+ profile using the modified sheet. This right now is limited to
+ matrix-shaper profiles, but even with this small limitation, 
+ it can become a valuable tool. 
+
+ Other useful tools are included in littlecms CMM package. 
+ You have TIFFICC that can be used to apply profile transforms
+ to TIFF files, and JPEGICC that does same on JPEG. Also, 
+ you have ICCTRANS, that can be used to check profiles
+ by numbers. See the littlecms documentation for more details.
+
+
+ That's all for now. There are still many options that this small
+ introduction don't cover, like the CIECAM97s appearance model,
+ and a more advanced usage. However, you have now a basic
+ knowledge of how this stuff works. There is a mailing list on
+ littlecms for asking and sharing your tricks on how get the best
+ from littlecms profilers. Feel free to ask.
+
+      http://lists.sourceforge.net/lists/listinfo/lcms-user
+
+
+  Enjoy!
