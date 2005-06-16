@@ -93,3 +93,6 @@ clean:
 
 install:
 	cp libqtlcmswidgets.a $(LIBDIR)
+
+uninstall:
+	rm -f $(LIBDIR)/libqtlcmswidgets.a

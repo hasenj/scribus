@@ -49,7 +49,7 @@ endif
 
 MAKEARGS=BASEDIR=$(BASEDIR) LIBDIR=$(LIBDIR) BINDIR=$(BINDIR) INCDIR=$(INCDIR) QTDIR=$(QTDIR) QT_BINDIR=$(QT_BINDIR) UIC=$(UIC) MOC=$(MOC) QT_INCDIR=$(QT_INCDIR) QT_LIBDIR=$(QT_LIBDIR) EXESUFFIX=$(EXESUFFIX)
 
-all install clean test::
+all install uninstall clean test::
 	( cd liblprof ; $(MAKE) $(MAKEARGS) $@ )
 	( cd libqtlcmswidgets ; $(MAKE) $(MAKEARGS) $@ )
 	( cd ICCtoIT8 ; $(MAKE) $(MAKEARGS) $@ )
