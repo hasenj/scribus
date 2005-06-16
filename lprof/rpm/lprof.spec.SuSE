@@ -1,0 +1,119 @@
+Name:           lprof
+Version:        1.09
+Release:        0.suse90
+Epoch:          0
+Summary:        Color Profilers
+
+Group:          Applications/Productivity
+License:        GPL
+URL:            http://www.littlecms.com/
+Source0:        http://www.littlecms.com/lprof-1.09.tar.gz
+Source1:	qtmeasure.png
+Source2:	qtmeasurementtool.desktop
+Source3:	qtmonitorprofiler.desktop
+Source4:	qtmonitor.png
+Source5:	qtscannerprofiler.desktop
+Source6:	qtscanner.png
+Source7:	qtprofilechecker.desktop
+Source8:	qtchecker.png
+
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Patch0: 	lprof-1.09_mrr_patch
+
+BuildRequires:  liblcms-devel => 0:1.09-0
+BuildRequires:  qt3-devel 
+Requires:	liblcms => 0:1.09-0
+
+Provides:       lprof = %{epoch}:%{version}-%{release}
+
+
+%description
+Monitor and Scanner Profile Creation tools from Littlecms.com
+
+
+
+%prep
+rm -rf ${RPM_BUILD_ROOT}
+
+
+%setup -q
+
+%patch0
+
+
+
+%build
+
+make  
+
+
+%install
+
+
+
+rm -rf ${RPM_BUILD_ROOT}
+#make install DESTDIR=${RPM_BUILD_ROOT}
+cd $RPM_BUILD_DIR/%{name}-%{version}
+mkdir -p ${RPM_BUILD_ROOT}%{_bindir}/
+mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}
+cp -f ./icc2it8 ${RPM_BUILD_ROOT}%{_bindir}/
+cp -f ./qtmeasurementtool ${RPM_BUILD_ROOT}%{_bindir}/
+cp -f ./qtmonitorprofiler ${RPM_BUILD_ROOT}%{_bindir}/
+cp -f ./qtprofilechecker  ${RPM_BUILD_ROOT}%{_bindir}/
+cp -f ./qtscannerprofiler ${RPM_BUILD_ROOT}%{_bindir}/
+cp -fr  $RPM_BUILD_DIR/%{name}-%{version}/pics ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}
+cp -fr  $RPM_BUILD_DIR/%{name}-%{version}/profiles ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}
+cp -fr  $RPM_BUILD_DIR/%{name}-%{version}/targets ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}
+cp -fr  $RPM_BUILD_DIR/%{name}-%{version}/template ${RPM_BUILD_ROOT}%{_datadir}/%{name}-%{version}
+
+
+install -p -D -m0644  %{SOURCE1} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtmeasure.png
+desktop-file-install --vendor suse                   \
+  --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
+  --add-category X-Fedora                              \
+  %{SOURCE2}
+
+install -p -D -m0644 %{SOURCE4} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtmonitor.png
+desktop-file-install --vendor suse                   \
+  --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
+  --add-category X-Fedora                              \
+  %{SOURCE3}
+
+install -p -D -m0644 %{SOURCE6} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtscanner.png
+desktop-file-install --vendor suse                   \
+  --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
+  --add-category X-Fedora                              \
+  %{SOURCE5}
+
+
+install -p -D -m0644 %{SOURCE8} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtchecker.png
+desktop-file-install --vendor suse                   \
+  --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
+  --add-category X-Fedora                              \
+  %{SOURCE7}
+
+
+%clean
+rm -rf ${RPM_BUILD_ROOT}
+
+
+
+
+%files
+%defattr(-,root,root,-)
+%doc README COPYING manual.txt
+%{_bindir}/*
+%{_datadir}/lprof-1.09/*
+%{_datadir}/applications/suse-qt*.desktop
+%{_datadir}/pixmaps/qt*.png
+
+
+
+
+
+%changelog
+
+* Sun Apr 4 2004 -scribusdocs at atlantictechsolutions.com - 0:1.09-0.suse90
+- first RPM build for suse
+- mod patches for RPM_OPT_FLAGS
+- make .desktop files
