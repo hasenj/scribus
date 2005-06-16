@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-CFLAGS  = -g -O4 -I../include -fomit-frame-pointer -Wall 
+CFLAGS  = -g -O4 -I../include -I../../lcms-1.09/include -fomit-frame-pointer -Wall 
 BASEDIR = $(DESTDIR)/usr
 BINDIR  = $(BASEDIR)/bin
 LIBDIR  = $(BASEDIR)/lib
