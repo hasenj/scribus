@@ -77,7 +77,7 @@
 
   if something goes wrong, try the gcc compiler by using
 
-    make CC=gcc all
+    make CC=gcc
 
   You may also need to tell lprof where your Qt headers, binaries, etc
   are installed. If they're all under one directory, use:
@@ -92,7 +92,18 @@
 
   (the above is correct for Debian Sarge, with libqt3-mt-dev installed)
 
-  All binaries will be placed in bin/ when the compile finishes.
+  Note that you can use environment variables instead of make arguments too,
+  so if your QTDIR is correctly set in your environment you don't need to do
+  anything to get a working build.
+
+  When compilation has completed successfully, you can run:
+
+    make install
+
+  to actually install the binaries. You can use the BASEDIR variable
+  to tell lprof where to install everything under, or you can use BINDIR,
+  INCDIR, and LIBDIR for more detailed control. By default, everything
+  is installed to the bin, lib, and include subdirs of /usr/local .
 
   KDE
   ===
