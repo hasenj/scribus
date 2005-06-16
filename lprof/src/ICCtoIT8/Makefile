@@ -21,6 +21,7 @@ EXESUFFIX=
 endif
 
 CFLAGS = -g -O4 -fomit-frame-pointer -Wall -I../liblprof -L../liblprof
+PROGRAM=icc2it8
 
 all:	icc2it8
 
