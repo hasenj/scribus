@@ -1,7 +1,15 @@
-Name:           lprof
-Version:        1.09
-Release:        0.suse90
-Epoch:          0
+%define _name  lprof
+%define _version 1.09
+%define _rel  1
+%define _suse  %(if [ -f /etc/SuSE-release ]; then echo 1; else echo 0; fi)
+%define _suse_version %(grep VERSION /etc/SuSE-release|cut -f3 -d" ")
+%define _suse_vernum  %(echo "%_suse_version"|tr -d '.')
+%define _release   %{_rel}.suse%{_suse_vernum}
+%define _has_distro  1
+%define _distribution SuSE Linux %_suse_version
+Name:     %{_name}
+Version:  %{_version}
+Release:  %{_release}
 Summary:        Color Profilers
 
 Group:          Applications/Productivity
@@ -18,11 +26,11 @@ Source7:	qtprofilechecker.desktop
 Source8:	qtchecker.png
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Patch0: 	lprof-1.09_mrr_patch
+#Patch0: 	lprof-1.09_mrr_patch
 
-BuildRequires:  liblcms-devel => 0:1.09-0
+BuildRequires:  liblcms-devel => 1.09
 BuildRequires:  qt3-devel 
-Requires:	liblcms => 0:1.09-0
+Requires:	liblcms => 1.09
 
 Provides:       lprof = %{epoch}:%{version}-%{release}
 
@@ -38,7 +46,7 @@ rm -rf ${RPM_BUILD_ROOT}
 
 %setup -q
 
-%patch0
+#%patch0
 
 
 
@@ -70,26 +78,26 @@ cp -fr  $RPM_BUILD_DIR/%{name}-%{version}/template ${RPM_BUILD_ROOT}%{_datadir}/
 install -p -D -m0644  %{SOURCE1} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtmeasure.png
 desktop-file-install --vendor suse                   \
   --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
-  --add-category X-Fedora                              \
+  --add-category X-Suse                             \
   %{SOURCE2}
 
 install -p -D -m0644 %{SOURCE4} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtmonitor.png
 desktop-file-install --vendor suse                   \
   --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
-  --add-category X-Fedora                              \
+  --add-category X-Suse                              \
   %{SOURCE3}
 
 install -p -D -m0644 %{SOURCE6} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtscanner.png
 desktop-file-install --vendor suse                   \
   --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
-  --add-category X-Fedora                              \
+  --add-category X-suse                              \
   %{SOURCE5}
 
 
 install -p -D -m0644 %{SOURCE8} ${RPM_BUILD_ROOT}%{_datadir}/pixmaps/qtchecker.png
 desktop-file-install --vendor suse                   \
   --dir ${RPM_BUILD_ROOT}%{_datadir}/applications      \
-  --add-category X-Fedora                              \
+  --add-category X-suse                              \
   %{SOURCE7}
 
 
