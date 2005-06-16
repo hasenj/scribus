@@ -1,9 +1,29 @@
 #
 # The measurement tool Makefile
 
-# Assure these are defined
-UIC = $(QTDIR)/bin/uic
-MOC = $(QTDIR)/bin/moc
+ifndef QTDIR
+QTDIR=/usr
+endif
+
+ifndef QT_BINDIR
+QT_BINDIR=$(QTDIR)/bin
+endif
+
+ifndef MOC
+MOC=$(QT_BINDIR)/moc
+endif
+
+ifndef UIC
+UIC=$(QT_BINDIR)/uic
+endif
+
+ifndef QT_INCDIR
+QT_INCDIR=$(QTDIR)/include
+endif
+
+ifndef QT_LIBDIR
+QT_LIBDIR=$(QTDIR)/lib
+endif
 
 ifdef USE_KDE
 KDEINCLUDE=-I$(KDEDIR)/include
@@ -14,12 +34,10 @@ PROGRAM=kmeasurementtool
 endif
 
 # some settings
-INCLUDES = -I../liblprof/ -I../../include -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt $(KDEINCLUDE)
-LIBS     = -L$(QTDIR)/lib -L../liblprof -L../../src $(KDELIBDIR) -L../../../lcms-1.09/src
+INCLUDES = -I../liblprof/ -I. -I$(QT_INCDIR) $(KDEINCLUDE)
+LIBS     = -L$(QT_LIBDIR) -L../liblprof $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -llprof -llcms -lm
-
-BINDIR  = ../../
 
 all: libqtlcmswidgets.a
 

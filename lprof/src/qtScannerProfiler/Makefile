@@ -2,10 +2,30 @@
 # The scanner profiler Makefile
 #
 
+ifndef QTDIR
+QTDIR=/usr
+endif
 
-# Assure these are defined
-UIC = $(QTDIR)/bin/uic
-MOC = $(QTDIR)/bin/moc
+ifndef QT_BINDIR
+QT_BINDIR=$(QTDIR)/bin
+endif
+
+ifndef MOC
+MOC=$(QT_BINDIR)/moc
+endif
+
+ifndef UIC
+UIC=$(QT_BINDIR)/uic
+endif
+
+ifndef QT_INCDIR
+QT_INCDIR=$(QTDIR)/include
+endif
+
+ifndef QT_LIBDIR
+QT_LIBDIR=$(QTDIR)/lib
+endif
+
 PROGRAM=qtscannerprofiler
 
 ifdef USE_KDE
@@ -18,8 +38,8 @@ endif
 
 
 # some settings
-INCLUDES = -I../../bininclude -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt  $(KDEINCLUDE)
-LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../binsrc $(KDELIBDIR) -L../../../lcms-1.09/src
+INCLUDES = -I../liblprof -I../libqtlcmswidgets -I$(QT_INCDIR) -I. $(KDEINCLUDE)
+LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
 BINDIR   = ../../bin
