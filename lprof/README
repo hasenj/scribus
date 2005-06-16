@@ -100,10 +100,10 @@
 
     make install
 
-  to actually install the binaries. You can use the BASEDIR variable
-  to tell lprof where to install everything under, or you can use BINDIR,
-  INCDIR, and LIBDIR for more detailed control. By default, everything
-  is installed to the bin, lib, and include subdirs of /usr/local .
+  to actually install the binaries. You can use the BASEDIR variable to tell
+  lprof where to install everything under, or you can use BINDIR, INCDIR,
+  DOCDIR and LIBDIR for more detailed control. By default, everything is
+  installed to the bin, lib, share/doc, and include subdirs of /usr/local .
 
   KDE
   ===
