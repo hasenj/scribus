@@ -1,0 +1,16 @@
+TEMPLATE
+ORIGINATOR "Little cms standard pick templates"
+DESCRIPTOR "Empty picker"
+CREATED  "AUG, 2001"
+MANUFACTURER " Little CMS"
+PROD_DATE "2001:00 "
+NUMBER_OF_FIELDS 5
+#
+# Coordinates are given in 0..65535 domain, measurement tool
+# does resize them to suitable values depending on resolution
+BEGIN_DATA_FORMAT
+SAMPLE_ID POS_X POS_Y SIZE_X SIZE_Y
+END_DATA_FORMAT
+NUMBER_OF_SETS 0
+BEGIN_DATA
+END_DATA
