@@ -18,12 +18,12 @@ endif
 
 
 # some settings
-INCLUDES = -I../../include -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt  $(KDEINCLUDE)
-LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../src $(KDELIBDIR) -L../../../lcms-1.09/src
+INCLUDES = -I../../bininclude -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt  $(KDEINCLUDE)
+LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../binsrc $(KDELIBDIR) -L../../../lcms-1.09/src
 
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
-BINDIR   = ../../
+BINDIR   = ../../bin
 OBJECTS=main.o qtdrawcurve.o qtcietonge.o qtprofilecheckerdialog.o qtprofilecheckerdialogbase.o moc_qtprofilecheckerdialog.o moc_qtprofilecheckerdialogbase.o
 
 # Targets

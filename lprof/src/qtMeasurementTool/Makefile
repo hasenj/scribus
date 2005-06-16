@@ -17,12 +17,12 @@ PROGRAM=kmeasurementtool
 endif
 
 # some settings
-INCLUDES = -I../../include -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt $(KDEINCLUDE)
-LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../src $(KDELIBDIR) -L../../../lcms-1.09/src
+INCLUDES = -I../../bininclude -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt $(KDEINCLUDE)
+LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../binsrc $(KDELIBDIR) -L../../../lcms-1.09/src
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -llcms -lm -lqtlcmswidgets -llprof 
 
-BINDIR   = ../../
+BINDIR   = ../../bin
 OBJECTS=main.o qtmeasurementtooldialog.o qtmeasurementtooldialogbase.o moc_qtmeasurementtooldialog.o moc_qtmeasurementtooldialogbase.o
 
 # Targets
