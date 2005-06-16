@@ -4,7 +4,7 @@ init: FORCE
 	@$(MAKE) all
 
 ifndef BASEDIR
-BASEDIR = $(DESTDIR)/usr/local
+BASEDIR = /usr/local
 endif
 
 ifndef DESTDIR
@@ -62,10 +62,10 @@ clean:
 test:
 
 install:
-	mkdir -p $(DOCDIR)
-	cp manual.txt $(DOCDIR)
+	mkdir -p $(DESTDIR)$(DOCDIR)
+	cp manual.txt $(DESTDIR)$(DOCDIR)
 
 uninstall:
-	rm -f $(DOCDIR)/manual.txt
+	rm -f $(DESTDIR)$(DOCDIR)/manual.txt
 
 FORCE:

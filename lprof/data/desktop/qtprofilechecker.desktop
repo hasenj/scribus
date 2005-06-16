@@ -1,0 +1,15 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Profile Checking Tool
+GenericName=Profile Checking Tool
+Exec=qtprofilechecker
+MimeType=
+Terminal=false
+Icon=qtchecker.png
+Type=Application
+X-StandardInstall=false
+Categories=Graphics;X-Misc;
+StartupWMClass=qtprofilechecker
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+# vi: encoding=utf-8

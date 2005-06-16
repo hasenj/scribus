@@ -1,0 +1,15 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Profile Measuring Tool
+GenericName=Profile Measuring Tool
+Exec=qtmeasurementtool
+MimeType=
+Terminal=false
+Icon=qtmeasure.png
+Type=Application
+X-StandardInstall=false
+Categories=Graphics;X-Misc;
+StartupWMClass=qtmeasurementtool
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+# vi: encoding=utf-8

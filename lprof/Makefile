@@ -4,7 +4,7 @@ init: FORCE
 	@$(MAKE) all
 
 ifndef BASEDIR
-BASEDIR = $(DESTDIR)/usr/local
+BASEDIR = /usr/local
 endif
 
 ifndef DESTDIR

@@ -32,7 +32,7 @@ all:	icc2it8
 icc2it8: icc2it8.o getopt.o
 	$(CC) $(CFLAGS) icc2it8.o getopt.o -o $@ -lm -llprof -llcms
 
-install:
+install: icc2it8
 	cp $(PROGRAM)$(EXESUFFIX) $(DESTDIR)$(BINDIR)
 
 icc2it8.o: icc2it8.c

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Scanner Profiler
+GenericName=Scanner Profiler
+Exec=qtscannerprofiler
+MimeType=
+Terminal=false
+Icon=scanner.png
+Type=Application
+X-StandardInstall=false
+Categories=Graphics;X-Misc;
+StartupWMClass=qtscannerprofiler
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+# vi: encoding=utf-8

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Monitor Profiler
+GenericName=Monitor Profiler
+Exec=qtmonitorprofiler
+MimeType=
+Terminal=false
+Icon=monitor.png
+Type=Application
+X-StandardInstall=false
+Categories=Graphics;X-Misc;
+StartupWMClass=qtmonitorprofiler
+X-KDE-SubstituteUID=false
+X-KDE-Username=
+# vi: encoding=utf-8
