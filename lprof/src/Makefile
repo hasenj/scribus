@@ -19,6 +19,10 @@ ifndef INCDIR
 INCDIR  = $(BASEDIR)/include
 endif
 
+ifndef DOCDIR
+DOCDIR  = $(BASEDIR)/share/doc/lprof
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
