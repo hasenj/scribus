@@ -15,18 +15,18 @@ SRCS = cmshull.c cmslm.c cmslnr.c cmsmatn.c cmsmkmsh.c cmsmntr.c cmsoutl.c \
 
 OBJS = $(SRCS:.c=.o)
 
-all:	liblprof.a 
+all:	liblprof.a
 
 liblprof.a: $(OBJS)
 	ar -cru liblprof.a $(OBJS)
 	ranlib liblprof.a
 
 install: liblprof.a  
-	mkdir -p $(BINDIR) $(LIBDIR) $(INCDIR)	
+	mkdir -p $(BINDIR) $(LIBDIR) $(INCDIR)
 	cp -a liblprof.a $(LIBDIR)
 	cp ../include/lcmsprf.h $(INCDIR)
 	chmod 644 $(INCDIR)/lcmsprf.h
-	
+
 test:
 	# we are doing nothing for the test target
 
