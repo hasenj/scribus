@@ -18,12 +18,12 @@ endif
 
 
 # some settings
-INCLUDES = -I../../include -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt  $(KDEINCLUDE)
-LIBS     = -L$(QTDIR)/lib -L../../src $(KDELIBDIR) -L../../../lcms-1.09/src
+INCLUDES = -I../../include -I../liblprof -I../libqtlcmswidgets -I../../../lcms-1.09/include -I$(QTDIR)/include -I. -I.. -I$(QTDIR)/include/qt  $(KDEINCLUDE)
+LIBS     = -L$(QTDIR)/lib -L../liblprof -L../libqtlcmswidgets -L../../src $(KDELIBDIR) -L../../../lcms-1.09/src
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
-POSTLIB  = $(KDEPOSTLIB) -lqt-mt -llprof -llcms -lm
+POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
 BINDIR   = ../../
-OBJECTS=main.o qtlcmswidgets.o qtscannerprofilerdialog.o qtscannerprofilerdialogbase.o moc_qtscannerprofilerdialog.o moc_qtscannerprofilerdialogbase.o moc_qtlcmswidgets.o
+OBJECTS=main.o qtscannerprofilerdialog.o qtscannerprofilerdialogbase.o moc_qtscannerprofilerdialog.o moc_qtscannerprofilerdialogbase.o
 
 # Targets
 all: $(PROGRAM) install
@@ -44,13 +44,6 @@ moc_%.cpp: %.h
 
 %.o: %.cpp
 	$(CC) $(INCLUDES) $(CFLAGS) -c $< -o $@
-
-# special dependency
-moc_qtlcmswidgets.cpp: ../qtlcmswidgets.h
-	$(MOC) $< -o $@
-
-qtlcmswidgets.o: ../qtlcmswidgets.cpp
-	$(CC) -c $(INCLUDES) $(CFLAGS) ../qtlcmswidgets.cpp -o qtlcmswidgets.o
 
 main.cpp: qtscannerprofilerdialog.h
 

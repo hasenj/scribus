@@ -5,6 +5,7 @@ init: FORCE
 
 all install clean test::
 	( cd liblprof ; $(MAKE) $@ )
+	( cd libqtlcmswidgets ; $(MAKE) $@ )
 	( cd ICCtoIT8 ; $(MAKE) $@ )
 	( cd qtMeasurementTool; $(MAKE) $@ )
 	( cd qtMonitorProfiler; $(MAKE) $@ )
