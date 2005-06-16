@@ -2,6 +2,22 @@
 # The scanner profiler Makefile
 #
 
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
+BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
+LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
+INCDIR  = $(BASEDIR)/include
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
@@ -26,6 +42,10 @@ ifndef QT_LIBDIR
 QT_LIBDIR=$(QTDIR)/lib
 endif
 
+ifndef EXESUFFIX
+EXESUFFIX=
+endif
+
 PROGRAM=qtscannerprofiler
 
 ifdef USE_KDE
@@ -42,11 +62,10 @@ INCLUDES = -I../liblprof -I../libqtlcmswidgets -I$(QT_INCDIR) -I. $(KDEINCLUDE)
 LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
-BINDIR   = ../../bin
 OBJECTS=main.o qtscannerprofilerdialog.o qtscannerprofilerdialogbase.o moc_qtscannerprofilerdialog.o moc_qtscannerprofilerdialogbase.o
 
 # Targets
-all: $(PROGRAM) install
+all: $(PROGRAM)
 
 $(PROGRAM):  $(OBJECTS)
 	@echo "Building scanner profiler ..."
@@ -75,7 +94,11 @@ qtscannerprofilerdialogbase.o: qtscannerprofilerdialogbase.cpp qtscannerprofiler
 
 
 install: $(PROGRAM)
-	-cp $(PROGRAM) $(BINDIR)
+	-cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
 
 clean:
-	rm -f moc_*.* *.o qtscannerprofilerdialogbase.cpp qtscannerprofilerdialogbase.h $(PROGRAM) $(PROGRAM).exe $(BINDIR)$(PROGRAM) $(BINDIR)$(PROGRAM).exe
+	rm -f moc_*.* *.o qtscannerprofilerdialogbase.cpp qtscannerprofilerdialogbase.h \
+	$(PROGRAM)$(EXESUFFIX)
+
+uninstall:
+	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)

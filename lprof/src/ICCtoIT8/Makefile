@@ -28,7 +28,7 @@ icc2it8: icc2it8.o getopt.o
 	$(CC) $(CFLAGS) icc2it8.o getopt.o -o $@ -lm -llprof -llcms
 
 install:
-	cp icc2it8$(EXESUFFIX) $(BINDIR)
+	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
 
 icc2it8.o: icc2it8.c
 getopt.o: getopt.c
@@ -36,7 +36,7 @@ getopt.o: getopt.c
 utils:: icc2it8
 
 clean:
-	-rm icc2it8.o getopt.o icc2it8$(EXESUFFIX)
+	-rm icc2it8.o getopt.o $(PROGRAM)$(EXESUFFIX)
 
 uninstall:
-	-rm -f $(BINDIR)/icc2it8$(EXESUFFIX)
+	-rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)

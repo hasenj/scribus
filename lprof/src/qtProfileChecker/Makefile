@@ -2,6 +2,22 @@
 # The scanner profiler Makefile
 #
 
+ifndef BASEDIR
+BASEDIR = $(DESTDIR)/usr/local
+endif
+
+ifndef BINDIR
+BINDIR  = $(BASEDIR)/bin
+endif
+
+ifndef LIBDIR
+LIBDIR  = $(BASEDIR)/lib
+endif
+
+ifndef INCDIR
+INCDIR  = $(BASEDIR)/include
+endif
+
 ifndef QTDIR
 QTDIR=/usr
 endif
@@ -26,6 +42,10 @@ ifndef QT_LIBDIR
 QT_LIBDIR=$(QTDIR)/lib
 endif
 
+ifndef EXESUFFIX
+EXESUFFIX=
+endif
+
 PROGRAM=qtprofilechecker
 
 ifdef USE_KDE
@@ -43,11 +63,10 @@ LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
-BINDIR   = ../../bin
 OBJECTS=main.o qtdrawcurve.o qtcietonge.o qtprofilecheckerdialog.o qtprofilecheckerdialogbase.o moc_qtprofilecheckerdialog.o moc_qtprofilecheckerdialogbase.o
 
 # Targets
-all: $(PROGRAM) install
+all: $(PROGRAM)
 
 $(PROGRAM):  $(OBJECTS)
 	@echo "Building profile checker ..."
@@ -78,9 +97,12 @@ qtdrawcurve.o: qtdrawcurve.cpp
 
 qtcietonge.o: qtcietonge.cpp
 
-
 install: $(PROGRAM)
-	-cp $(PROGRAM) $(BINDIR)
+	-cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
 
 clean:
-	rm -f moc_*.* *.o qtprofilecheckerdialogbase.cpp qtprofilecheckerdialogbase.h $(PROGRAM) $(PROGRAM).exe $(BINDIR)$(PROGRAM) $(BINDIR)$(PROGRAM).exe
+	rm -f moc_*.* *.o qtprofilecheckerdialogbase.cpp qtprofilecheckerdialogbase.h \
+	$(PROGRAM)$(EXESUFFIX)
+
+uninstall:
+	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
