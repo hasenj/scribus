@@ -2168,7 +2168,7 @@
 <customwidgets>
     <customwidget>
         <class>ICCProfileSelector</class>
-        <header location="global">../qtlcmswidgets.h</header>
+        <header location="global">qtlcmswidgets.h</header>
         <sizehint>
             <width>-1</width>
             <height>10</height>
@@ -2186,7 +2186,7 @@
     </customwidget>
     <customwidget>
         <class>IT8Selector</class>
-        <header location="global">../qtlcmswidgets.h</header>
+        <header location="global">qtlcmswidgets.h</header>
         <sizehint>
             <width>-1</width>
             <height>-1</height>
