@@ -69,4 +69,4 @@ libqtlcmswidgets.a: qtlcmswidgets.o moc_qtlcmswidgets.o
 	ranlib libqtlcmswidgets.a
 
 clean:
-	rm -f moc_*.* *.o qtlcmswidgets.o
+	rm -f moc_*.* *.o qtlcmswidgets.o liblcmswidgets.a
