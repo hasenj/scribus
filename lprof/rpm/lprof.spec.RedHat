@@ -7,7 +7,7 @@ Summary:        Color Profilers
 Group:          Applications/Productivity
 License:        GPL
 URL:            http://www.littlecms.com/
-Source0:        http://www.littlecms.com/lprof-1.09.tar.gz
+Source0:        http://gkall.hobby.nl/sane-lprof/lprof-1.09.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
