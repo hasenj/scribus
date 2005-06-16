@@ -4,6 +4,10 @@ ifndef BASEDIR
 BASEDIR = $(DESTDIR)/usr/local
 endif
 
+ifndef DESTDIR
+DESTDIR=
+endif
+
 ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
 endif
@@ -29,7 +33,7 @@ icc2it8: icc2it8.o getopt.o
 	$(CC) $(CFLAGS) icc2it8.o getopt.o -o $@ -lm -llprof -llcms
 
 install:
-	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
+	cp $(PROGRAM)$(EXESUFFIX) $(DESTDIR)$(BINDIR)
 
 icc2it8.o: icc2it8.c
 getopt.o: getopt.c
@@ -40,4 +44,4 @@ clean:
 	-rm icc2it8.o getopt.o $(PROGRAM)$(EXESUFFIX)
 
 uninstall:
-	-rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
+	-rm -f $(DESTDIR)$(BINDIR)/$(PROGRAM)$(EXESUFFIX)

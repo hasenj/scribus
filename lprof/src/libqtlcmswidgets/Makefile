@@ -5,6 +5,10 @@ ifndef BASEDIR
 BASEDIR = $(DESTDIR)/usr/local
 endif
 
+ifndef DESTDIR
+DESTDIR=
+endif
+
 ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
 endif
@@ -92,7 +96,7 @@ clean:
 	rm -f moc_*.* *.o qtlcmswidgets.o liblcmswidgets.a
 
 install:
-	cp libqtlcmswidgets.a $(LIBDIR)
+	cp libqtlcmswidgets.a $(DESTDIR)$(LIBDIR)
 
 uninstall:
-	rm -f $(LIBDIR)/libqtlcmswidgets.a
+	rm -f $(DESTDIR)$(LIBDIR)/libqtlcmswidgets.a

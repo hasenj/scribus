@@ -6,6 +6,10 @@ ifndef BASEDIR
 BASEDIR = $(DESTDIR)/usr/local
 endif
 
+ifndef DESTDIR
+DESTDIR=
+endif
+
 ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
 endif
@@ -97,12 +101,12 @@ qtdrawcurve.o: qtdrawcurve.cpp
 
 qtcietonge.o: qtcietonge.cpp
 
-install: $(PROGRAM)
-	-cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
-
 clean:
 	rm -f moc_*.* *.o qtprofilecheckerdialogbase.cpp qtprofilecheckerdialogbase.h \
 	$(PROGRAM)$(EXESUFFIX)
 
+install: $(PROGRAM)
+	-cp $(PROGRAM)$(EXESUFFIX) $(DESTDIR)$(BINDIR)
+
 uninstall:
-	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
+	rm -f $(DESTDIR)$(BINDIR)/$(PROGRAM)$(EXESUFFIX)

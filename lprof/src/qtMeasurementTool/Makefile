@@ -6,6 +6,10 @@ ifndef BASEDIR
 BASEDIR = $(DESTDIR)/usr/local
 endif
 
+ifndef DESTDIR
+DESTDIR=
+endif
+
 ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
 endif
@@ -93,12 +97,12 @@ qtmeasurementtooldialog.o: qtmeasurementtooldialog.cpp qtmeasurementtooldialog.h
 qtmeasurementtooldialogbase.o: qtmeasurementtooldialogbase.cpp qtmeasurementtooldialogbase.h
 
 
-install: $(PROGRAM)
-	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
-
 clean:
 	rm -f moc_*.* *.o qtmeasurementtooldialogbase.cpp qtmeasurementtooldialogbase.h \
 	$(PROGRAM)$(EXESUFFIX)
 
+install: $(PROGRAM)
+	cp $(PROGRAM)$(EXESUFFIX) $(DESTDIR)$(BINDIR)
+
 uninstall:
-	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
+	rm -f $(DESTDIR)$(BINDIR)/$(PROGRAM)$(EXESUFFIX)

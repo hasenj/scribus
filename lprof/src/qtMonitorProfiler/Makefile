@@ -6,6 +6,10 @@ ifndef BASEDIR
 BASEDIR = $(DESTDIR)/usr/local
 endif
 
+ifndef DESTDIR
+DESTDIR=
+endif
+
 ifndef BINDIR
 BINDIR  = $(BASEDIR)/bin
 endif
@@ -92,13 +96,12 @@ qtmonitorprofilerdialog.o: qtmonitorprofilerdialog.cpp qtmonitorprofilerdialog.h
 
 qtmonitorprofilerdialogbase.o: qtmonitorprofilerdialogbase.cpp qtmonitorprofilerdialogbase.h
 
-
-install: $(PROGRAM)
-	cp $(PROGRAM)$(EXESUFFIX) $(BINDIR)
-
 clean:
 	rm -f moc_*.* *.o qtmonitorprofilerdialogbase.cpp qtmonitorprofilerdialogbase.h \
 	$(PROGRAM)$(EXESUFFIX)
 
+install: $(PROGRAM)
+	cp $(PROGRAM)$(EXESUFFIX) $(DESTDIR)$(BINDIR)
+
 uninstall:
-	rm -f $(BINDIR)/$(PROGRAM)$(EXESUFFIX)
+	rm -f $(DESTDIR)$(BINDIR)/$(PROGRAM)$(EXESUFFIX)
