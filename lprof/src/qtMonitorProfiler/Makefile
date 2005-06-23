@@ -66,14 +66,23 @@ INCLUDES = -I../liblprof -I../libqtlcmswidgets -I$(QT_INCDIR) -I. $(KDEINCLUDE)
 LIBS     = -L$(QT_LIBDIR) -L../liblprof -L../libqtlcmswidgets $(KDELIBDIR)
 CFLAGS   = -O4 -Wall $(KDEFLAGS)
 POSTLIB  = $(KDEPOSTLIB) -lqt-mt -lqtlcmswidgets -llprof -llcms -lm
-OBJECTS=main.o qtmonitorprofilerdialog.o qtmonitorprofilerdialogbase.o moc_qtmonitorprofilerdialog.o moc_qtmonitorprofilerdialogbase.o
+OBJECTS=qtmonitorprofilerdialog.o qtmonitorprofilerdialogbase.o moc_qtmonitorprofilerdialog.o moc_qtmonitorprofilerdialogbase.o
 
 # Targets
 all: $(PROGRAM)
 
-$(PROGRAM):  $(OBJECTS)
+$(PROGRAM):  $(OBJECTS) main.o
 	@echo "Building monitor profiler ..."
-	$(CC) $(LIBS) $(OBJECTS) -o $(PROGRAM) $(POSTLIB)
+	$(CC) $(LIBS) $(OBJECTS) main.o -o $(PROGRAM) $(POSTLIB)
+
+libqtmonitorprofiler.a: $(OBJECTS)
+	ar -cru libqtmonitorprofiler.a $(OBJECTS)
+	ranlib libqtmonitorprofiler.a
+
+qtmonitorprofiler-lib: libqtmonitorprofiler.a main.o
+	$(CC) main.o -L./ -lqtmonitorprofiler $(LIBS) -o qtmonitorprofiler-lib $(POSTLIB)
+
+
 
 # general rules how to build files
 %.h: %.ui
