@@ -1,15 +1,14 @@
 
 
- THIS SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
- EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
- WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ THIS SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS,
+ IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF
+ MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
- IN NO EVENT SHALL MARTI MARIA BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
- INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
- OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
- LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
- OF THIS SOFTWARE.
+ IN NO EVENT SHALL MARTI MARIA BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT
+ OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF THE POSSIBILITY OF
+ DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT OF OR IN CONNECTION WITH
+ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
  The lprof library is distributed under
 
@@ -23,30 +22,17 @@
 
  See file COPYING. for details
 
+ This program was originally developed in conjunction with LittleCMS
+ at http://www.littlecms.com/. Marti Maria discontinued development
+ of the tool and maintainance is now separate.
 
-   This is the 2nd. public release the profilers. It has not been 
-   tested extensively, so is possible some bugs still arises. 
-   If so, sorry for the inconvenience, and please feel free to submit 
-   any suggestion/solution (if you can find it) at:
+ This release is a somewhat tweaked package based on the second public release
+ by Marti, who wrote:
 
-                       marti@littlecms.com
+   This is the 2nd. public release of the profilers. It has not been tested
+   extensively, so is possible some bugs may still arise. 
 
- 
-   The main site for the package is located at
-
-           http://www.littlecms.com
-        or
-           http://www.lcms.coloraid.de
-
-
-
-   Looking forward the lcms project would grow in future, I will 
-   welcome any contribution/optimization/enhancement.
-
-   Enjoy!
-
-
-  Requeriments
+  Requirements
   ============
 
   In order to execute the profiling utilities, you will need:
@@ -75,20 +61,20 @@
 	- ICC2IT8 program
 
 
-  if something goes wrong, try the gcc compiler by using
+  if something goes wrong (on UNIX), try the gcc compiler and GNU make by using
 
-    make CC=gcc
+    gmake CC=gcc
 
   You may also need to tell lprof where your Qt headers, binaries, etc
   are installed. If they're all under one directory, use:
 
-    make QTDIR=/usr/qt3
+    gmake QTDIR=/usr/qt3
 
   (assuming your Qt directory is /usr/qt3 of course). If they're scattered
   around like some Linux distributors do, you can instead specify the location
   of the bits:
 
-    make QT_BINDIR=/usr/bin QT_INCDIR=/usr/include/qt3
+    gmake QT_BINDIR=/usr/bin QT_INCDIR=/usr/include/qt3
 
   (the above is correct for Debian Sarge, with libqt3-mt-dev installed)
 
@@ -139,8 +125,9 @@
 
     tifficc /iscanner.icm /omonitor.icm image_in.tif image_out.tif
 
- Also note that Qt does not support any type of image, TIFF, for example
+ Also note that Qt does not support all types of image. TIFF, for example
  is not supported. JPEG, BMP are generally available. The list of 
- supported formats does vary on platform and Qt version.
+ supported formats does vary on platform and Qt version. Work on adding
+ support for other image formats outside of Qt is ongoing.
  
  
