@@ -1,9 +1,4 @@
-from glob import glob
-
-PROGRAM_DIRS=glob('qt*')
-
-cenv = Environment()
-Export('cenv')
+Import('cenv')
 
 conf = cenv.Configure()
 
@@ -34,6 +29,7 @@ Export('lprofenv')
 SConscript('liblprof/SConscript')
 SConscript('ICCtoIT8/SConscript')
 SConscript('libqtlcmswidgets/SConscript')
-
-for program_dir in PROGRAM_DIRS:
-    SConscript(program_dir+'/SConscript')
+SConscript('qtMonitorProfiler/SConscript')
+SConscript('qtScannerProfiler/SConscript')
+SConscript('qtProfileChecker/SConscript')
+SConscript('qtMeasurementTool/SConscript')

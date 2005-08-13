@@ -1,1 +1,5 @@
-SConscript('src/SConscript')
+cenv = Environment()
+cenv.BuildDir('build','src')
+Export('cenv')
+
+SConscript('build/SConscript')
