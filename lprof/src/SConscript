@@ -1,0 +1,39 @@
+from glob import glob
+
+PROGRAM_DIRS=glob('qt*')
+
+cenv = Environment()
+Export('cenv')
+
+conf = cenv.Configure()
+
+if not conf.CheckCHeader('lcms.h'):
+    print "lcms.h not found"
+    Exit(1)
+
+if not conf.CheckLib('lcms', 'cmsOpenProfileFromFile'):
+    print "liblcms not found"
+    Exit(1)
+
+cenv = conf.Finish()
+
+qtenv = cenv.Copy(tools=['default','qt'])
+qtenv['QT_LIB'] = 'qt-mt'
+Export('qtenv')
+
+lprofenv = qtenv.Copy()
+lprofenv['LCMSWIDGETS_LIB'] = 'qtlcmswidgets'
+lprofenv['LPROF_LIB'] = 'lprof'
+lprofenv.AppendUnique(
+    CPPPATH=['#/src/liblprof', '#/src/libqtlcmswidgets' ],
+    LIBPATH=['#/src/liblprof', '#/src/libqtlcmswidgets' ],
+    LIBS=['$LCMSWIDGETS_LIB', '$LPROF_LIB']
+    )
+Export('lprofenv')
+
+SConscript('liblprof/SConscript')
+SConscript('ICCtoIT8/SConscript')
+SConscript('libqtlcmswidgets/SConscript')
+
+for program_dir in PROGRAM_DIRS:
+    SConscript(program_dir+'/SConscript')

@@ -1,0 +1,3 @@
+Import('lprofenv')
+lprofenv.Program('qtprofilechecker',
+    ['main.cpp', 'qtprofilecheckerdialogbase.ui', 'qtprofilecheckerdialog.cpp', 'qtcietonge.cpp', 'qtdrawcurve.cpp'])
