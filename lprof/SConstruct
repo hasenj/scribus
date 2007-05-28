@@ -1,7 +1,0 @@
-builddir = ARGUMENTS.get('builddir', 'build')
-
-cenv = Environment()
-cenv.BuildDir(builddir,'src')
-Export('cenv')
-
-SConscript(builddir+'/SConscript')

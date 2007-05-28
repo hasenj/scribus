@@ -1,1 +1,0 @@
-Program('icc2it8', ['getopt.c', 'icc2it8.c'], LIBS=['lcms', 'lprof'])

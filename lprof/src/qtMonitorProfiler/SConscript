@@ -1,3 +1,0 @@
-Import('lprofenv')
-lprofenv.Program('qtmonitorprofiler',
-    ['main.cpp', 'qtmonitorprofilerdialogbase.ui', 'qtmonitorprofilerdialog.cpp'])

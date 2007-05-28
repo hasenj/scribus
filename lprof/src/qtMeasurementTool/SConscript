@@ -1,3 +1,0 @@
-Import('lprofenv')
-lprofenv.Program('qtmeasurementtool',
-    ['main.cpp', 'qtmeasurementtooldialogbase.ui', 'qtmeasurementtooldialog.cpp'])
