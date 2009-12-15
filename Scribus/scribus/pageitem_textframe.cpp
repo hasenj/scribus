@@ -52,6 +52,7 @@ for which a new license (GPL+exception) is in place.
 #include "undostate.h"
 #include "util.h"
 #include "util_math.h"
+#include "fribidi/fribidi.h"
 #ifdef HAVE_CAIRO
 	#include <cairo.h>
 #endif
@@ -809,7 +810,7 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 
 void PageItem_TextFrame::layout() 
 {
-        qDebug()<<"==Layout==" << itemName() ;
+        qDebug()<<"==Layout==" << itemName() ; //enabled by hasenj
 // 	printBacktrace(24);
 	if (BackBox != NULL && BackBox->invalid) {
 //		qDebug("textframe: len=%d, going back", itemText.length());
@@ -899,7 +900,7 @@ void PageItem_TextFrame::layout()
 	if ((itemText.length() != 0)) // || (NextBox != 0))
 	{
 		// determine layout area
-		QRegion cl = availableRegion(QRegion(pf2.map(Clip)));
+		QRegion cl = availableRegion(QRegion(pf2.map(Clip)));                
 		if (cl.isEmpty())
 		{
 			MaxChars = firstInFrame();
