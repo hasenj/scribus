@@ -52,7 +52,6 @@ for which a new license (GPL+exception) is in place.
 #include "undostate.h"
 #include "util.h"
 #include "util_math.h"
-#include "fribidi/fribidi.h"
 #ifdef HAVE_CAIRO
 	#include <cairo.h>
 #endif
@@ -804,6 +803,12 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
+#define LAYOUT_BIDI 1
+
+#if LAYOUT_BIDI
+
+#include "fribidi/fribidi.h"
+
 #ifndef SCRIBUS_BIDI_SHAPE_MANAGER
 #define SCRIBUS_BIDI_SHAPE_MANAGER
 
@@ -824,6 +829,8 @@ class ShapeManager
         ~ShapeManager();
         QChar logicalAt(int index);
         QChar visualAt(int index);
+        bool isEmbeddingRat(int index);
+        bool isEmbeddingLat(int index);
 };
 
 #endif
@@ -870,6 +877,18 @@ QChar ShapeManager::visualAt(int index)
     else
         return logicalAt(index);
 }
+
+bool ShapeManager::isEmbeddingRat(int index)
+{
+    if(!ok) return false;
+    return EmbeddingLevels[index] % 2 == 1; // odd embedding levels are part of an RTL run
+}
+
+bool ShapeManager::isEmbeddingLat(int index)
+{
+    return !(isEmbeddingRat(index));
+}
+
 /*
     HasenJ: This layout method is monstorously huge. I'm not going to try and fiddle with it.
 
@@ -883,9 +902,11 @@ QChar ShapeManager::visualAt(int index)
 
  */
 
+#endif
+
 void PageItem_TextFrame::layout() 
 {
-        qDebug()<<"==Layout==" << itemName() ; //enabled by hasenj
+//  qDebug()<<"==Layout==" << itemName() ;
 // 	printBacktrace(24);
 	if (BackBox != NULL && BackBox->invalid) {
 //		qDebug("textframe: len=%d, going back", itemText.length());
@@ -1029,10 +1050,12 @@ void PageItem_TextFrame::layout()
 			current.yPos = itemText.defaultStyle().lineSpacing() + extra.Top+lineCorr-desc2;
 		}
 
+#if LAYOUT_BIDI
         /*
             hasenj: let fribidi do its magic
          */
         ShapeManager shapeManager(itemText);
+#endif
 
 		current.startLine(firstInFrame());
 		outs = false;
@@ -1041,13 +1064,6 @@ void PageItem_TextFrame::layout()
 		for (int a = firstInFrame(); a < itemText.length(); ++a)
 		{
 			hl = itemText.item(a);
-            
-#define LAYOUT_BIDI 1
-#if LAYOUT_BIDI
-            //hasenj: replace hl's character with the character from fribidi
-            QChar bidi_restore_hl = hl->ch;
-            hl->ch = shapeManager.visualAt(a); 
-#endif
 
 			if (a > 0 && itemText.text(a-1) == SpecialChars::PARSEP)
 				style = itemText.paragraphStyle(a);
@@ -1220,6 +1236,16 @@ void PageItem_TextFrame::layout()
 				itemText.item(a)->setEffects(itemText.item(a)->effects() & ~ScStyle_StartOfLine);
 			}
 			hl->glyph.yadvance = 0;
+            
+#if LAYOUT_BIDI
+            //hasenj: use the chstr to force scribus to render the visual character on RTL runs
+            QChar visualChar = shapeManager.visualAt(a);
+            if(shapeManager.isEmbeddingRat(a))
+            {
+                chstr = QString(visualChar);
+            }
+#endif
+
 			oldCurY = layoutGlyphs(*hl, chstr, hl->glyph);
 			// find out width of char
 			if ((hl->ch == SpecialChars::OBJECT) && (hl->embedded.hasItem()))
@@ -2203,9 +2229,6 @@ void PageItem_TextFrame::layout()
 					}
 				}
 			}
-#if LAYOUT_BIDI
-            hl->ch = bidi_restore_hl; // restore it to the logical character instead of the visual one
-#endif
 		}
 		if (goNoRoom)
 		{
