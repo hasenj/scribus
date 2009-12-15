@@ -1042,9 +1042,12 @@ void PageItem_TextFrame::layout()
 		{
 			hl = itemText.item(a);
             
+#define LAYOUT_BIDI 1
+#if LAYOUT_BIDI
             //hasenj: replace hl's character with the character from fribidi
             QChar bidi_restore_hl = hl->ch;
             hl->ch = shapeManager.visualAt(a); 
+#endif
 
 			if (a > 0 && itemText.text(a-1) == SpecialChars::PARSEP)
 				style = itemText.paragraphStyle(a);
@@ -2200,7 +2203,9 @@ void PageItem_TextFrame::layout()
 					}
 				}
 			}
+#if LAYOUT_BIDI
             hl->ch = bidi_restore_hl; // restore it to the logical character instead of the visual one
+#endif
 		}
 		if (goNoRoom)
 		{
@@ -2671,7 +2676,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea, double s
 						else
 							p->setPen(cachedStrokeQ, 1, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 					}
-					// paint glyphs
+					// paint glyphs //hasenj XXX (note checkpoint)
 					if (isEmbedded || cullingArea.intersects(pf2.mapRect(QRect(qRound(CurX + hl->glyph.xoffset),qRound(ls.y + hl->glyph.yoffset-asce), qRound(hl->glyph.xadvance+1), qRound(asce+desc)))))
 					{
 						p->save();//SA4
