@@ -804,9 +804,84 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
+#ifndef SCRIBUS_BIDI_SHAPE_MANAGER
+#define SCRIBUS_BIDI_SHAPE_MANAGER
 
+class ShapeManager
+{
+    private:
+        const QString qInputString;
+        const FriBidiChar *InputString;
+        const FriBidiStrIndex InputLength;
+        FriBidiParType BaseDir;
+        FriBidiChar *VisualString;
+        FriBidiStrIndex *L_to_V;
+        FriBidiStrIndex *V_to_L;
+        FriBidiLevel *EmbeddingLevels;
+        FriBidiLevel ok;
+    public:
+        ShapeManager(StoryText itemText);
+        ~ShapeManager();
+        QChar logicalAt(int index);
+        QChar visualAt(int index);
+};
 
+#endif
 
+ShapeManager::ShapeManager(StoryText itemText) : 
+    qInputString(itemText.text(0, itemText.length())),
+    InputString(qInputString.toUcs4().data()),
+    InputLength(itemText.length()),
+    BaseDir(FRIBIDI_PAR_WLTR), //weak LTR, dunno, sounds like a sand default for now
+    VisualString(0),
+    L_to_V(0), V_to_L(0),
+    EmbeddingLevels(0),
+    ok(0)
+{
+    VisualString = new FriBidiChar[InputLength];
+    L_to_V = new FriBidiStrIndex[InputLength];
+    V_to_L = new FriBidiStrIndex[InputLength];
+    EmbeddingLevels = new FriBidiLevel[InputLength];
+    ok = fribidi_log2vis(InputString, 
+            InputLength,
+            &BaseDir,
+            VisualString,
+            L_to_V,
+            V_to_L,
+            EmbeddingLevels);
+}
+ShapeManager::~ShapeManager()
+{
+    delete[] L_to_V;
+    delete[] V_to_L;
+    delete[] VisualString;
+    delete[] EmbeddingLevels;
+}
+
+QChar ShapeManager::logicalAt(int index)
+{
+    return QChar(InputString[index]);
+}
+
+QChar ShapeManager::visualAt(int index)
+{
+    if(ok)
+        return QChar(VisualString[index]);
+    else
+        return logicalAt(index);
+}
+/*
+    HasenJ: This layout method is monstorously huge. I'm not going to try and fiddle with it.
+
+    My plan right now is in 2 phases:
+
+        1- get fribidi to link with the project and use the log2vis function to get the proper shaping.
+
+        2- try to fix line break issues by hacking all possible failure points.
+
+    This will probably only make this function more monstorous, but hey, I wasn't the one who made it that way.
+
+ */
 
 void PageItem_TextFrame::layout() 
 {
@@ -953,6 +1028,12 @@ void PageItem_TextFrame::layout()
 			desc2 = -itemText.defaultStyle().charStyle().font().descent(itemText.defaultStyle().charStyle().fontSize() / 10.0);
 			current.yPos = itemText.defaultStyle().lineSpacing() + extra.Top+lineCorr-desc2;
 		}
+
+        /*
+            hasenj: let fribidi do its magic
+         */
+        ShapeManager shapeManager(itemText);
+
 		current.startLine(firstInFrame());
 		outs = false;
 		OFs = 0;
@@ -960,6 +1041,11 @@ void PageItem_TextFrame::layout()
 		for (int a = firstInFrame(); a < itemText.length(); ++a)
 		{
 			hl = itemText.item(a);
+            
+            //hasenj: replace hl's character with the character from fribidi
+            QChar bidi_restore_hl = hl->ch;
+            hl->ch = shapeManager.visualAt(a); 
+
 			if (a > 0 && itemText.text(a-1) == SpecialChars::PARSEP)
 				style = itemText.paragraphStyle(a);
 			if (current.itemsInLine == 0)
@@ -2114,6 +2200,7 @@ void PageItem_TextFrame::layout()
 					}
 				}
 			}
+            hl->ch = bidi_restore_hl; // restore it to the logical character instead of the visual one
 		}
 		if (goNoRoom)
 		{
