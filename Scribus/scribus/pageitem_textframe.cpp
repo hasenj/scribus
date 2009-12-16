@@ -902,6 +902,41 @@ bool ShapeManager::isEmbeddingLat(int index)
 
  */
 
+
+/**
+    EXPERIMENTAL
+
+    Reverse the layout of a sequence of glyphs. 
+
+    This is probably a naive approach, but at least we can 
+    learn a few more things about glyph layout, hopefully
+
+    @param itemText: the text we want to reverse a segment of
+    @param startIndex: start of segment to reverse
+    @param endIndex: end of segment to reverse (exclusive, of course!)
+
+    how it works: swaps the glyphs (originally I thought of swapping positions, but then
+    I figured it's better to just swap the glyphs, since it's much less than the position info!)
+ */
+bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
+{
+    if(startIndex > itemText->length() || endIndex > itemText->length())
+    {
+        qDebug() << "out of range";
+        return false;
+    }
+    int length = endIndex - startIndex;
+    for(int i = 0; i < length / 2; i++) // (startIndex + endIndex) / 2 is the midpoint
+    {
+        ScText *first = itemText->item(i + startIndex);
+        ScText *second = itemText->item(endIndex - 1 - i);
+        GlyphLayout tmp = first->glyph;
+        first->glyph = second->glyph;
+        second->glyph = tmp;
+    }
+    return true;
+}
+
 #endif
 
 void PageItem_TextFrame::layout() 
