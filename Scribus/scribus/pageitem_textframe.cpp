@@ -985,7 +985,7 @@ void ShapeManager::BidiLayoutLine(int lineStart, int lineEnd)
  */
 int ShapeManager::nextRun(int start, int max)
 {
-    bool startDir = isEmbeddingLat(start);
+    bool startEmbedding = isEmbeddingRat(start);
     if(max == -1)
     {
         max = itemText->length();
@@ -994,7 +994,7 @@ int ShapeManager::nextRun(int start, int max)
     while(index < max)
     {
         index++;
-        if(isEmbeddingLat(index) != startDir)
+        if(isEmbeddingRat(index) != startEmbedding)
             break;
     }
     return index;
@@ -1006,8 +1006,9 @@ void ShapeManager::BidiLayout(QLinkedList<int> lineEndIndexes)
     while(!lineEndIndexes.isEmpty())
     {
         lineStart = lineEndIndexes.takeFirst();
-        lineEnd = lineEndIndexes.takeFirst();
+        lineEnd = lineEndIndexes.takeFirst() + 1; // what's recorded in the list is inclusive, it seems
         BidiLayoutLine(lineStart, lineEnd); 
+        qDebug() << "start: " << lineStart << ", end: " << lineEnd << ", length: " << itemText->length();
     }
 }
 
@@ -1871,7 +1872,6 @@ void PageItem_TextFrame::layout()
 					current.finishLine(EndX);
 #if LAYOUT_BIDI
                     //bidi-line-break [dup#1]
-                    //not sure where this should go so that the values are setup correctly
                     lineEndIndexes.append(current.line.firstItem);
                     lineEndIndexes.append(current.line.lastItem);
 #endif
@@ -1944,7 +1944,6 @@ void PageItem_TextFrame::layout()
 						current.finishLine(EndX);
 #if LAYOUT_BIDI
                         //bidi-line-break [dup#2]
-                        //not sure where this should go so that the values are setup correctly
                         lineEndIndexes.append(current.line.firstItem);
                         lineEndIndexes.append(current.line.lastItem);
 #endif
@@ -2033,7 +2032,6 @@ void PageItem_TextFrame::layout()
 						current.finishLine(EndX);
 #if LAYOUT_BIDI
                         //bidi-line-break [dup#3]
-                        //not sure where this should go so that the values are setup correctly
                         lineEndIndexes.append(current.line.firstItem);
                         lineEndIndexes.append(current.line.lastItem);
 #endif
@@ -2362,7 +2360,6 @@ void PageItem_TextFrame::layout()
 		current.finishLine(EndX);
 #if LAYOUT_BIDI
         //bidi-line-break [dup#4]
-        //not sure where this should go so that the values are setup correctly
         lineEndIndexes.append(current.line.firstItem);
         lineEndIndexes.append(current.line.lastItem);
 #endif
