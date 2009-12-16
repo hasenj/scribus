@@ -1757,7 +1757,7 @@ void PageItem_TextFrame::layout()
 				cl = cl.subtract(cm);*/
 //				current.yPos = maxDY;
 			}
-			// end of line
+			// end of line [[XXX:hasenj]]
 			if ( SpecialChars::isBreak(hl->ch, Cols > 1) || (outs))
 			{
 				tabs.active = false;
@@ -2699,7 +2699,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea, double s
 						else
 							p->setPen(cachedStrokeQ, 1, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 					}
-					// paint glyphs //hasenj XXX (note checkpoint)
+					// paint glyphs [[XXX:hasenj]]
 					if (isEmbedded || cullingArea.intersects(pf2.mapRect(QRect(qRound(CurX + hl->glyph.xoffset),qRound(ls.y + hl->glyph.yoffset-asce), qRound(hl->glyph.xadvance+1), qRound(asce+desc)))))
 					{
 						p->save();//SA4
