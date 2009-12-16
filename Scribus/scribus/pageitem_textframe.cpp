@@ -803,7 +803,7 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
-#define LAYOUT_BIDI 0
+#define LAYOUT_BIDI 1
 
 #if LAYOUT_BIDI
 
@@ -1861,11 +1861,6 @@ void PageItem_TextFrame::layout()
 			// end of line [[XXX:hasenj]]
 			if ( SpecialChars::isBreak(hl->ch, Cols > 1) || (outs))
 			{
-#if LAYOUT_BIDI
-                //not sure if a is the right value to put or what?
-                lineEndIndexes.append(current.line.firstItem);
-                lineEndIndexes.append(a);
-#endif
 				tabs.active = false;
 				tabs.status = TabNONE;
 				if (SpecialChars::isBreak(hl->ch, Cols > 1))
@@ -1874,6 +1869,12 @@ void PageItem_TextFrame::layout()
 					current.breakLine(itemText, a);
 					EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 					current.finishLine(EndX);
+#if LAYOUT_BIDI
+                    //bidi-line-break [dup#1]
+                    //not sure where this should go so that the values are setup correctly
+                    lineEndIndexes.append(current.line.firstItem);
+                    lineEndIndexes.append(current.line.lastItem);
+#endif
 					
 //					if (style.alignment() != 0)
 					{
@@ -1941,6 +1942,12 @@ void PageItem_TextFrame::layout()
 						
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
+#if LAYOUT_BIDI
+                        //bidi-line-break [dup#2]
+                        //not sure where this should go so that the values are setup correctly
+                        lineEndIndexes.append(current.line.firstItem);
+                        lineEndIndexes.append(current.line.lastItem);
+#endif
 
 //???						current.breakXPos = current.line.x;
 //???						for (int j=current.line.firstItem; j <= a; ++j)
@@ -2024,6 +2031,12 @@ void PageItem_TextFrame::layout()
 //							   .arg(a);
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
+#if LAYOUT_BIDI
+                        //bidi-line-break [dup#3]
+                        //not sure where this should go so that the values are setup correctly
+                        lineEndIndexes.append(current.line.firstItem);
+                        lineEndIndexes.append(current.line.lastItem);
+#endif
 //						qDebug() << QString("no break pos: %1-%2 @ %3 wid %4 nat %5 endX %6")
 //							   .arg(current.line.firstItem).arg(current.line.firstItem)
 //							   .arg(current.line.x).arg(current.line.width).arg(current.line.naturalWidth).arg(EndX);
@@ -2347,6 +2360,12 @@ void PageItem_TextFrame::layout()
 		current.breakLine(itemText, a);
 		EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 		current.finishLine(EndX);
+#if LAYOUT_BIDI
+        //bidi-line-break [dup#4]
+        //not sure where this should go so that the values are setup correctly
+        lineEndIndexes.append(current.line.firstItem);
+        lineEndIndexes.append(current.line.lastItem);
+#endif
 
 //		if (style.alignment() != 0)
 		{
