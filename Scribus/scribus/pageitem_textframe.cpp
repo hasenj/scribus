@@ -803,10 +803,11 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
-#define LAYOUT_BIDI 1
+#define LAYOUT_BIDI 0
 
 #if LAYOUT_BIDI
 
+#include <QLinkedList>
 #include "fribidi/fribidi.h"
 
 #ifndef SCRIBUS_BIDI_SHAPE_MANAGER
@@ -815,6 +816,8 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 class ShapeManager
 {
     private:
+        StoryText *itemText;
+
         const QString qInputString;
         const FriBidiChar *InputString;
         const FriBidiStrIndex InputLength;
@@ -824,21 +827,26 @@ class ShapeManager
         FriBidiStrIndex *V_to_L;
         FriBidiLevel *EmbeddingLevels;
         FriBidiLevel ok;
+
     public:
-        ShapeManager(StoryText itemText);
+        ShapeManager(StoryText *p_itemText);
         ~ShapeManager();
         QChar logicalAt(int index);
         QChar visualAt(int index);
         bool isEmbeddingRat(int index);
         bool isEmbeddingLat(int index);
+        int nextRun(int index, int max=-1);
+        void BidiLayoutLine(int lineStart, int lineEnd);
+        void BidiLayout(QLinkedList<int> lineEndIndexes);
 };
 
 #endif
 
-ShapeManager::ShapeManager(StoryText itemText) : 
-    qInputString(itemText.text(0, itemText.length())),
+ShapeManager::ShapeManager(StoryText *p_itemText) : 
+    itemText(p_itemText),
+    qInputString(p_itemText->text(0, p_itemText->length())),
     InputString(qInputString.toUcs4().data()),
-    InputLength(itemText.length()),
+    InputLength(p_itemText->length()),
     BaseDir(FRIBIDI_PAR_WLTR), //weak LTR, dunno, sounds like a sand default for now
     VisualString(0),
     L_to_V(0), V_to_L(0),
@@ -922,7 +930,6 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
 {
     if(startIndex > itemText->length() || endIndex > itemText->length())
     {
-        qDebug() << "out of range";
         return false;
     }
     int length = endIndex - startIndex;
@@ -935,6 +942,73 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
         second->glyph = tmp;
     }
     return true;
+}
+
+/**
+    The bidi needs to be applied to one line at a time. We don't know where lines start and end,
+    but we can let others use us to apply bidi to a certain range of text. 
+
+    Call this function when you determine the start and enf of a line. It will examine 
+    the given range and look for RTL runs and reverse them.
+ */
+void ShapeManager::BidiLayoutLine(int lineStart, int lineEnd)
+{
+    if(lineStart > itemText->length() || lineEnd > itemText->length())
+    {
+        return;
+    }
+    int start = lineStart;
+    int end = start;
+    while(start < lineEnd)
+    {
+        end = nextRun(start, lineEnd);
+        if(isEmbeddingRat(start))
+        {
+            _reverseGlyphLayout(itemText, start, end);
+        }
+        start = end;
+    }
+}
+
+/**
+    Get the start of the next run.
+
+    This method is used to get ranges for runs. Sample usage is available in BidiLayoutLine
+
+        start = 0
+        end = start
+        while(start < length):
+            end = nextRun(start, length)
+            // (start, end) is now a run, do something with it
+            start = end
+
+ */
+int ShapeManager::nextRun(int start, int max)
+{
+    bool startDir = isEmbeddingLat(start);
+    if(max == -1)
+    {
+        max = itemText->length();
+    }
+    int index = start;
+    while(index < max)
+    {
+        index++;
+        if(isEmbeddingLat(index) != startDir)
+            break;
+    }
+    return index;
+}
+
+void ShapeManager::BidiLayout(QLinkedList<int> lineEndIndexes)
+{
+    int lineStart = 0, lineEnd = 0;
+    while(!lineEndIndexes.isEmpty())
+    {
+        lineStart = lineEndIndexes.takeFirst();
+        lineEnd = lineEndIndexes.takeFirst();
+        BidiLayoutLine(lineStart, lineEnd); 
+    }
 }
 
 #endif
@@ -1089,7 +1163,8 @@ void PageItem_TextFrame::layout()
         /*
             hasenj: let fribidi do its magic
          */
-        ShapeManager shapeManager(itemText);
+        ShapeManager shapeManager(&itemText);
+        QLinkedList<int> lineEndIndexes;
 #endif
 
 		current.startLine(firstInFrame());
@@ -1272,15 +1347,6 @@ void PageItem_TextFrame::layout()
 			}
 			hl->glyph.yadvance = 0;
             
-#if LAYOUT_BIDI
-            //hasenj: use the chstr to force scribus to render the visual character on RTL runs
-            QChar visualChar = shapeManager.visualAt(a);
-            if(shapeManager.isEmbeddingRat(a))
-            {
-                chstr = QString(visualChar);
-            }
-#endif
-
 			oldCurY = layoutGlyphs(*hl, chstr, hl->glyph);
 			// find out width of char
 			if ((hl->ch == SpecialChars::OBJECT) && (hl->embedded.hasItem()))
@@ -1795,6 +1861,11 @@ void PageItem_TextFrame::layout()
 			// end of line [[XXX:hasenj]]
 			if ( SpecialChars::isBreak(hl->ch, Cols > 1) || (outs))
 			{
+#if LAYOUT_BIDI
+                //not sure if a is the right value to put or what?
+                lineEndIndexes.append(current.line.firstItem);
+                lineEndIndexes.append(a);
+#endif
 				tabs.active = false;
 				tabs.status = TabNONE;
 				if (SpecialChars::isBreak(hl->ch, Cols > 1))
@@ -2413,6 +2484,9 @@ void PageItem_TextFrame::layout()
 		if (current.itemsInLine > 0) {
 			itemText.appendLine(current.line);
 		}
+#if LAYOUT_BIDI
+    shapeManager.BidiLayout(lineEndIndexes);
+#endif
 	}
 	MaxChars = itemText.length();
 	invalid = false;
