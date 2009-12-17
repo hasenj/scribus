@@ -813,7 +813,32 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 #ifndef SCRIBUS_BIDI_SHAPE_MANAGER
 #define SCRIBUS_BIDI_SHAPE_MANAGER
 
-class ShapeManager
+/**
+    This class is a hack that applies bidi reordering after the layout method does its biznis.
+
+    We're not really interested in fixing the layout method or figuring out how it works: we only need to figure out
+    the positions of the line breaks, and fool the layout method to choose shaped characters by figuring out the shapes
+    of arabic characters (without reordering them).
+
+    Here's the plan:
+
+    BidiLayoutManager will:
+
+        * Figure out embedding levels (using GNU FriBidi)
+        * Figure out shapes of arabic characters (without reordering the input string or modifying it)
+        
+    Then, in the layout method, inject the following:
+
+        * Right before choosing the glyph for a character, check if it's in an RTL run, and if so, supply the arabic shape for it
+        * Where ever a new line is detected, record the start and end position of that line somewhere where it can be retrived later
+        * When layout is done with its biznis, let the BidiLayoutManager reorder RTL runs in each line
+        
+    This should get proper RTL rendering, but this is not enough:
+
+        * We need extra work so that selections and editing are done correctly.
+
+ */
+class BidiLayoutManager
 {
     private:
         StoryText *itemText;
@@ -829,20 +854,20 @@ class ShapeManager
         FriBidiLevel ok;
 
     public:
-        ShapeManager(StoryText *p_itemText);
-        ~ShapeManager();
+        BidiLayoutManager(StoryText *p_itemText);
+        ~BidiLayoutManager();
         QChar logicalAt(int index);
         QChar visualAt(int index);
         bool isEmbeddingRat(int index);
         bool isEmbeddingLat(int index);
         int nextRun(int index, int max=-1);
-        void BidiLayoutLine(int lineStart, int lineEnd);
-        void BidiLayout(QLinkedList<int> lineEndIndexes);
+        void doBidiLayoutLine(int lineStart, int lineEnd);
+        void doBidiLayout(QLinkedList<int> lineEndIndexes);
 };
 
 #endif
 
-ShapeManager::ShapeManager(StoryText *p_itemText) : 
+BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) : 
     itemText(p_itemText),
     qInputString(p_itemText->text(0, p_itemText->length())),
     InputString(qInputString.toUcs4().data()),
@@ -865,7 +890,7 @@ ShapeManager::ShapeManager(StoryText *p_itemText) :
             V_to_L,
             EmbeddingLevels);
 }
-ShapeManager::~ShapeManager()
+BidiLayoutManager::~BidiLayoutManager()
 {
     delete[] L_to_V;
     delete[] V_to_L;
@@ -873,12 +898,12 @@ ShapeManager::~ShapeManager()
     delete[] EmbeddingLevels;
 }
 
-QChar ShapeManager::logicalAt(int index)
+QChar BidiLayoutManager::logicalAt(int index)
 {
     return QChar(InputString[index]);
 }
 
-QChar ShapeManager::visualAt(int index)
+QChar BidiLayoutManager::visualAt(int index)
 {
     if(ok)
         return QChar(VisualString[index]);
@@ -886,13 +911,13 @@ QChar ShapeManager::visualAt(int index)
         return logicalAt(index);
 }
 
-bool ShapeManager::isEmbeddingRat(int index)
+bool BidiLayoutManager::isEmbeddingRat(int index)
 {
     if(!ok) return false;
     return EmbeddingLevels[index] % 2 == 1; // odd embedding levels are part of an RTL run
 }
 
-bool ShapeManager::isEmbeddingLat(int index)
+bool BidiLayoutManager::isEmbeddingLat(int index)
 {
     return !(isEmbeddingRat(index));
 }
@@ -951,7 +976,7 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
     Call this function when you determine the start and enf of a line. It will examine 
     the given range and look for RTL runs and reverse them.
  */
-void ShapeManager::BidiLayoutLine(int lineStart, int lineEnd)
+void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
 {
     if(lineStart > itemText->length() || lineEnd > itemText->length())
     {
@@ -983,7 +1008,7 @@ void ShapeManager::BidiLayoutLine(int lineStart, int lineEnd)
             start = end
 
  */
-int ShapeManager::nextRun(int start, int max)
+int BidiLayoutManager::nextRun(int start, int max)
 {
     bool startEmbedding = isEmbeddingRat(start);
     if(max == -1)
@@ -1000,14 +1025,25 @@ int ShapeManager::nextRun(int start, int max)
     return index;
 }
 
-void ShapeManager::BidiLayout(QLinkedList<int> lineEndIndexes)
+/**
+    EXPERIMENTAL
+
+    Applies bidi reordering to each line as specified in lineEndIndexes.
+
+    Why to each line? bidi must be applied on a per-line basis, (I'm not going to explain all the whys here).
+
+    lineEndIndexes is a list of numbers, (it's a bit messy, should be a tuple)[FIXME], we extract two numbers at a time
+    and treat them as a tuple (lineStart, lineEnd). If lineEndIndexes is not setup properly then we will just choke [FIXME]
+ */
+void BidiLayoutManager::doBidiLayout(QLinkedList<int> lineEndIndexes)
 {
     int lineStart = 0, lineEnd = 0;
     while(!lineEndIndexes.isEmpty())
     {
         lineStart = lineEndIndexes.takeFirst();
-        lineEnd = lineEndIndexes.takeFirst() + 1; // what's recorded in the list is inclusive, it seems
-        BidiLayoutLine(lineStart, lineEnd); 
+        lineEnd = lineEndIndexes.takeFirst();
+
+        doBidiLayoutLine(lineStart, lineEnd); 
         qDebug() << "start: " << lineStart << ", end: " << lineEnd << ", length: " << itemText->length();
     }
 }
@@ -1164,7 +1200,7 @@ void PageItem_TextFrame::layout()
         /*
             hasenj: let fribidi do its magic
          */
-        ShapeManager shapeManager(&itemText);
+        BidiLayoutManager bidiManager(&itemText);
         QLinkedList<int> lineEndIndexes;
 #endif
 
@@ -2501,7 +2537,7 @@ void PageItem_TextFrame::layout()
 			itemText.appendLine(current.line);
 		}
 #if LAYOUT_BIDI
-    shapeManager.BidiLayout(lineEndIndexes);
+    bidiManager.doBidiLayout(lineEndIndexes);
 #endif
 	}
 	MaxChars = itemText.length();
