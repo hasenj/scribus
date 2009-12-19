@@ -803,15 +803,17 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
-#define LAYOUT_BIDI 1
+#define BIDI_LAYOUT 1
 
-#if LAYOUT_BIDI
+#if BIDI_LAYOUT
 
 #include <QLinkedList>
 #include "fribidi/fribidi.h"
 
 #ifndef SCRIBUS_BIDI_SHAPE_MANAGER
 #define SCRIBUS_BIDI_SHAPE_MANAGER
+
+struct LayoutLine;
 
 /**
     This class is a hack that applies bidi reordering after the layout method does its biznis.
@@ -858,21 +860,43 @@ class BidiLayoutManager
         ~BidiLayoutManager();
         QChar logicalAt(int index);
         QChar visualAt(int index);
+        QChar shapeAt(int index);
         bool isEmbeddingRat(int index);
         bool isEmbeddingLat(int index);
         int nextRun(int index, int max=-1);
         void doBidiLayoutLine(int lineStart, int lineEnd);
-        void doBidiLayout(QLinkedList<int> lineEndIndexes);
+        void doBidiLayout(QLinkedList<LayoutLine> layoutLines);
+};
+
+struct LayoutLine
+{
+    int startIndex;
+    int endIndex;
+    LayoutLine()
+    {
+        startIndex = 0;
+        endIndex = 0;
+    }
+    LayoutLine(LineSpec line)
+    {
+        startIndex = line.firstItem;
+        endIndex = line.lastItem + 1; // XXX: I think last item is inclusive, but not exactly sure (actually I'm not sure of anything here!)
+    }
 };
 
 #endif
 
+/**
+    Let fribidi work its magic.
+
+    This will give us the embedding levels, allowing us to grab text runs
+ */
 BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) : 
     itemText(p_itemText),
     qInputString(p_itemText->text(0, p_itemText->length())),
     InputString(qInputString.toUcs4().data()),
     InputLength(p_itemText->length()),
-    BaseDir(FRIBIDI_PAR_WLTR), //weak LTR, dunno, sounds like a sand default for now
+    BaseDir(FRIBIDI_PAR_LTR), //dunno, sounds like a sane default for now
     VisualString(0),
     L_to_V(0), V_to_L(0),
     EmbeddingLevels(0),
@@ -882,20 +906,23 @@ BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) :
     L_to_V = new FriBidiStrIndex[InputLength];
     V_to_L = new FriBidiStrIndex[InputLength];
     EmbeddingLevels = new FriBidiLevel[InputLength];
-    ok = fribidi_log2vis(InputString, 
-            InputLength,
-            &BaseDir,
-            VisualString,
-            L_to_V,
-            V_to_L,
-            EmbeddingLevels);
+    FriBidiCharType *bidi_types = new FriBidiCharType[InputLength];
+    fribidi_get_bidi_types (InputString, InputLength, bidi_types);
+    BaseDir = fribidi_get_par_direction(bidi_types, InputLength);
+    ok = fribidi_get_par_embedding_levels(bidi_types, InputLength, &BaseDir, EmbeddingLevels);
+
+    qDebug() << "input length:" << InputLength << "scribus text length:" << itemText->length();
+    qDebug() << "sanity check:" << QString::fromUcs4(InputString, InputLength);
+
 }
 BidiLayoutManager::~BidiLayoutManager()
 {
-    delete[] L_to_V;
-    delete[] V_to_L;
-    delete[] VisualString;
-    delete[] EmbeddingLevels;
+#define BIDI_DEL(x) if(x) { delete[] x; x = 0; }
+    BIDI_DEL(L_to_V)
+    BIDI_DEL(V_to_L)
+    BIDI_DEL(VisualString)
+    BIDI_DEL(EmbeddingLevels)
+#undef BIDI_DEL
 }
 
 QChar BidiLayoutManager::logicalAt(int index)
@@ -903,12 +930,21 @@ QChar BidiLayoutManager::logicalAt(int index)
     return QChar(InputString[index]);
 }
 
+//don't use; bad idea
 QChar BidiLayoutManager::visualAt(int index)
 {
     if(ok)
         return QChar(VisualString[index]);
     else
         return logicalAt(index);
+}
+
+//don't use; bad idea
+QChar BidiLayoutManager::shapeAt(int index)
+{
+    if(!ok) return logicalAt(index);
+
+    return visualAt(L_to_V[index]);
 }
 
 bool BidiLayoutManager::isEmbeddingRat(int index)
@@ -1010,6 +1046,8 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
  */
 int BidiLayoutManager::nextRun(int start, int max)
 {
+    qDebug() << "nextRun:" << start << "char" << InputString[start] << "Direction:" << (isEmbeddingRat(start)? "R" : "L") << "EmbeddingLevel:" << EmbeddingLevels[start]
+                << "prev:" << (start > 0? QString::fromUcs4(InputString+start-1, 1) : QString("N/A"));
     bool startEmbedding = isEmbeddingRat(start);
     if(max == -1)
     {
@@ -1028,23 +1066,17 @@ int BidiLayoutManager::nextRun(int start, int max)
 /**
     EXPERIMENTAL
 
-    Applies bidi reordering to each line as specified in lineEndIndexes.
+    Applies bidi reordering to each line as specified in layoutLines. (bidi must applied on a per-line basis only)
 
-    Why to each line? bidi must be applied on a per-line basis, (I'm not going to explain all the whys here).
-
-    lineEndIndexes is a list of numbers, (it's a bit messy, should be a tuple)[FIXME], we extract two numbers at a time
-    and treat them as a tuple (lineStart, lineEnd). If lineEndIndexes is not setup properly then we will just choke [FIXME]
+    layoutLines is a list of tuples (read: struct with 2 elements) that specify the indexes for line beginnings and ends
  */
-void BidiLayoutManager::doBidiLayout(QLinkedList<int> lineEndIndexes)
+void BidiLayoutManager::doBidiLayout(QLinkedList<LayoutLine> layoutLines)
 {
-    int lineStart = 0, lineEnd = 0;
-    while(!lineEndIndexes.isEmpty())
+    while(!layoutLines.isEmpty())
     {
-        lineStart = lineEndIndexes.takeFirst();
-        lineEnd = lineEndIndexes.takeFirst();
-
-        doBidiLayoutLine(lineStart, lineEnd); 
-        qDebug() << "start: " << lineStart << ", end: " << lineEnd << ", length: " << itemText->length();
+        LayoutLine line = layoutLines.takeFirst();
+        doBidiLayoutLine(line.startIndex, line.endIndex);
+        // qDebug() << "start: " << line.startIndex << ", end: " << line.endIndex << ", length: " << itemText->length();
     }
 }
 
@@ -1141,6 +1173,11 @@ void PageItem_TextFrame::layout()
 	setShadow();
 	if ((itemText.length() != 0)) // || (NextBox != 0))
 	{
+#if BIDI_LAYOUT
+        BidiLayoutManager bidiManager(&itemText);
+        QLinkedList<LayoutLine> layoutLines;
+#endif
+
 		// determine layout area
 		QRegion cl = availableRegion(QRegion(pf2.map(Clip)));                
 		if (cl.isEmpty())
@@ -1195,14 +1232,6 @@ void PageItem_TextFrame::layout()
 			desc2 = -itemText.defaultStyle().charStyle().font().descent(itemText.defaultStyle().charStyle().fontSize() / 10.0);
 			current.yPos = itemText.defaultStyle().lineSpacing() + extra.Top+lineCorr-desc2;
 		}
-
-#if LAYOUT_BIDI
-        /*
-            hasenj: let fribidi do its magic
-         */
-        BidiLayoutManager bidiManager(&itemText);
-        QLinkedList<int> lineEndIndexes;
-#endif
 
 		current.startLine(firstInFrame());
 		outs = false;
@@ -1906,10 +1935,9 @@ void PageItem_TextFrame::layout()
 					current.breakLine(itemText, a);
 					EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 					current.finishLine(EndX);
-#if LAYOUT_BIDI
+#if BIDI_LAYOUT
                     //bidi-line-break [dup#1]
-                    lineEndIndexes.append(current.line.firstItem);
-                    lineEndIndexes.append(current.line.lastItem);
+                    layoutLines << LayoutLine(current.line);
 #endif
 					
 //					if (style.alignment() != 0)
@@ -1978,10 +2006,9 @@ void PageItem_TextFrame::layout()
 						
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
-#if LAYOUT_BIDI
+#if BIDI_LAYOUT
                         //bidi-line-break [dup#2]
-                        lineEndIndexes.append(current.line.firstItem);
-                        lineEndIndexes.append(current.line.lastItem);
+                        layoutLines << LayoutLine(current.line);
 #endif
 
 //???						current.breakXPos = current.line.x;
@@ -2066,10 +2093,9 @@ void PageItem_TextFrame::layout()
 //							   .arg(a);
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
-#if LAYOUT_BIDI
+#if BIDI_LAYOUT
                         //bidi-line-break [dup#3]
-                        lineEndIndexes.append(current.line.firstItem);
-                        lineEndIndexes.append(current.line.lastItem);
+                        layoutLines << LayoutLine(current.line);
 #endif
 //						qDebug() << QString("no break pos: %1-%2 @ %3 wid %4 nat %5 endX %6")
 //							   .arg(current.line.firstItem).arg(current.line.firstItem)
@@ -2394,10 +2420,9 @@ void PageItem_TextFrame::layout()
 		current.breakLine(itemText, a);
 		EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 		current.finishLine(EndX);
-#if LAYOUT_BIDI
+#if BIDI_LAYOUT
         //bidi-line-break [dup#4]
-        lineEndIndexes.append(current.line.firstItem);
-        lineEndIndexes.append(current.line.lastItem);
+        layoutLines << LayoutLine(current.line);
 #endif
 
 //		if (style.alignment() != 0)
@@ -2536,8 +2561,8 @@ void PageItem_TextFrame::layout()
 		if (current.itemsInLine > 0) {
 			itemText.appendLine(current.line);
 		}
-#if LAYOUT_BIDI
-    bidiManager.doBidiLayout(lineEndIndexes);
+#if BIDI_LAYOUT
+    bidiManager.doBidiLayout(layoutLines);
 #endif
 	}
 	MaxChars = itemText.length();
