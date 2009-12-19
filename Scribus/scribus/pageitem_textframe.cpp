@@ -1037,8 +1037,6 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
  */
 int BidiLayoutManager::nextRun(int start, int max)
 {
-     // qDebug() << "nextRun:" << start << "char" << InputString[start] << "Direction:" << (isEmbeddingRat(start)? "R" : "L") << "EmbeddingLevel:" << EmbeddingLevels[start]
-                 // << "prev:" << (start > 0? QString::fromUcs4(InputString+start-1, 1) : QString("N/A"));
     bool startEmbedding = isEmbeddingRat(start);
     if(max == -1)
     {
@@ -1067,22 +1065,8 @@ void BidiLayoutManager::doBidiLayout(QLinkedList<LayoutLine> layoutLines)
     {
         LayoutLine line = layoutLines.takeFirst();
         doBidiLayoutLine(line.startIndex, line.endIndex);
-        // qDebug() << "start: " << line.startIndex << ", end: " << line.endIndex << ", length: " << itemText->length();
     }
 }
-
-/*
-    HasenJ: This layout method is monstorously huge. I'm not going to try and fiddle with it.
-
-    My plan right now is in 2 phases:
-
-        1- get fribidi to link with the project and use the log2vis function to get the proper shaping.
-
-        2- try to fix line break issues by hacking all possible failure points.
-
-    This will probably only make this function more monstorous, but hey, I wasn't the one who made it that way.
-
- */
 
 #endif
 
@@ -1928,7 +1912,7 @@ void PageItem_TextFrame::layout()
 				cl = cl.subtract(cm);*/
 //				current.yPos = maxDY;
 			}
-			// end of line [[XXX:hasenj]]
+			// end of line
 			if ( SpecialChars::isBreak(hl->ch, Cols > 1) || (outs))
 			{
 				tabs.active = false;
@@ -2889,7 +2873,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea, double s
 						else
 							p->setPen(cachedStrokeQ, 1, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 					}
-					// paint glyphs [[XXX:hasenj]]
+					// paint glyphs
 					if (isEmbedded || cullingArea.intersects(pf2.mapRect(QRect(qRound(CurX + hl->glyph.xoffset),qRound(ls.y + hl->glyph.yoffset-asce), qRound(hl->glyph.xadvance+1), qRound(asce+desc)))))
 					{
 						p->save();//SA4
