@@ -847,7 +847,7 @@ class BidiLayoutManager
 
         const QString qInputString;
         const FriBidiChar *InputString;
-        const FriBidiStrIndex InputLength;
+        FriBidiStrIndex InputLength;
         FriBidiParType BaseDir;
         FriBidiChar *VisualString;
         FriBidiStrIndex *L_to_V;
@@ -880,7 +880,7 @@ struct LayoutLine
     LayoutLine(LineSpec line)
     {
         startIndex = line.firstItem;
-        endIndex = line.lastItem + 1; // XXX: I think last item is inclusive, but not exactly sure (actually I'm not sure of anything here!)
+        endIndex = line.lastItem; //lastItem is inclusive
     }
 };
 
@@ -902,6 +902,7 @@ BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) :
     EmbeddingLevels(0),
     ok(0)
 {
+    InputLength += qInputString.count('\r'); //HACK: occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?
     VisualString = new FriBidiChar[InputLength];
     L_to_V = new FriBidiStrIndex[InputLength];
     V_to_L = new FriBidiStrIndex[InputLength];
@@ -910,10 +911,6 @@ BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) :
     fribidi_get_bidi_types (InputString, InputLength, bidi_types);
     BaseDir = fribidi_get_par_direction(bidi_types, InputLength);
     ok = fribidi_get_par_embedding_levels(bidi_types, InputLength, &BaseDir, EmbeddingLevels);
-
-    qDebug() << "input length:" << InputLength << "scribus text length:" << itemText->length();
-    qDebug() << "sanity check:" << QString::fromUcs4(InputString, InputLength);
-
 }
 BidiLayoutManager::~BidiLayoutManager()
 {
@@ -958,20 +955,6 @@ bool BidiLayoutManager::isEmbeddingLat(int index)
     return !(isEmbeddingRat(index));
 }
 
-/*
-    HasenJ: This layout method is monstorously huge. I'm not going to try and fiddle with it.
-
-    My plan right now is in 2 phases:
-
-        1- get fribidi to link with the project and use the log2vis function to get the proper shaping.
-
-        2- try to fix line break issues by hacking all possible failure points.
-
-    This will probably only make this function more monstorous, but hey, I wasn't the one who made it that way.
-
- */
-
-
 /**
     EXPERIMENTAL
 
@@ -993,6 +976,14 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
     {
         return false;
     }
+
+    // HACK: last space seems to be ignored, and the first character of the last RTL run that gets
+    //      line-broken won't display
+    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
+    if(itemText->item(endIndex)->ch != ' ') {
+            endIndex++; 
+    }
+
     int length = endIndex - startIndex;
     for(int i = 0; i < length / 2; i++) // (startIndex + endIndex) / 2 is the midpoint
     {
@@ -1046,8 +1037,8 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
  */
 int BidiLayoutManager::nextRun(int start, int max)
 {
-    qDebug() << "nextRun:" << start << "char" << InputString[start] << "Direction:" << (isEmbeddingRat(start)? "R" : "L") << "EmbeddingLevel:" << EmbeddingLevels[start]
-                << "prev:" << (start > 0? QString::fromUcs4(InputString+start-1, 1) : QString("N/A"));
+     // qDebug() << "nextRun:" << start << "char" << InputString[start] << "Direction:" << (isEmbeddingRat(start)? "R" : "L") << "EmbeddingLevel:" << EmbeddingLevels[start]
+                 // << "prev:" << (start > 0? QString::fromUcs4(InputString+start-1, 1) : QString("N/A"));
     bool startEmbedding = isEmbeddingRat(start);
     if(max == -1)
     {
@@ -1079,6 +1070,19 @@ void BidiLayoutManager::doBidiLayout(QLinkedList<LayoutLine> layoutLines)
         // qDebug() << "start: " << line.startIndex << ", end: " << line.endIndex << ", length: " << itemText->length();
     }
 }
+
+/*
+    HasenJ: This layout method is monstorously huge. I'm not going to try and fiddle with it.
+
+    My plan right now is in 2 phases:
+
+        1- get fribidi to link with the project and use the log2vis function to get the proper shaping.
+
+        2- try to fix line break issues by hacking all possible failure points.
+
+    This will probably only make this function more monstorous, but hey, I wasn't the one who made it that way.
+
+ */
 
 #endif
 
