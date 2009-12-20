@@ -810,41 +810,35 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 #include <QLinkedList>
 #include "fribidi/fribidi.h"
 
-#ifndef SCRIBUS_BIDI_CLASSES
-#define SCRIBUS_BIDI_CLASSES
+#ifndef SCRIBUS_BIDI_HEADERS
+#define SCRIBUS_BIDI_HEADERS
 
 struct LayoutLine;
 
 /**
-    This class is a hack that applies bidi reordering after the layout method does its biznis.
+    This code is a hack that applies bidi reordering after the layout method has done its business.
 
     We're not really interested in fixing the layout method or figuring out how it works: we only need to figure out
-    the positions of the line breaks, and fool the layout method to choose shaped characters by figuring out the shapes
-    of arabic characters (without reordering them).
+    the positions of the line breaks.
 
     Here's the plan:
 
-    BidiLayoutManager will:
+    BidiInfo will Figure out embedding levels (using GNU FriBidi) and supply ranges for runs (uni directional segments).
 
-        * Figure out embedding levels (using GNU FriBidi)
-        * Figure out shapes of arabic characters (without reordering the input string or modifying it)
-        
-    Then, in the layout method, inject the following:
+    This information is used to drive the bidi-reordering process, which involves:
 
-        * Right before choosing the glyph for a character, check if it's in an RTL run, and if so, supply the arabic shape for it
-        * Where ever a new line is detected, record the start and end position of that line somewhere where it can be retrived later
-        * When layout is done with its biznis, let the BidiLayoutManager reorder RTL runs in each line
+        * Detecting positions of new lines
+        * Reordering each line using the BidiInfo
         
     This should get proper RTL rendering, but this is not enough:
 
+        * We need to shape arabic characters (and other languages that require it, if any): for this we need HarfBuzz
         * We need extra work so that selections and editing are done correctly.
 
  */
-class BidiLayoutManager
+class BidiInfo
 {
     private:
-        StoryText *itemText;
-
         QString qString;
         QVector<uint> qUtf32; // included for RAII
         FriBidiChar *inputString;
@@ -853,13 +847,11 @@ class BidiLayoutManager
         FriBidiLevel *embeddingLevels;
 
     public:
-        BidiLayoutManager(StoryText *p_itemText);
-        ~BidiLayoutManager();
-        bool isEmbeddingRat(int index);
-        bool isEmbeddingLat(int index);
+        BidiInfo(StoryText *itemText);
+        ~BidiInfo();
+        bool isRtlEmbedding(int index);
+        bool isLtrEmbedding(int index);
         int nextRun(int index, int limit=-1);
-        void doBidiLayoutLine(int lineStart, int lineEnd);
-        void doBidiLayout(QLinkedList<LayoutLine> layoutLines);
 };
 
 struct LayoutLine
@@ -885,24 +877,22 @@ struct LayoutLine
 
     This will give us the embedding levels, allowing us to grab text runs
  */
-BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) : 
-    itemText(p_itemText),
-    qString(p_itemText->text(0, p_itemText->length())),
+BidiInfo::BidiInfo(StoryText *itemText) : 
+    qString(itemText->text(0, itemText->length())),
     qUtf32(qString.toUcs4()),
     inputString(qUtf32.data()),
-    inputLength(p_itemText->length() + qString.count('\r')), //HACK: occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?
-    baseDir(FRIBIDI_PAR_LTR), //dunno, sounds like a sane default for now
-    embeddingLevels(new FriBidiLevel[inputLength])
+    inputLength(qString.length() + qString.count('\r')), //HACK: I think occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?)
+    baseDir(FRIBIDI_PAR_LTR), //just an init, we'll calculate it again soon
+    embeddingLevels(new FriBidiLevel[inputLength]) //don't forget to delete me
 {
     FriBidiCharType *bidi_types = new FriBidiCharType[inputLength];
-
     fribidi_get_bidi_types (inputString, inputLength, bidi_types);
     baseDir = fribidi_get_par_direction(bidi_types, inputLength);
     FriBidiLevel ok = fribidi_get_par_embedding_levels(bidi_types, inputLength, &baseDir, embeddingLevels);
-    if(!ok) throw "BIDI ERROR"; // XXX: this shouldn't happen anyway, but this is probably the wrong way to panic
+    if(!ok) throw "BIDI ERROR"; // XXX: how do we panic?
     delete[] bidi_types;
 }
-BidiLayoutManager::~BidiLayoutManager()
+BidiInfo::~BidiInfo()
 {
 #define BIDI_DEL(x) if(x) { delete[] x; x = 0; }
     BIDI_DEL(embeddingLevels)
@@ -912,7 +902,7 @@ BidiLayoutManager::~BidiLayoutManager()
 /**
     Does character at index have an RTL embedding level?
  */
-bool BidiLayoutManager::isEmbeddingRat(int index)
+bool BidiInfo::isRtlEmbedding(int index)
 {
     return embeddingLevels[index] % 2 == 1; // odd embedding levels are part of an RTL run
 }
@@ -920,9 +910,9 @@ bool BidiLayoutManager::isEmbeddingRat(int index)
 /**
     Does character at index have an LTR embedding level?
  */
-bool BidiLayoutManager::isEmbeddingLat(int index)
+bool BidiInfo::isLtrEmbedding(int index)
 {
-    return !(isEmbeddingRat(index));
+    return !(isRtlEmbedding(index));
 }
 
 /**
@@ -940,7 +930,7 @@ bool BidiLayoutManager::isEmbeddingLat(int index)
     how it works: swaps the glyphs (originally I thought of swapping positions, but then
     I figured it's better to just swap the glyphs, since it's much less than the position info!)
  */
-bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
+bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
 {
     if(startIndex > itemText->length() || endIndex > itemText->length())
     {
@@ -960,44 +950,9 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
 }
 
 /**
-    The bidi needs to be applied to one line at a time. We don't know where lines start and end,
-    but we can let others use us to apply bidi to a certain range of text. 
-
-    Call this function when you determine the start and enf of a line. It will examine 
-    the given range and look for RTL runs and reverse them.
- */
-void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
-{
-    if(lineStart > itemText->length() || lineEnd > itemText->length())
-    {
-        return;
-    }
-
-    // HACK: last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
-    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
-    //
-    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
-    if(itemText->item(lineEnd-1)->ch == ' ') {
-            lineEnd--; 
-    }
-
-    int start = lineStart;
-    int end = start;
-    while(start < lineEnd)
-    {
-        end = nextRun(start, lineEnd);
-        if(isEmbeddingRat(start))
-        {
-            _reverseGlyphLayout(itemText, start, end);
-        }
-        start = end;
-    }
-}
-
-/**
     Get the start of the next (directional) run.
 
-    This method is used to get ranges for runs. Sample usage is available in doBidiLayoutLine
+    This method is used to get ranges for runs. Sample usage is available in doBidiLine
 
     Pseudo code:
 
@@ -1008,37 +963,80 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
             // (start, end) is now a run, do something with it
             start = end
  */
-int BidiLayoutManager::nextRun(int start, int limit)
+int BidiInfo::nextRun(int start, int limit)
 {
-    bool startEmbedding = isEmbeddingRat(start);
+    bool startEmbedding = isRtlEmbedding(start);
     if(limit == -1)
     {
-        limit = itemText->length();
+        limit = qString.length();
     }
     int index = start;
     while(index < limit)
     {
         index++;
-        if(isEmbeddingRat(index) != startEmbedding)
+        if(isRtlEmbedding(index) != startEmbedding)
             break;
     }
     return index;
 }
 
 /**
-    EXPERIMENTAL
+    The bidi needs to be applied to one line at a time. This method expects you to tell it
+    where a lines starts and ends
 
-    Applies bidi reordering to each line as specified in layoutLines. (bidi must applied on a per-line basis only)
+    Call this function when you determine the start and enf of a line. It will examine 
+    the given range and look for RTL runs and reverse them.
 
-    layoutLines is a list of tuples (read: struct with 2 elements) that specify the indexes for line beginnings and ends
+    @param itemText: ojbect representing the text of the text-frame
+    @param bidi: holds the bidi information about the text
  */
-void BidiLayoutManager::doBidiLayout(QLinkedList<LayoutLine> layoutLines)
+void doBidiLine(StoryText * itemText, BidiInfo *bidi, int lineStart, int lineEnd)
+{
+    // HACK:last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
+    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
+    //      Why do we decrement lineEnd? because if the last character is a space, whatever we seap it with won't be displayed,
+    //      so the last character needs to be the last character that's actually displayed
+    //
+    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
+    if(itemText->item(lineEnd-1)->ch == ' ') {
+            lineEnd--; 
+    }
+
+    int start = lineStart;
+    int end = start;
+    while(start < lineEnd)
+    {
+        end = bidi->nextRun(start, lineEnd);
+        if(bidi->isRtlEmbedding(start)) //RTL run
+        {
+            reverseGlyphLayout(itemText, start, end);
+        }
+        start = end;
+    }
+}
+
+/**
+    Applies bidi reordering to each line in a parapgraph.
+
+    @param layoutLines: tells us the line boundaries
+ */
+void doBidiParagraph(StoryText *itemText, BidiInfo *bidi, QLinkedList<LayoutLine> layoutLines)
 {
     while(!layoutLines.isEmpty())
     {
         LayoutLine line = layoutLines.takeFirst();
-        doBidiLayoutLine(line.startIndex, line.endIndex);
+        doBidiLine(itemText, bidi, line.startIndex, line.endIndex);
     }
+}
+
+/**
+    Inject a call to this method somewhere at the tail of the layout method
+ */
+void doBidiPostProcess(StoryText* itemText, QLinkedList<LayoutLine> layoutLines)
+{
+    //FIXME: this treats the whole text as one paragraph
+    BidiInfo bidiInfo(itemText);
+    doBidiParagraph(itemText, &bidiInfo, layoutLines);
 }
 
 #endif
@@ -1135,7 +1133,6 @@ void PageItem_TextFrame::layout()
 	if ((itemText.length() != 0)) // || (NextBox != 0))
 	{
 #if BIDI_LAYOUT
-        BidiLayoutManager bidiManager(&itemText);
         QLinkedList<LayoutLine> layoutLines;
 #endif
 
@@ -2523,7 +2520,7 @@ void PageItem_TextFrame::layout()
 			itemText.appendLine(current.line);
 		}
 #if BIDI_LAYOUT
-    bidiManager.doBidiLayout(layoutLines);
+    doBidiPostProcess(&itemText, layoutLines);
 #endif
 	}
 	MaxChars = itemText.length();
