@@ -810,8 +810,8 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 #include <QLinkedList>
 #include "fribidi/fribidi.h"
 
-#ifndef SCRIBUS_BIDI_SHAPE_MANAGER
-#define SCRIBUS_BIDI_SHAPE_MANAGER
+#ifndef SCRIBUS_BIDI_CLASSES
+#define SCRIBUS_BIDI_CLASSES
 
 struct LayoutLine;
 
@@ -845,25 +845,19 @@ class BidiLayoutManager
     private:
         StoryText *itemText;
 
-        const QString qInputString;
-        const FriBidiChar *InputString;
-        FriBidiStrIndex InputLength;
-        FriBidiParType BaseDir;
-        FriBidiChar *VisualString;
-        FriBidiStrIndex *L_to_V;
-        FriBidiStrIndex *V_to_L;
-        FriBidiLevel *EmbeddingLevels;
-        FriBidiLevel ok;
+        QString qString;
+        QVector<uint> qUtf32; // included for RAII
+        FriBidiChar *inputString;
+        FriBidiStrIndex inputLength;
+        FriBidiParType baseDir;
+        FriBidiLevel *embeddingLevels;
 
     public:
         BidiLayoutManager(StoryText *p_itemText);
         ~BidiLayoutManager();
-        QChar logicalAt(int index);
-        QChar visualAt(int index);
-        QChar shapeAt(int index);
         bool isEmbeddingRat(int index);
         bool isEmbeddingLat(int index);
-        int nextRun(int index, int max=-1);
+        int nextRun(int index, int limit=-1);
         void doBidiLayoutLine(int lineStart, int lineEnd);
         void doBidiLayout(QLinkedList<LayoutLine> layoutLines);
 };
@@ -893,63 +887,39 @@ struct LayoutLine
  */
 BidiLayoutManager::BidiLayoutManager(StoryText *p_itemText) : 
     itemText(p_itemText),
-    qInputString(p_itemText->text(0, p_itemText->length())),
-    InputString(qInputString.toUcs4().data()),
-    InputLength(p_itemText->length()),
-    BaseDir(FRIBIDI_PAR_LTR), //dunno, sounds like a sane default for now
-    VisualString(0),
-    L_to_V(0), V_to_L(0),
-    EmbeddingLevels(0),
-    ok(0)
+    qString(p_itemText->text(0, p_itemText->length())),
+    qUtf32(qString.toUcs4()),
+    inputString(qUtf32.data()),
+    inputLength(p_itemText->length() + qString.count('\r')), //HACK: occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?
+    baseDir(FRIBIDI_PAR_LTR), //dunno, sounds like a sane default for now
+    embeddingLevels(new FriBidiLevel[inputLength])
 {
-    InputLength += qInputString.count('\r'); //HACK: occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?
-    VisualString = new FriBidiChar[InputLength];
-    L_to_V = new FriBidiStrIndex[InputLength];
-    V_to_L = new FriBidiStrIndex[InputLength];
-    EmbeddingLevels = new FriBidiLevel[InputLength];
-    FriBidiCharType *bidi_types = new FriBidiCharType[InputLength];
-    fribidi_get_bidi_types (InputString, InputLength, bidi_types);
-    BaseDir = fribidi_get_par_direction(bidi_types, InputLength);
-    ok = fribidi_get_par_embedding_levels(bidi_types, InputLength, &BaseDir, EmbeddingLevels);
+    FriBidiCharType *bidi_types = new FriBidiCharType[inputLength];
+
+    fribidi_get_bidi_types (inputString, inputLength, bidi_types);
+    baseDir = fribidi_get_par_direction(bidi_types, inputLength);
+    FriBidiLevel ok = fribidi_get_par_embedding_levels(bidi_types, inputLength, &baseDir, embeddingLevels);
+    if(!ok) throw "BIDI ERROR"; // XXX: this shouldn't happen anyway, but this is probably the wrong way to panic
+    delete[] bidi_types;
 }
 BidiLayoutManager::~BidiLayoutManager()
 {
 #define BIDI_DEL(x) if(x) { delete[] x; x = 0; }
-    BIDI_DEL(L_to_V)
-    BIDI_DEL(V_to_L)
-    BIDI_DEL(VisualString)
-    BIDI_DEL(EmbeddingLevels)
+    BIDI_DEL(embeddingLevels)
 #undef BIDI_DEL
 }
 
-QChar BidiLayoutManager::logicalAt(int index)
-{
-    return QChar(InputString[index]);
-}
-
-//don't use; bad idea
-QChar BidiLayoutManager::visualAt(int index)
-{
-    if(ok)
-        return QChar(VisualString[index]);
-    else
-        return logicalAt(index);
-}
-
-//don't use; bad idea
-QChar BidiLayoutManager::shapeAt(int index)
-{
-    if(!ok) return logicalAt(index);
-
-    return visualAt(L_to_V[index]);
-}
-
+/**
+    Does character at index have an RTL embedding level?
+ */
 bool BidiLayoutManager::isEmbeddingRat(int index)
 {
-    if(!ok) return false;
-    return EmbeddingLevels[index] % 2 == 1; // odd embedding levels are part of an RTL run
+    return embeddingLevels[index] % 2 == 1; // odd embedding levels are part of an RTL run
 }
 
+/**
+    Does character at index have an LTR embedding level?
+ */
 bool BidiLayoutManager::isEmbeddingLat(int index)
 {
     return !(isEmbeddingRat(index));
@@ -977,15 +947,17 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
         return false;
     }
 
-    // HACK: last space seems to be ignored, and the first character of the last RTL run that gets
-    //      line-broken won't display
+    // HACK: last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
+    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
+    //      The question is: why does `endIndex++` fix it? I'm not sure, it's something I discovered by accident really
+    //
     // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
     if(itemText->item(endIndex)->ch != ' ') {
             endIndex++; 
     }
 
     int length = endIndex - startIndex;
-    for(int i = 0; i < length / 2; i++) // (startIndex + endIndex) / 2 is the midpoint
+    for(int i = 0; i < length / 2; i++) 
     {
         ScText *first = itemText->item(i + startIndex);
         ScText *second = itemText->item(endIndex - 1 - i);
@@ -1023,9 +995,11 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
 }
 
 /**
-    Get the start of the next run.
+    Get the start of the next (directional) run.
 
-    This method is used to get ranges for runs. Sample usage is available in BidiLayoutLine
+    This method is used to get ranges for runs. Sample usage is available in doBidiLayoutLine
+
+    Pseudo code:
 
         start = 0
         end = start
@@ -1033,17 +1007,16 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
             end = nextRun(start, length)
             // (start, end) is now a run, do something with it
             start = end
-
  */
-int BidiLayoutManager::nextRun(int start, int max)
+int BidiLayoutManager::nextRun(int start, int limit)
 {
     bool startEmbedding = isEmbeddingRat(start);
-    if(max == -1)
+    if(limit == -1)
     {
-        max = itemText->length();
+        limit = itemText->length();
     }
     int index = start;
-    while(index < max)
+    while(index < limit)
     {
         index++;
         if(isEmbeddingRat(index) != startEmbedding)
