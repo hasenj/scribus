@@ -874,7 +874,7 @@ struct LayoutLine
     LayoutLine(LineSpec line)
     {
         startIndex = line.firstItem;
-        endIndex = line.lastItem; //lastItem is inclusive
+        endIndex = line.lastItem + 1; //lastItem is inclusive
     }
 };
 
@@ -947,15 +947,6 @@ bool _reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
         return false;
     }
 
-    // HACK: last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
-    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
-    //      The question is: why does `endIndex++` fix it? I'm not sure, it's something I discovered by accident really
-    //
-    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
-    if(itemText->item(endIndex)->ch != ' ') {
-            endIndex++; 
-    }
-
     int length = endIndex - startIndex;
     for(int i = 0; i < length / 2; i++) 
     {
@@ -981,6 +972,15 @@ void BidiLayoutManager::doBidiLayoutLine(int lineStart, int lineEnd)
     {
         return;
     }
+
+    // HACK: last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
+    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
+    //
+    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
+    if(itemText->item(lineEnd-1)->ch == ' ') {
+            lineEnd--; 
+    }
+
     int start = lineStart;
     int end = start;
     while(start < lineEnd)
