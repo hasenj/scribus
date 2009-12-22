@@ -818,23 +818,22 @@ struct LayoutLine;
 /**
     This code is a hack that applies bidi reordering after the layout method has done its business.
 
-    We're not really interested in fixing the layout method or figuring out how it works: we only need to figure out
-    the positions of the line breaks.
-
-    Here's the plan:
-
-    BidiInfo will Figure out embedding levels (using GNU FriBidi) and supply ranges for runs (uni directional segments).
+    BidiInfo will Figure out embedding levels (using GNU FriBidi) and supply ranges for runs (uni-directional segments of text).
 
     This information is used to drive the bidi-reordering process, which involves:
 
         * Detecting positions of new lines
         * Reordering each line using the BidiInfo
         
-    This should get proper RTL rendering, but this is not enough:
+    This should get proper bidirectional display, but this is not enough for full bidi support:
 
-        * We need to shape arabic characters (and other languages that require it, if any): for this we need HarfBuzz
+        * We need to shape arabic characters (and other languages that require it, if any): 
+            * For this we need HarfBuzz
         * We need extra work so that selections and editing are done correctly.
+            * See section "Supporting Text Manipulation" on http://java.sun.com/j2se/1.5.0/docs/guide/2d/spec/j2d-fonts.html#wp68590
+            
 
+    -hasenj
  */
 class BidiInfo
 {
@@ -875,7 +874,7 @@ struct LayoutLine
 /**
     Let fribidi work its magic.
 
-    This will give us the embedding levels, allowing us to grab text runs
+    This will give us the embedding levels, allowing us to grab directional runs
  */
 BidiInfo::BidiInfo(StoryText *itemText) : 
     qString(itemText->text(0, itemText->length())),
@@ -929,6 +928,7 @@ bool BidiInfo::isLtrEmbedding(int index)
 
     how it works: swaps the glyphs (originally I thought of swapping positions, but then
     I figured it's better to just swap the glyphs, since it's much less than the position info!)
+    FIXME: This is probably wrong, it results in an ScText item to have a glyph not of its own
  */
 bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
 {
@@ -942,6 +942,7 @@ bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
     {
         ScText *first = itemText->item(i + startIndex);
         ScText *second = itemText->item(endIndex - 1 - i);
+
         GlyphLayout tmp = first->glyph;
         first->glyph = second->glyph;
         second->glyph = tmp;
@@ -982,22 +983,21 @@ int BidiInfo::nextRun(int start, int limit)
 
 /**
     The bidi needs to be applied to one line at a time. This method expects you to tell it
-    where a lines starts and ends
+    where a line starts and ends
 
-    Call this function when you determine the start and enf of a line. It will examine 
+    Call this function when you determine the start and end of a line. It will examine 
     the given range and look for RTL runs and reverse them.
 
-    @param itemText: ojbect representing the text of the text-frame
+    @param itemText: ojbect representing the text of the scribus text-frame
     @param bidi: holds the bidi information about the text
  */
 void doBidiLine(StoryText * itemText, BidiInfo *bidi, int lineStart, int lineEnd)
 {
     // HACK:last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
-    //      when an RTL run crosses a line boundary, because the character took the place of the space (which got erased!)
-    //      Why do we decrement lineEnd? because if the last character is a space, whatever we seap it with won't be displayed,
-    //      so the last character needs to be the last character that's actually displayed
+    //      when an RTL run crosses a line boundary, because the character was swaped with an invisible space
+    //      To circumvent this situation, we ignore the last character from the line if it's a space. This should not cause
+    //      any problem, even if it turned out that the space wasn't suppressed
     //
-    // XXX: We should check for the ScStyle_SuppressSpace flag, but in my testing, things work better if we just assume it
     if(itemText->item(lineEnd-1)->ch == ' ') {
             lineEnd--; 
     }
@@ -1007,9 +1007,10 @@ void doBidiLine(StoryText * itemText, BidiInfo *bidi, int lineStart, int lineEnd
     while(start < lineEnd)
     {
         end = bidi->nextRun(start, lineEnd);
-        if(bidi->isRtlEmbedding(start)) //RTL run
+        if(bidi->isRtlEmbedding(start)) 
         {
-            reverseGlyphLayout(itemText, start, end);
+            // Reverse an RTL text run
+            reverseGlyphLayout(itemText, start, end); 
         }
         start = end;
     }
@@ -1030,6 +1031,8 @@ void doBidiParagraph(StoryText *itemText, BidiInfo *bidi, QLinkedList<LayoutLine
 }
 
 /**
+    This function takes off where PageItem_TextFrame::layout (thinks) it's done.
+
     Inject a call to this method somewhere at the tail of the layout method
  */
 void doBidiPostProcess(StoryText* itemText, QLinkedList<LayoutLine> layoutLines)
