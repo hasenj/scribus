@@ -11,6 +11,8 @@ extern "C" {
 HB_Script charScript(uint cp);
 HB_Script stringScript(QVector<uint> ustr);
 
+void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex);
+
 /**
     This is an attempt to encapsulate and streamline the font stuff
     in the harfbuzz API with freetype
@@ -27,9 +29,40 @@ public:
 
         based on tests/fuzzing/fuzz.cc
      */
-    ShaperFontInfo(FT_Face face);
+    ShaperFontInfo(ScFace face);
 };
 
+
+struct ShaperOutput
+{
+    hb_uint32 num_glyphs;
+    HB_Glyph* glyphs;
+    HB_GlyphAttributes* attributes;
+    HB_Fixed* advances;
+    HB_FixedPoint* offsets;
+    ushort* log_clusters;
+
+    ShaperOutput()
+    {
+        num_glyphs = 0;
+        glyphs = 0;
+        attributes = 0;
+        advances = 0;
+        offsets = 0;
+        log_clusters = 0;
+    }
+
+    ShaperOutput(HB_ShaperItem *item)
+    {
+        num_glyphs = item->num_glyphs;
+        glyphs = item->glyphs;
+        attributes = item->attributes;
+        advances = item->advances;
+        offsets = item->offsets;
+        log_clusters = item->log_clusters;
+    }
+
+};
 
 /**
     Attempt to simplify and streamline the HarfBuzz shaper item stuff
@@ -44,15 +77,7 @@ private:
 public:
     ShaperItemInfo(ShaperFontInfo *font);
     ~ShaperItemInfo();
-    void shapeItem(QString str);
-};
-
-struct ShaperOutput
-{
-    HB_Glyph* glyphs;
-    HB_GlyphAttributes* attributes;
-    HB_Fixed* advances;
-    ushort* log_clusters;
+    ShaperOutput shapeItem(QString str);
 };
 
 #endif

@@ -809,6 +809,7 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 
 #include <QLinkedList>
 #include "fribidi/fribidi.h"
+#include "shaper.h"
 
 #ifndef SCRIBUS_BIDI_HEADERS
 #define SCRIBUS_BIDI_HEADERS
@@ -991,7 +992,7 @@ int BidiInfo::nextRun(int start, int limit)
     @param itemText: ojbect representing the text of the scribus text-frame
     @param bidi: holds the bidi information about the text
  */
-void doBidiLine(StoryText * itemText, BidiInfo *bidi, int lineStart, int lineEnd)
+void doBidiLine(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd)
 {
     // HACK:last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
     //      when an RTL run crosses a line boundary, because the character was swaped with an invisible space
@@ -1009,7 +1010,8 @@ void doBidiLine(StoryText * itemText, BidiInfo *bidi, int lineStart, int lineEnd
         end = bidi->nextRun(start, lineEnd);
         if(bidi->isRtlEmbedding(start)) 
         {
-            // Reverse an RTL text run
+            // process RTL runs
+            shapeGlyphs(itemText, start, end);
             reverseGlyphLayout(itemText, start, end); 
         }
         start = end;

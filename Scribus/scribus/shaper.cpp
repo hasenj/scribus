@@ -6,8 +6,11 @@
 
 #include <QString>
 #include <QVector>
+#include <QDebug>
 
 #include "shaper.h"
+#include "fonts/ftface.h"
+#include "fonts/scface.h"
 
 //pointless proxy
 HB_Script charScript(uint cp)
@@ -46,8 +49,16 @@ HB_Script stringScript(QVector<uint> ustr)
 
     based on tests/fuzzing/fuzz.cc
  */
-ShaperFontInfo::ShaperFontInfo(FT_Face face)
+ShaperFontInfo::ShaperFontInfo(ScFace scface)
 {
+    FT_Library library = 0;
+    // XXX: deal with error
+    bool error = FT_Init_FreeType(&library);
+    FT_Face face = 0;
+    error = FT_New_Face(library, 
+            scface.fontFilePath().toUtf8().data(), 
+            scface.faceIndex(), &face);
+
     hbFace = HB_NewFace(face, hb_freetype_table_sfnt_get);
     hbFont.klass = &hb_freetype_class;
     hbFont.userData = face;
@@ -95,16 +106,44 @@ ShaperItemInfo::~ShaperItemInfo()
 
     Assume str is an item, i.e. same script across the entire string
  */
-void ShaperItemInfo::shapeItem(QString str)
+ShaperOutput ShaperItemInfo::shapeItem(QString str)
 {
     if(str.length() == 0)
-        return;
+        return ShaperOutput();
 
-    HB_ScriptItem *out = &(shaper_item.item);
-    QVector<uint> ustr = str.toUcs4();
+    QVector<uint> ustr = str.toUcs4(); //XXX let stringScript work with utf16
 
-    out->script = stringScript(ustr);
+    shaper_item.string = str.utf16();
+    shaper_item.stringLength = str.length();
+    shaper_item.item.script = stringScript(ustr);
+    shaper_item.item.pos = 0;
+    shaper_item.item.length = str.length();
 
     HB_ShapeItem(&shaper_item);
+
+    return ShaperOutput(&shaper_item);
+}
+
+/**
+    Use HarfBuzz to shape segment in question
+ */
+void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
+{
+    QString text = itemText->text(startIndex, endIndex-startIndex); //this one takes pos, len
+
+    ScFace scface = itemText->item(startIndex)->font();
+
+    ShaperFontInfo font(scface);
+    ShaperItemInfo shaper(&font);
+    ShaperOutput out = shaper.shapeItem(text);
+
+    //out.glyphs has our glyphs
+    for(int i = 0; i < out.num_glyphs; i++)
+    {
+        itemText->item(startIndex + i)->glyph.glyph = out.glyphs[i];
+        // itemText->item(startIndex + i)->glyph.xadvance = out.advances[i];
+        qDebug() << "advance[" << i << "] =" << out.advances[i];
+        qDebug() << "offsets[" << i << "] =" << out.offsets[i].x;
+    }
 }
 
