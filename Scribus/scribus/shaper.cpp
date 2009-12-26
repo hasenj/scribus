@@ -191,6 +191,17 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
         // qDebug() << "advance[" << i << "] =" << out.advances[i];
         // qDebug() << "offsets[" << i << "].x =" << out.offsets[i].x;
         // qDebug() << "offsets[" << i << "].y =" << out.offsets[i].y;
+    }
+
+    if(out.num_glyphs < text.length())
+    {
+        // There were some ligatures, so zero-out the extra characters at the end of this run
+        for(int i = out.num_glyphs; i < text.length(); i++)
+        {
+            GlyphLayout &glyph = itemText->item(startIndex + i)->glyph;
+            glyph.glyph = scface.char2CMap(QChar::Nbsp);
+            glyph.xadvance = 0;
+        }
 
     }
 }
