@@ -1011,7 +1011,7 @@ void doBidiLine(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd)
         if(bidi->isRtlEmbedding(start)) 
         {
             // process RTL runs
-            shapeGlyphs(itemText, start, end);
+            shapeGlyphs(itemText, start, end); //HarfBuzz!!
             reverseGlyphLayout(itemText, start, end); 
         }
         start = end;

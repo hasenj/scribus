@@ -19,9 +19,10 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex);
  */
 class ShaperFontInfo
 {
-public:
+private:
     HB_Face hbFace;
     HB_FontRec hbFont;
+    FT_Face face;
 
 public:    
     /**
@@ -29,7 +30,17 @@ public:
 
         based on tests/fuzzing/fuzz.cc
      */
-    ShaperFontInfo(ScFace face);
+    ShaperFontInfo(ScFace face, qreal size);
+    ~ShaperFontInfo();
+    qreal uniEM();
+
+    HB_Font get_HB_Font() {
+        return &hbFont;
+    }
+
+    HB_Face get_HB_Face() {
+        return hbFace;
+    }
 };
 
 

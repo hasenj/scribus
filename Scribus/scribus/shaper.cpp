@@ -45,20 +45,33 @@ HB_Script stringScript(QVector<uint> ustr)
 }
 
 /**
-    The FT_Face should be initialized already in scribus
+    The FT_Face should be initialized already in scribus, but I can't access it!!!
 
     based on tests/fuzzing/fuzz.cc
  */
-ShaperFontInfo::ShaperFontInfo(ScFace scface)
+ShaperFontInfo::ShaperFontInfo(ScFace scface, qreal size)
 {
+    face = 0;
     FT_Library library = 0;
     // XXX: deal with error
     bool error = FT_Init_FreeType(&library);
-    FT_Face face = 0;
+    if(error)
+    {
+        qDebug() << "error initing FT library";
+    }
+    // qDebug() << "font file:" << scface.fontFilePath();
     error = FT_New_Face(library, 
             scface.fontFilePath().toUtf8().data(), 
             scface.faceIndex(), &face);
-
+    if(error)
+    {
+        qDebug() << "error loading FT font?";
+    }
+    error = FT_Set_Char_Size(face, 0, 10, 72, 72); // XXX: not sure what should I put here!! fonts/ftface puts 10 for the size, why?
+    if(error)
+    {
+        qDebug() << "error setting font size";
+    }
     hbFace = HB_NewFace(face, hb_freetype_table_sfnt_get);
     hbFont.klass = &hb_freetype_class;
     hbFont.userData = face;
@@ -68,19 +81,30 @@ ShaperFontInfo::ShaperFontInfo(ScFace scface)
     hbFont.y_scale = face->size->metrics.y_scale;
 }
 
+ShaperFontInfo::~ShaperFontInfo()
+{
+    FT_Done_Face(face);
+}
+
+// fonts/ftface uses this thing (uniEM) to get the proper xadvance, 
+// I'm really *not* sure how I should use it, right now it's unused
+qreal ShaperFontInfo::uniEM()
+{
+    return static_cast<qreal>(face->units_per_EM);
+}
 
 /**
     based on tests/fuzzing/fuzz.cc
  */
 ShaperItemInfo::ShaperItemInfo(ShaperFontInfo *font)
 {
-    shaper_item.kerning_applied = false;
+    shaper_item.kerning_applied = true;
     shaper_item.string = (HB_UChar16 *) str;
-    shaper_item.stringLength = 0;
+    shaper_item.stringLength = maxLength;
     shaper_item.item.bidiLevel = 0;
     shaper_item.shaperFlags = 0;
-    shaper_item.font = &(font->hbFont);
-    shaper_item.face = font->hbFace;
+    shaper_item.font = font->get_HB_Font();
+    shaper_item.face = font->get_HB_Face();
     shaper_item.glyphIndicesPresent = false;
     shaper_item.initialGlyphCount = 0;
 
@@ -100,6 +124,7 @@ ShaperItemInfo::~ShaperItemInfo()
     delete[] shaper_item.offsets;
     delete[] shaper_item.log_clusters;
 }
+
 
 /**
     Do the shaping for this string.
@@ -131,19 +156,42 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
 {
     QString text = itemText->text(startIndex, endIndex-startIndex); //this one takes pos, len
 
-    ScFace scface = itemText->item(startIndex)->font();
+    ScText * scitem = itemText->item(startIndex);
+    ScFace scface = scitem->font();
+    qreal size = scitem->fontSize() / 10.0;
+    
+    // qDebug() << "font size:" << size;
 
-    ShaperFontInfo font(scface);
+    ShaperFontInfo font(scface, size);
     ShaperItemInfo shaper(&font);
     ShaperOutput out = shaper.shapeItem(text);
 
     //out.glyphs has our glyphs
-    for(int i = 0; i < out.num_glyphs; i++)
+    for(uint i = 0; i < out.num_glyphs; i++)
     {
-        itemText->item(startIndex + i)->glyph.glyph = out.glyphs[i];
-        // itemText->item(startIndex + i)->glyph.xadvance = out.advances[i];
-        qDebug() << "advance[" << i << "] =" << out.advances[i];
-        qDebug() << "offsets[" << i << "] =" << out.offsets[i].x;
+        GlyphLayout &glyph = itemText->item(startIndex + i)->glyph;
+        glyph.glyph = out.glyphs[i];
+
+        // XXX: I can't figure out how to use the advances returned by harfbuzz
+        //      to position the glyphs, so I'm going to ask the scribus font
+        //      class to get the advances for me, then I'll handle marks as
+        //      a special case where there's no advance
+        //
+        //      Please somebody FIXME
+        //
+        glyph.xadvance = scface.glyphWidth(glyph.glyph, size); //works .. sorta!!
+
+        if(out.attributes[i].mark) //vowel marks
+        {
+            glyph.xadvance = 0;
+        }
+
+        //debugging
+        // qDebug() << "glyphs[" << i << "] =" << out.glyphs[i];
+        // qDebug() << "advance[" << i << "] =" << out.advances[i];
+        // qDebug() << "offsets[" << i << "].x =" << out.offsets[i].x;
+        // qDebug() << "offsets[" << i << "].y =" << out.offsets[i].y;
+
     }
 }
 
