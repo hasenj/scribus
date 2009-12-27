@@ -1145,6 +1145,10 @@ void PageItem_TextFrame::layout()
 	current.initColumns(columnWidth(), ColGap);
 	current.hyphenCount = 0;
 				 
+#if BIDI_LAYOUT
+        QLinkedList<LayoutLine> layoutLines;
+#endif
+
 	// dump styles
 /*	
 	for (int i=0; i < itemText.nrOfParagraphs(); ++i) {
@@ -1163,10 +1167,6 @@ void PageItem_TextFrame::layout()
 	setShadow();
 	if ((itemText.length() != 0)) // || (NextBox != 0))
 	{
-#if BIDI_LAYOUT
-        QLinkedList<LayoutLine> layoutLines;
-#endif
-
 		// determine layout area
 		QRegion cl = availableRegion(QRegion(pf2.map(Clip)));                
 		if (cl.isEmpty())
@@ -2571,6 +2571,9 @@ void PageItem_TextFrame::layout()
 	return;
 			
 NoRoom:     
+#if BIDI_LAYOUT
+    doBidiPostProcess(&itemText, layoutLines);
+#endif
 //	pf2.end();
 	invalid = false;
 	PageItem_TextFrame * next = dynamic_cast<PageItem_TextFrame*>(NextBox);
