@@ -882,12 +882,12 @@ BidiInfo::BidiInfo(StoryText *itemText) :
     qUtf32(qString.toUcs4()),
     inputString(qUtf32.data()),
     inputLength(qString.length() + qString.count('\r')), //HACK: I think occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?)
-    baseDir(FRIBIDI_PAR_LTR), //just an init, we'll calculate it again soon
+    baseDir(FRIBIDI_PAR_LTR),
     embeddingLevels(new FriBidiLevel[inputLength]) //don't forget to delete me
 {
     FriBidiCharType *bidi_types = new FriBidiCharType[inputLength];
     fribidi_get_bidi_types (inputString, inputLength, bidi_types);
-    baseDir = fribidi_get_par_direction(bidi_types, inputLength);
+    // baseDir = fribidi_get_par_direction(bidi_types, inputLength);
     FriBidiLevel ok = fribidi_get_par_embedding_levels(bidi_types, inputLength, &baseDir, embeddingLevels);
     if(!ok) throw "BIDI ERROR"; // XXX: how do we panic?
     delete[] bidi_types;
@@ -1899,7 +1899,8 @@ void PageItem_TextFrame::layout()
 					EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 					current.finishLine(EndX);
 #if BIDI_LAYOUT
-                    //bidi-line-break [dup#1]
+                    //bidi-line-break [dup#1] // end of paragraph
+                    qDebug() << "line end #1";
                     layoutLines << LayoutLine(current.line);
 #endif
 					
@@ -1970,7 +1971,8 @@ void PageItem_TextFrame::layout()
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
-                        //bidi-line-break [dup#2]
+                        //bidi-line-break [dup#2] // line wrap
+                        qDebug() << "line end #2";
                         layoutLines << LayoutLine(current.line);
 #endif
 
@@ -2057,7 +2059,8 @@ void PageItem_TextFrame::layout()
 						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
-                        //bidi-line-break [dup#3]
+                        //bidi-line-break [dup#3] ???
+                        qDebug() << "line end #3";
                         layoutLines << LayoutLine(current.line);
 #endif
 //						qDebug() << QString("no break pos: %1-%2 @ %3 wid %4 nat %5 endX %6")
@@ -2384,7 +2387,8 @@ void PageItem_TextFrame::layout()
 		EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
 		current.finishLine(EndX);
 #if BIDI_LAYOUT
-        //bidi-line-break [dup#4]
+        //bidi-line-break [dup#4] // end of text
+        qDebug() << "line end #4";
         layoutLines << LayoutLine(current.line);
 #endif
 
