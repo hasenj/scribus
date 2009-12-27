@@ -851,7 +851,9 @@ class BidiInfo
         ~BidiInfo();
         bool isRtlEmbedding(int index);
         bool isLtrEmbedding(int index);
-        int nextRun(int index, int limit=-1);
+        int nextRun(int index, int limit);
+        int nextInnerRun(int index, int limit);
+        int levelAt(int index){ return embeddingLevels[index]; }
 };
 
 struct LayoutLine
@@ -948,13 +950,14 @@ bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
         first->glyph = second->glyph;
         second->glyph = tmp;
     }
+
     return true;
 }
 
 /**
     Get the start of the next (directional) run.
 
-    This method is used to get ranges for runs. Sample usage is available in doBidiLine
+    This method is used to get ranges for runs. Sample usage is available in doBidiReordering
 
     Pseudo code:
 
@@ -964,22 +967,30 @@ bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
             end = nextRun(start, length)
             // (start, end) is now a run, do something with it
             start = end
+
+    Note: RTL runs can have "child" LTR runs, which in turn can have child RTL runs, and so on
+
  */
 int BidiInfo::nextRun(int start, int limit)
 {
-    bool startEmbedding = isRtlEmbedding(start);
-    if(limit == -1)
+    int startEmbedding = embeddingLevels[start];
+    for(int index = start; index < limit; index++)
     {
-        limit = qString.length();
+        if(embeddingLevels[index] < startEmbedding)
+            return index;
     }
-    int index = start;
-    while(index < limit)
+    return limit;
+}
+
+int BidiInfo::nextInnerRun(int start, int limit)
+{
+    int startEmbedding = embeddingLevels[start];
+    for(int index = start; index < limit; index++)
     {
-        index++;
-        if(isRtlEmbedding(index) != startEmbedding)
-            break;
+        if(embeddingLevels[index] > startEmbedding)
+            return index;
     }
-    return index;
+    return limit;
 }
 
 /**
@@ -992,28 +1003,33 @@ int BidiInfo::nextRun(int start, int limit)
     @param itemText: ojbect representing the text of the scribus text-frame
     @param bidi: holds the bidi information about the text
  */
-void doBidiLine(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd)
+void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd)
 {
-    // HACK:last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
-    //      when an RTL run crosses a line boundary, because the character was swaped with an invisible space
-    //      To circumvent this situation, we ignore the last character from the line if it's a space. This should not cause
-    //      any problem, even if it turned out that the space wasn't suppressed
-    //
-    if(itemText->item(lineEnd-1)->ch == ' ') {
-            lineEnd--; 
-    }
-
     int start = lineStart;
     int end = start;
     while(start < lineEnd)
     {
         end = bidi->nextRun(start, lineEnd);
-        if(bidi->isRtlEmbedding(start)) 
+
+        if(bidi->levelAt(start) == 1) // root level
         {
-            // process RTL runs
-            shapeGlyphs(itemText, start, end); //HarfBuzz!!
+            shapeGlyphs(itemText, start, end); //HarfBuzz!! //TODO make harfbuzz more of a pre-processor
+        }
+
+        // reverse internal runs first
+        int childStart = bidi->nextInnerRun(start, end);
+        while(childStart != end) // this run has inner runs
+        {
+            int childEnd = bidi->nextRun(childStart, end);
+            doBidiReordering(itemText, bidi, childStart, childEnd); 
+            childStart = bidi->nextInnerRun(childEnd, end);
+        }
+
+        if(bidi->levelAt(start) > 0) // not the root LTR run
+        {
             reverseGlyphLayout(itemText, start, end); 
         }
+
         start = end;
     }
 }
@@ -1028,7 +1044,17 @@ void doBidiParagraph(StoryText *itemText, BidiInfo *bidi, QLinkedList<LayoutLine
     while(!layoutLines.isEmpty())
     {
         LayoutLine line = layoutLines.takeFirst();
-        doBidiLine(itemText, bidi, line.startIndex, line.endIndex);
+
+        // HACK:last space seems to be ignored/suppressed, this results in a character to be missing from the end of the line
+        //      when an RTL run crosses a line boundary, because the character was swaped with an invisible space
+        //      To circumvent this situation, we ignore the last character from the line if it's a space. This should not cause
+        //      any problem, even if it turned out that the space wasn't suppressed
+        //
+        if(itemText->item(line.endIndex-1)->ch == ' ') {
+                line.endIndex--;
+        }
+
+        doBidiReordering(itemText, bidi, line.startIndex, line.endIndex);
     }
 }
 
@@ -1900,7 +1926,6 @@ void PageItem_TextFrame::layout()
 					current.finishLine(EndX);
 #if BIDI_LAYOUT
                     //bidi-line-break [dup#1] // end of paragraph
-                    qDebug() << "line end #1";
                     layoutLines << LayoutLine(current.line);
 #endif
 					
@@ -1972,7 +1997,6 @@ void PageItem_TextFrame::layout()
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
                         //bidi-line-break [dup#2] // line wrap
-                        qDebug() << "line end #2";
                         layoutLines << LayoutLine(current.line);
 #endif
 
@@ -2388,7 +2412,6 @@ void PageItem_TextFrame::layout()
 		current.finishLine(EndX);
 #if BIDI_LAYOUT
         //bidi-line-break [dup#4] // end of text
-        qDebug() << "line end #4";
         layoutLines << LayoutLine(current.line);
 #endif
 
