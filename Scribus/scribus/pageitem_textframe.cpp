@@ -850,8 +850,7 @@ class BidiInfo
         ~BidiInfo();
         bool isRtlEmbedding(int index);
         bool isLtrEmbedding(int index);
-        int nextRun(int index, int limit);
-        int nextInnerRun(int index, int limit);
+        bool nextRunOfLevel(int level, int start, int limit, int *out_start, int *out_end);
         int levelAt(int index){ return embeddingLevels[index]; }
         FriBidiChar * getInputString() { return inputString; }
         QUtf32 getUtf32() { return qUtf32; }
@@ -974,43 +973,37 @@ bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
 }
 
 /**
-    Get the start of the next (directional) run.
+    Get the first range for the embedding level `level` between `(start, limit)` 
+    If such a range is found, it outputs it to (out_start, out_end), and returns true.
 
-    This method is used to get ranges for runs. Sample usage is available in doBidiReordering
-
-    Pseudo code:
-
-        start = 0
-        end = start
-        while(start < length):
-            end = nextRun(start, length)
-            // (start, end) is now a run, do something with it
-            start = end
-
-    Note: RTL runs can have "child" LTR runs, which in turn can have child RTL runs, and so on
+    If none is found, then we return false, and (out_start, out_end) is undefined
 
  */
-int BidiInfo::nextRun(int start, int limit)
+bool BidiInfo::nextRunOfLevel(int level, int start, int limit, int* out_start, int* out_end)
 {
-    int startEmbedding = embeddingLevels[start];
+    *out_start = *out_end = -1;
     for(int index = start; index < limit; index++)
     {
-        if(embeddingLevels[index] < startEmbedding)
-            return index;
+        if(embeddingLevels[index] >= level)
+        {
+            *out_start = index;
+            break;
+        }
     }
-    return limit;
+    if(*out_start == -1) return false;
+    for(int index = *out_start; index < limit; index++)
+    {
+        if(embeddingLevels[index] < level)
+        {
+            *out_end = index;
+            break;
+        }
+    }
+    if(*out_end == -1) *out_end = limit;
+    assert(*out_end > *out_start);
+    return true;
 }
 
-int BidiInfo::nextInnerRun(int start, int limit)
-{
-    int startEmbedding = embeddingLevels[start];
-    for(int index = start; index < limit; index++)
-    {
-        if(embeddingLevels[index] > startEmbedding)
-            return index;
-    }
-    return limit;
-}
 
 /**
     The bidi needs to be applied to one line at a time. This method expects you to tell it
@@ -1024,27 +1017,32 @@ int BidiInfo::nextInnerRun(int start, int limit)
  */
 void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd, bool inner=false)
 {
-    int start = lineStart;
-    int end = start;
-    while(start < lineEnd)
+    int max_level = bidi->levelAt(lineStart);
+    int min_odd_level = max_level + 1;
+
+    for(int i = lineStart; i < lineEnd; i++)
     {
-        end = bidi->nextRun(start, lineEnd);
+        int level = bidi->levelAt(i);
+        if(level > max_level) max_level = level;
+        if(level % 2 == 1 && level < min_odd_level) min_odd_level = level;
+    }
+    qDebug() << "line:" << lineStart << lineEnd << "levels:" << max_level << min_odd_level;
 
-        // reverse internal runs first
-        int childStart = bidi->nextInnerRun(start, end);
-        while(childStart != end) // this run has inner runs
+    for(int level = max_level; level >= min_odd_level; level--)
+    {
+        int start = lineStart;
+        int end = start;
+        while(true)
         {
-            int childEnd = bidi->nextRun(childStart, end);
-            doBidiReordering(itemText, bidi, childStart, childEnd, true); 
-            childStart = bidi->nextInnerRun(childEnd, end);
+            if(bidi->nextRunOfLevel(level, end, lineEnd, &start, &end))
+            {
+                reverseGlyphLayout(itemText, start, end);
+            }
+            else
+            {
+                break;
+            }
         }
-
-        if(inner || bidi->isRtlEmbedding(start))
-        {
-            reverseGlyphLayout(itemText, start, end); 
-        }
-
-        start = end;
     }
 }
 
