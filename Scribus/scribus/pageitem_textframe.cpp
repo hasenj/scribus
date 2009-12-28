@@ -856,6 +856,7 @@ class BidiInfo
         FriBidiChar * getInputString() { return inputString; }
         QUtf32 getUtf32() { return qUtf32; }
         bool isRtlBase() { return baseDir == FRIBIDI_PAR_RTL; }
+        FriBidiParType getBaseDir() { return baseDir; }
 };
 
 struct LayoutLine
@@ -893,10 +894,6 @@ BidiInfo::BidiInfo(StoryText *itemText) :
     embeddingLevels = new FriBidiLevel[inputLength]; //don't forget to delete me
     bidiTypes = new FriBidiCharType[inputLength]; //ditto
 
-    if(bidiTypes == 0)
-    {
-        qDebug() << "bidiTypes allocation failed";
-    }
     fribidi_get_bidi_types (inputString, inputLength, bidiTypes);
     baseDir = fribidi_get_par_direction(bidiTypes, inputLength);
     FriBidiLevel ok = fribidi_get_par_embedding_levels(bidiTypes, inputLength, &baseDir, embeddingLevels);
@@ -1025,7 +1022,7 @@ int BidiInfo::nextInnerRun(int start, int limit)
     @param itemText: ojbect representing the text of the scribus text-frame
     @param bidi: holds the bidi information about the text
  */
-void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd, bool force=false)
+void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd, bool inner=false)
 {
     int start = lineStart;
     int end = start;
@@ -1042,7 +1039,7 @@ void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int li
             childStart = bidi->nextInnerRun(childEnd, end);
         }
 
-        if(force || bidi->isRtlEmbedding(start))
+        if(inner || bidi->isRtlEmbedding(start))
         {
             reverseGlyphLayout(itemText, start, end); 
         }
