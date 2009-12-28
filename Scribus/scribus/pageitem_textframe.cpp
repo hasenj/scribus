@@ -843,6 +843,7 @@ class BidiInfo
         FriBidiStrIndex inputLength;
         FriBidiParType baseDir;
         FriBidiLevel *embeddingLevels;
+        FriBidiCharType *bidiTypes;
 
     public:
         BidiInfo(StoryText *itemText);
@@ -884,22 +885,30 @@ BidiInfo::BidiInfo(StoryText *itemText) :
     qString(itemText->text(0, itemText->length())),
     qUtf32(qString.toUcs4()),
     inputString(qUtf32.data()),
-    inputLength(qString.length() + qString.count('\r')), //HACK: I think occurances of \r mess up the actual string length for some reason (low level details, I suppose maybe the QString's length calculation counts \n\r as a single character?)
+    inputLength(qString.length()),
     baseDir(FRIBIDI_PAR_LTR),
-    embeddingLevels(new FriBidiLevel[inputLength]) //don't forget to delete me
+    embeddingLevels(0), 
+    bidiTypes(0)
 {
-    FriBidiCharType *bidi_types = new FriBidiCharType[inputLength];
-    fribidi_get_bidi_types (inputString, inputLength, bidi_types);
-    baseDir = fribidi_get_par_direction(bidi_types, inputLength);
-    FriBidiLevel ok = fribidi_get_par_embedding_levels(bidi_types, inputLength, &baseDir, embeddingLevels);
-    if(!ok) throw "BIDI ERROR"; // XXX: how do we panic?
-    delete[] bidi_types;
+    embeddingLevels = new FriBidiLevel[inputLength]; //don't forget to delete me
+    bidiTypes = new FriBidiCharType[inputLength]; //ditto
+
+    if(bidiTypes == 0)
+    {
+        qDebug() << "bidiTypes allocation failed";
+    }
+    fribidi_get_bidi_types (inputString, inputLength, bidiTypes);
+    baseDir = fribidi_get_par_direction(bidiTypes, inputLength);
+    FriBidiLevel ok = fribidi_get_par_embedding_levels(bidiTypes, inputLength, &baseDir, embeddingLevels);
+    if(ok == 0) 
+    {
+        qDebug() << "BIDI ERROR"; // XXX: how do we panic?
+    }
 }
 BidiInfo::~BidiInfo()
 {
-#define BIDI_DEL(x) if(x) { delete[] x; x = 0; }
-    BIDI_DEL(embeddingLevels)
-#undef BIDI_DEL
+    delete[] embeddingLevels;
+    delete[] bidiTypes;
 }
 
 /**
@@ -1024,18 +1033,16 @@ void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int li
     {
         end = bidi->nextRun(start, lineEnd);
 
-        qDebug() << "run: level" << bidi->levelAt(start);
         // reverse internal runs first
         int childStart = bidi->nextInnerRun(start, end);
         while(childStart != end) // this run has inner runs
         {
-            qDebug() << "child: level" << bidi->levelAt(childStart);
             int childEnd = bidi->nextRun(childStart, end);
             doBidiReordering(itemText, bidi, childStart, childEnd, true); 
             childStart = bidi->nextInnerRun(childEnd, end);
         }
 
-        if(bidi->levelAt(start) % 2 == 1 || force)
+        if(force || bidi->isRtlEmbedding(start))
         {
             reverseGlyphLayout(itemText, start, end); 
         }
