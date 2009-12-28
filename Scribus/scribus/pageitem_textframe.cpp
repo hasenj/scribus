@@ -803,13 +803,11 @@ static double opticalRightMargin(const StoryText& itemText, const LineSpec& line
 	return 0.0;
 }
 
-#define BIDI_LAYOUT 1
-
+#include "shaper.h"
 #if BIDI_LAYOUT
 
 #include <QLinkedList>
 #include "fribidi/fribidi.h"
-#include "shaper.h"
 
 #ifndef SCRIBUS_BIDI_HEADERS
 #define SCRIBUS_BIDI_HEADERS
@@ -854,6 +852,8 @@ class BidiInfo
         int nextRun(int index, int limit);
         int nextInnerRun(int index, int limit);
         int levelAt(int index){ return embeddingLevels[index]; }
+        FriBidiChar * getInputString() { return inputString; }
+        QUtf32 getUtf32() { return qUtf32; }
 };
 
 struct LayoutLine
@@ -1011,11 +1011,6 @@ void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int li
     {
         end = bidi->nextRun(start, lineEnd);
 
-        if(bidi->levelAt(start) == 1) // root level
-        {
-            shapeGlyphs(itemText, start, end); //HarfBuzz!! //TODO make harfbuzz more of a pre-processor
-        }
-
         // reverse internal runs first
         int childStart = bidi->nextInnerRun(start, end);
         while(childStart != end) // this run has inner runs
@@ -1063,11 +1058,23 @@ void doBidiParagraph(StoryText *itemText, BidiInfo *bidi, QLinkedList<LayoutLine
 
     Inject a call to this method somewhere at the tail of the layout method
  */
-void doBidiPostProcess(StoryText* itemText, QLinkedList<LayoutLine> layoutLines)
+void doBidiPostProcess(StoryText* itemText, BidiInfo *bidi, QLinkedList<LayoutLine> layoutLines)
 {
-    //FIXME: this treats the whole text as one paragraph
-    BidiInfo bidiInfo(itemText);
-    doBidiParagraph(itemText, &bidiInfo, layoutLines);
+    doBidiParagraph(itemText, bidi, layoutLines);
+}
+
+/**
+    selects the glyphs for the text before the layout method does
+ */
+void preShapeText(StoryText *itemText, BidiInfo *bidi, int start=0)
+{
+    QVector<uint> ustr = bidi->getUtf32();
+    while(start < itemText->length())
+    {
+        int end = nextScriptRun(ustr, start);
+        shapeGlyphs(itemText, start, end);
+        start = end;
+    }
 }
 
 #endif
@@ -1146,7 +1153,9 @@ void PageItem_TextFrame::layout()
 	current.hyphenCount = 0;
 				 
 #if BIDI_LAYOUT
-        QLinkedList<LayoutLine> layoutLines;
+    BidiInfo bidiInfo(&itemText); //FIXME: this treats the whole text as one paragraph
+    preShapeText(&itemText, &bidiInfo, firstInFrame());
+    QLinkedList<LayoutLine> layoutLines; //used to keep track of line boundaries
 #endif
 
 	// dump styles
@@ -1403,6 +1412,7 @@ void PageItem_TextFrame::layout()
 			hl->glyph.yadvance = 0;
             
 			oldCurY = layoutGlyphs(*hl, chstr, hl->glyph);
+
 			// find out width of char
 			if ((hl->ch == SpecialChars::OBJECT) && (hl->embedded.hasItem()))
 			{
@@ -2552,7 +2562,7 @@ void PageItem_TextFrame::layout()
 			itemText.appendLine(current.line);
 		}
 #if BIDI_LAYOUT
-    doBidiPostProcess(&itemText, layoutLines);
+    doBidiPostProcess(&itemText, &bidiInfo, layoutLines);
 #endif
 	}
 	MaxChars = itemText.length();
@@ -2572,7 +2582,7 @@ void PageItem_TextFrame::layout()
 			
 NoRoom:     
 #if BIDI_LAYOUT
-    doBidiPostProcess(&itemText, layoutLines);
+    doBidiPostProcess(&itemText, &bidiInfo, layoutLines); // XXX dup#2
 #endif
 //	pf2.end();
 	invalid = false;

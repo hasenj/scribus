@@ -72,6 +72,8 @@ for which a new license (GPL+exception) is in place.
 	#include <cairo.h>
 #endif
 
+#include "shaper.h"
+
 using namespace std;
 
 PageItem::PageItem(const PageItem & other)
@@ -2067,6 +2069,11 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 	double retval = 0.0;
 	double asce = style.font().ascent(style.fontSize() / 10.0);
 	int chst = style.effects() & 1919;
+#if BIDI_LAYOUT
+    bool reset_xadvance = chars[0].unicode() > 256 && layout.xadvance == 0;
+    //if(isCommonScript(chars)) //for some reason, Scribus must handle the common script, or there will be some weird side-effects
+    if(chars[0].unicode() < 256)
+#endif    
 /*	if (chars[0] == SpecialChars::ZWSPACE ||
 		chars[0] == SpecialChars::ZWNBSPACE ||
 		chars[0] == SpecialChars::NBSPACE ||
@@ -2149,6 +2156,10 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 	{
 		layout.xadvance = style.font().glyphWidth(layout.glyph, style.fontSize() / 10) * layout.scaleH;
 		layout.yadvance = style.font().glyphBBox(layout.glyph, style.fontSize() / 10).ascent * layout.scaleV;
+#if BIDI_LAYOUT
+        if(reset_xadvance)
+            layout.xadvance = 0;
+#endif
 	}
 	if (layout.xadvance > 0)
 		layout.xadvance += tracking;

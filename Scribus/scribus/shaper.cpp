@@ -18,30 +18,64 @@ HB_Script charScript(uint cp)
     return code_point_to_script(cp);
 }
 
-HB_Script stringScript(QVector<uint> ustr)
+/**
+    The HB_Script of the given utf32 string
+
+    @param pos: (optional, output) the position of the first script character (after skipping past Inherited)
+ */
+HB_Script stringScript(QVector<uint> ustr, int *pos)
 {
     HB_Script script = charScript(ustr[0]);
+
+    if(pos)
+    {
+        *pos = 0;
+    }
 
     if(script == HB_Script_Inherited) 
     {
         //oh no, generic script! grab the first
         //script we can find
-        for(int i = 0; i < ustr.size(); i++)
+        int i = 0;
+        for(i = 0; i < ustr.size(); i++)
         {
             HB_Script script_candidate = charScript(ustr[i]);
-            if(script_candidate != script)
+            if(script_candidate != HB_Script_Inherited)
             {
                 script = script_candidate;
                 break;
             }
         }
+        if(pos)
+        {
+            *pos = i;
+        }
+
     }
+
+    //even after the loop!
     if(script == HB_Script_Inherited)
     {
         script = HB_Script_Common;
     }
-
     return script;
+}
+
+int nextScriptRun(QUtf32 ustr, int start)
+{
+    HB_Script script = charScript(ustr[start]);
+    int index = start;
+
+    while(index < ustr.size())
+    {
+        index++;
+        HB_Script current_script = charScript(ustr[index]);
+        if(current_script != script && current_script != HB_Script_Inherited) //inherited is considered to be part of the same script run
+        {
+            break;
+        }
+    }
+    return index;
 }
 
 /**
@@ -101,7 +135,7 @@ ShaperItemInfo::ShaperItemInfo(ShaperFontInfo *font)
     shaper_item.kerning_applied = true;
     shaper_item.string = (HB_UChar16 *) str;
     shaper_item.stringLength = maxLength;
-    shaper_item.item.bidiLevel = 0;
+    shaper_item.item.bidiLevel = 1;
     shaper_item.shaperFlags = 0;
     shaper_item.font = font->get_HB_Font();
     shaper_item.face = font->get_HB_Face();
@@ -140,7 +174,7 @@ ShaperOutput ShaperItemInfo::shapeItem(QString str)
 
     shaper_item.string = str.utf16();
     shaper_item.stringLength = str.length();
-    shaper_item.item.script = stringScript(ustr);
+    shaper_item.item.script = stringScript(ustr, 0);
     shaper_item.item.pos = 0;
     shaper_item.item.length = str.length();
 
@@ -154,6 +188,8 @@ ShaperOutput ShaperItemInfo::shapeItem(QString str)
  */
 void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
 {
+    if(startIndex < 0 || endIndex < 1) { return; }
+
     QString text = itemText->text(startIndex, endIndex-startIndex); //this one takes pos, len
 
     ScText * scitem = itemText->item(startIndex);
@@ -164,7 +200,7 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
 
     ShaperFontInfo font(scface, size);
     ShaperItemInfo shaper(&font);
-    ShaperOutput out = shaper.shapeItem(text);
+    ShaperOutput out = shaper.shapeItem(text); //HarfBuzz Magic
 
     //out.glyphs has our glyphs
     for(uint i = 0; i < out.num_glyphs; i++)
@@ -193,7 +229,7 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
         // qDebug() << "offsets[" << i << "].y =" << out.offsets[i].y;
     }
 
-    if(out.num_glyphs < text.length())
+    if(out.num_glyphs < (uint)text.length())
     {
         // There were some ligatures, so zero-out the extra characters at the end of this run
         for(int i = out.num_glyphs; i < text.length(); i++)
@@ -204,5 +240,10 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
         }
 
     }
+}
+
+bool isCommonScript(QString str)
+{
+    return stringScript(str.toUcs4()) == HB_Script_Common; 
 }
 

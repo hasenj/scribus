@@ -1,5 +1,9 @@
+#define BIDI_LAYOUT 1    
+
+#if BIDI_LAYOUT
 #ifndef SHAPER_H
 #define SHAPER_H
+
 
 #include "pageitem_textframe.h"
 extern "C" {
@@ -9,9 +13,13 @@ extern "C" {
 }
 
 HB_Script charScript(uint cp);
-HB_Script stringScript(QVector<uint> ustr);
+HB_Script stringScript(QVector<uint> ustr, int* out_pos=0);
+bool isCommonScript(QString str);
+
+typedef QVector<uint> QUtf32; 
 
 void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex);
+int nextScriptRun(QUtf32 ustr, int start=0);
 
 /**
     This is an attempt to encapsulate and streamline the font stuff
@@ -91,5 +99,6 @@ public:
     ShaperOutput shapeItem(QString str);
 };
 
+#endif
 #endif
 
