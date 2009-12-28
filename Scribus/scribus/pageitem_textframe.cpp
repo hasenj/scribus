@@ -917,6 +917,14 @@ bool BidiInfo::isLtrEmbedding(int index)
     return !(isRtlEmbedding(index));
 }
 
+void mirrorItem(ScText *item)
+{
+    if(item->ch.hasMirrored())
+    {
+        item->glyph.glyph = item->font().char2CMap(item->ch.mirroredChar());
+    }
+}
+
 /**
     EXPERIMENTAL
 
@@ -946,9 +954,13 @@ bool reverseGlyphLayout(StoryText *itemText, int startIndex, int endIndex)
         ScText *first = itemText->item(i + startIndex);
         ScText *second = itemText->item(endIndex - 1 - i);
 
+        mirrorItem(first);
+        mirrorItem(second);
+
         GlyphLayout tmp = first->glyph;
         first->glyph = second->glyph;
         second->glyph = tmp;
+
     }
 
     return true;
