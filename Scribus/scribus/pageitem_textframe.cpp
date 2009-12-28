@@ -854,6 +854,7 @@ class BidiInfo
         int levelAt(int index){ return embeddingLevels[index]; }
         FriBidiChar * getInputString() { return inputString; }
         QUtf32 getUtf32() { return qUtf32; }
+        bool isRtlBase() { return baseDir == FRIBIDI_PAR_RTL; }
 };
 
 struct LayoutLine
@@ -889,7 +890,7 @@ BidiInfo::BidiInfo(StoryText *itemText) :
 {
     FriBidiCharType *bidi_types = new FriBidiCharType[inputLength];
     fribidi_get_bidi_types (inputString, inputLength, bidi_types);
-    // baseDir = fribidi_get_par_direction(bidi_types, inputLength);
+    baseDir = fribidi_get_par_direction(bidi_types, inputLength);
     FriBidiLevel ok = fribidi_get_par_embedding_levels(bidi_types, inputLength, &baseDir, embeddingLevels);
     if(!ok) throw "BIDI ERROR"; // XXX: how do we panic?
     delete[] bidi_types;
