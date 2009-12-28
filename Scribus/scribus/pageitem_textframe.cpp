@@ -1015,7 +1015,7 @@ int BidiInfo::nextInnerRun(int start, int limit)
     @param itemText: ojbect representing the text of the scribus text-frame
     @param bidi: holds the bidi information about the text
  */
-void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd)
+void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int lineEnd, bool force=false)
 {
     int start = lineStart;
     int end = start;
@@ -1023,16 +1023,18 @@ void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int li
     {
         end = bidi->nextRun(start, lineEnd);
 
+        qDebug() << "run: level" << bidi->levelAt(start);
         // reverse internal runs first
         int childStart = bidi->nextInnerRun(start, end);
         while(childStart != end) // this run has inner runs
         {
+            qDebug() << "child: level" << bidi->levelAt(childStart);
             int childEnd = bidi->nextRun(childStart, end);
-            doBidiReordering(itemText, bidi, childStart, childEnd); 
+            doBidiReordering(itemText, bidi, childStart, childEnd, true); 
             childStart = bidi->nextInnerRun(childEnd, end);
         }
 
-        if(bidi->levelAt(start) > 0) // not the root LTR run
+        if(bidi->levelAt(start) % 2 == 1 || force)
         {
             reverseGlyphLayout(itemText, start, end); 
         }

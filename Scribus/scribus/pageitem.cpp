@@ -2073,6 +2073,7 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
     bool reset_xadvance = chars[0].unicode() > 256 && layout.xadvance == 0;
     //if(isCommonScript(chars)) //for some reason, Scribus must handle the common script, or there will be some weird side-effects
     if(chars[0].unicode() < 256)
+    {
 #endif    
 /*	if (chars[0] == SpecialChars::ZWSPACE ||
 		chars[0] == SpecialChars::ZWNBSPACE ||
@@ -2091,6 +2092,10 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 	{
 		layout.glyph = style.font().char2CMap(chars[0].unicode());
 	}
+
+#if BIDI_LAYOUT
+    }
+#endif    
 	
 	double tracking = 0.0;
 	if ( (style.effects() & ScStyle_StartOfLine) == 0)
@@ -2157,7 +2162,7 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 		layout.xadvance = style.font().glyphWidth(layout.glyph, style.fontSize() / 10) * layout.scaleH;
 		layout.yadvance = style.font().glyphBBox(layout.glyph, style.fontSize() / 10).ascent * layout.scaleV;
 #if BIDI_LAYOUT
-        if(reset_xadvance)
+        if(reset_xadvance) //HACK for vowel marks
             layout.xadvance = 0;
 #endif
 	}
