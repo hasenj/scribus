@@ -1747,7 +1747,7 @@ bool Scribus134Format::readObject(ScribusDoc* doc, ScXmlStreamReader& reader, It
 		info.groupLastItem = groupLastItem;
 	}
 
-	bool layerFound = true;
+	bool layerFound = false;
 	struct ImageLoadRequest loadingInfo;
 	QList<ParagraphStyle::TabRecord> tabValues;
 
@@ -2338,10 +2338,6 @@ PageItem* Scribus134Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		currItem->UseEmbedded = attrs.valueAsInt("EMBEDDED", 1);
 		currItem->pixm.imgInfo.lowResType = attrs.valueAsInt("ImageRes", 1);
 		currItem->pixm.imgInfo.actualPageNumber = attrs.valueAsInt("Pagenumber", 0);
-		currItem->IProfile    = attrs.valueAsString("PRFILE","");
-		currItem->EmProfile   = attrs.valueAsString("EPROF","");
-		currItem->IRender     = (eRenderIntent) attrs.valueAsInt("IRENDER", 1);
-		currItem->UseEmbedded = attrs.valueAsInt("EMBEDDED", 1);
 		if (currItem->asLatexFrame())
 		{
 			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX") * scx, attrs.valueAsDouble("LOCALY") * scy);

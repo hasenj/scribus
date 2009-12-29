@@ -1751,7 +1751,7 @@ bool Scribus150Format::readObject(ScribusDoc* doc, ScXmlStreamReader& reader, It
 		info.groupLastItem = groupLastItem;
 	}
 
-	bool layerFound = true;
+	bool layerFound = false;
 	struct ImageLoadRequest loadingInfo;
 #ifdef HAVE_OSG
 	struct PageItem_OSGFrame::viewDefinition currentView;
@@ -2348,10 +2348,10 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		currItem->UseEmbedded = attrs.valueAsInt("EMBEDDED", 1);
 		currItem->pixm.imgInfo.lowResType = attrs.valueAsInt("ImageRes", 1);
 		currItem->pixm.imgInfo.actualPageNumber = attrs.valueAsInt("Pagenumber", 0);
-		currItem->IProfile    = attrs.valueAsString("PRFILE","");
-		currItem->EmProfile   = attrs.valueAsString("EPROF","");
-		currItem->IRender     = (eRenderIntent) attrs.valueAsInt("IRENDER", 1);
-		currItem->UseEmbedded = attrs.valueAsInt("EMBEDDED", 1);
+		if ((currItem->OverrideCompressionMethod = attrs.hasAttribute("COMPRESSIONMETHOD")))
+			currItem->CompressionMethodIndex = attrs.valueAsInt("COMPRESSIONMETHOD", 0);
+		if ((currItem->OverrideCompressionQuality = attrs.hasAttribute("COMPRESSIONQUALITY")))
+			currItem->CompressionQualityIndex = attrs.valueAsInt("COMPRESSIONQUALITY");
 		if (currItem->asLatexFrame())
 		{
 			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX") * scx, attrs.valueAsDouble("LOCALY") * scy);

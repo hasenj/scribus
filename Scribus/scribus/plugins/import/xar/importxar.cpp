@@ -554,6 +554,8 @@ void XarPlug::handleTags(quint32 tag, quint32 dataLen, QDataStream &ts)
 		defineBitmap(ts, dataLen, tag);
 	else if (tag == 104)
 		createGroupItem();
+	else if (tag == 112)
+		createGuideLine(ts);
 	else if (tag == 114)
 	{
 		closed = handlePathRel(ts, dataLen);
@@ -740,10 +742,26 @@ void XarPlug::handleTags(quint32 tag, quint32 dataLen, QDataStream &ts)
 	{
 /*		if (m_gc.count() > 3)
 		{
-			if ((tag > 1999) && (tag < 3000))
+		//	if ((tag > 1999) && (tag < 3000))
 				qDebug() << QString("Unhandled OpCode: %1 Data Len %2").arg(tag).arg(dataLen, 8, 16, QLatin1Char('0'));
 		} */
 		ts.skipRawData(dataLen);
+	}
+}
+
+void XarPlug::createGuideLine(QDataStream &ts)
+{
+	quint8 flags;
+	qint32 position;
+	ts >> flags;
+	ts >> position;
+	double gpos = position / 1000.0;
+	if (importerFlags & LoadSavePlugin::lfCreateDoc)
+	{
+		if (flags == 1)
+			m_Doc->currentPage()->guides.addHorizontal(docHeight - gpos, GuideManagerCore::Standard);
+		else
+			m_Doc->currentPage()->guides.addVertical(gpos, GuideManagerCore::Standard);
 	}
 }
 
@@ -2106,7 +2124,19 @@ void XarPlug::handleBitmapFill(QDataStream &ts, quint32 dataLen)
 		gc->patternOffsetX = 0.0;
 		gc->patternOffsetY = 0.0;
 		gc->patternRotation = -rotB;
-		gc->patternSkewX = rotS - 90 - rotB;
+		double skewX = rotS - 90 - rotB;
+		double a;
+		if (skewX == 90)
+			a = 1;
+		else if (skewX == 180)
+			a = 0;
+		else if (skewX == 270)
+			a = -1;
+		else if (skewX == 360)
+			a = 0;
+		else
+			a = tan(M_PI / 180.0 * skewX);
+		gc->patternSkewX = tan(a);
 		gc->patternSkewY = 0.0;
 		if (textData.count() > 0)
 		{
@@ -2220,7 +2250,19 @@ void XarPlug::handleContoneBitmapFill(QDataStream &ts, quint32 dataLen)
 		gc->patternOffsetX = 0.0;
 		gc->patternOffsetY = 0.0;
 		gc->patternRotation = -rotB;
-		gc->patternSkewX = rotS - 90 - rotB;
+		double skewX = rotS - 90 - rotB;
+		double a;
+		if (skewX == 90)
+			a = 1;
+		else if (skewX == 180)
+			a = 0;
+		else if (skewX == 270)
+			a = -1;
+		else if (skewX == 360)
+			a = 0;
+		else
+			a = tan(M_PI / 180.0 * skewX);
+		gc->patternSkewX = tan(a);
 		gc->patternSkewY = 0.0;
 		if (textData.count() > 0)
 		{
@@ -2516,7 +2558,6 @@ void XarPlug::handleBrushItem(QDataStream &ts)
 	ts >> rotate;
 	ts >> offsetX >> offsetY;
 	ts >> scale;
-	qDebug() << "Using Brush" << brushRef[handle]  << "Rot" << rotate << "Offsets X" << offsetX << "Y" << offsetY << "Sc" << scale;
 	ScPattern pat = m_Doc->docPatterns[brushRef[handle]];
 	XarStyle *gc = m_gc.top();
 	gc->strokePattern = brushRef[handle];
