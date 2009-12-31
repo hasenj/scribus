@@ -1026,7 +1026,6 @@ void doBidiReordering(StoryText *itemText, BidiInfo *bidi, int lineStart, int li
         if(level > max_level) max_level = level;
         if(level % 2 == 1 && level < min_odd_level) min_odd_level = level;
     }
-    qDebug() << "line:" << lineStart << lineEnd << "levels:" << max_level << min_odd_level;
 
     for(int level = max_level; level >= min_odd_level; level--)
     {

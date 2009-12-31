@@ -2078,10 +2078,10 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 	double asce = style.font().ascent(style.fontSize() / 10.0);
 	int chst = style.effects() & 1919;
 #if BIDI_LAYOUT
-    bool reset_xadvance = chars[0].unicode() > 256 && layout.xadvance == 0;
-    //if(isCommonScript(chars)) //for some reason, Scribus must handle the common script, or there will be some weird side-effects
-    if(chars[0].unicode() < 256)
+    bool reset_xadvance = chars[0].unicode() > 256 && layout.xadvance == 0; //HACK for vowel marks
+    if(layout.glyph == 0) //we couldn't get this glyph with harfbuzz (why?)
     {
+        reset_xadvance = false;
 #endif    
 /*	if (chars[0] == SpecialChars::ZWSPACE ||
 		chars[0] == SpecialChars::ZWNBSPACE ||
@@ -2170,7 +2170,7 @@ double PageItem::layoutGlyphs(const CharStyle& style, const QString& chars, Glyp
 		layout.xadvance = style.font().glyphWidth(layout.glyph, style.fontSize() / 10) * layout.scaleH;
 		layout.yadvance = style.font().glyphBBox(layout.glyph, style.fontSize() / 10).ascent * layout.scaleV;
 #if BIDI_LAYOUT
-        if(reset_xadvance) //HACK for vowel marks
+        if(reset_xadvance)
             layout.xadvance = 0;
 #endif
 	}

@@ -194,11 +194,9 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
 
     ScText * scitem = itemText->item(startIndex);
     ScFace scface = scitem->font();
-    qreal size = scitem->fontSize() / 10.0;
+    qreal size = scitem->fontSize();
     
-    // qDebug() << "font size:" << size;
-
-    ShaperFontInfo font(scface, size);
+    ShaperFontInfo font(scface, size / 10.0);
     ShaperItemInfo shaper(&font);
     ShaperOutput out = shaper.shapeItem(text); //HarfBuzz Magic
 
@@ -217,7 +215,7 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
         //
         glyph.xadvance = scface.glyphWidth(glyph.glyph, size); //works .. sorta!!
 
-        if(out.attributes[i].mark) //vowel marks
+        if(out.attributes[i].mark) //HACK vowel marks
         {
             glyph.xadvance = 0;
         }
@@ -225,8 +223,6 @@ void shapeGlyphs(StoryText *itemText, int startIndex, int endIndex)
         //debugging
         // qDebug() << "glyphs[" << i << "] =" << out.glyphs[i];
         // qDebug() << "advance[" << i << "] =" << out.advances[i];
-        // qDebug() << "offsets[" << i << "].x =" << out.offsets[i].x;
-        // qDebug() << "offsets[" << i << "].y =" << out.offsets[i].y;
     }
 
     if(out.num_glyphs < (uint)text.length())
