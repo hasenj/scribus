@@ -1484,7 +1484,9 @@ void PageItem::DrawObj_Post(ScPainter *p)
 		}
 	}
 	p->setFillMode(ScPainter::Solid);
+	p->setBlendModeFill(0);
 	p->setStrokeMode(ScPainter::Solid);
+	p->setBlendModeStroke(0);
 	if ((!isEmbedded) && (!m_Doc->RePos))
 	{
 		double aestheticFactor(5.0);
@@ -5302,7 +5304,9 @@ bool PageItem::loadImage(const QString& filename, const bool reload, const int g
 		gsRes=PrefsManager::instance()->gsResolution();
 	bool dummy;
 	CMSettings cms(m_Doc, IProfile, IRender);
-	if (!pixm.LoadPicture(filename, pixm.imgInfo.actualPageNumber, cms, UseEmbedded, true, ScImage::RGBProof, gsRes, &dummy, showMsg))
+	cms.setUseEmbeddedProfile(UseEmbedded);
+	cms.allowSoftProofing(true);
+	if (!pixm.loadPicture(filename, pixm.imgInfo.actualPageNumber, cms, ScImage::RGBData, gsRes, &dummy, showMsg))
 	{
 		Pfile = fi.absoluteFilePath();
 		PictureIsAvailable = false;

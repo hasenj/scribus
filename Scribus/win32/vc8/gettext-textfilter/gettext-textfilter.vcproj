@@ -490,6 +490,7 @@
 		</Filter>
 		<Filter
 			Name="Generated Moc Files"
+			Filter="moc_*.cpp"
 			>
 			<File
 				RelativePath="..\..\..\scribus\plugins\gettext\textfilter\moc_tfdia.cpp"

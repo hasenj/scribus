@@ -38,7 +38,7 @@ for which a new license (GPL+exception) is in place.
 using namespace std;
  
 #include <cmath>
-#include "colormngt/sccolormngtengine.h"
+#include "colormgmt/sccolormgmtengine.h"
 #include "sccolorengine.h"
 #include "util.h"
 
@@ -540,7 +540,7 @@ void ScPainterEx_Ps2::putColor( ScColorShade& colorShade, bool doFill )
 
 void ScPainterEx_Ps2::drawImage( ScImage *image, ScPainterExBase::ImageMode mode )
 {
-	bool rgbMode = (mode == ScPainterExBase::rgbImages || mode == ScPainterExBase::rgbProofImages);
+	bool rgbMode = (mode == ScPainterExBase::rgbImages);
 	bool rgbPicture = rgbMode || (mode == ScPainterExBase::rawImages && image->imgInfo.colorspace == ColorSpaceRGB);
 	bool cmykPicture = (mode == ScPainterExBase::cmykImages || (mode == ScPainterExBase::rawImages && image->imgInfo.colorspace == ColorSpaceCMYK)); 
 
