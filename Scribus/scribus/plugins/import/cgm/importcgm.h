@@ -79,7 +79,7 @@ private:
 	void    decodeClass8(QDataStream &ts, quint16 elemID, quint16 paramLen);
 	void    decodeClass9(QDataStream &ts, quint16 elemID, quint16 paramLen);
 	void    getBinaryBezierPath(QDataStream &ts, quint16 paramLen);
-	void    getBinaryPath(QDataStream &ts, quint16 paramLen);
+	void    getBinaryPath(QDataStream &ts, quint16 paramLen, bool disjoint = false);
 	void    getBinaryColorTable(QDataStream &ts, quint16 paramLen);
 	QString getBinaryIndexedColor(QDataStream &ts);
 	ScColor getBinaryDirectColor(QDataStream &ts);
@@ -99,7 +99,7 @@ private:
 	void    handleMetaFileDescription(QString value);
 	QString handleColor(ScColor &color, QString proposedName);
 	double  convertCoords(double input);
-	void    finishItem(PageItem* ite);
+	void    finishItem(PageItem* ite, bool line = true);
 
 /* common variables */
 	int metaFileVersion;
@@ -134,14 +134,27 @@ private:
 
 	int lineBundleIndex;
 	Qt::PenStyle lineType;
+	Qt::PenCapStyle lineCap;
+	Qt::PenJoinStyle lineJoin;
 	double lineWidth;
 	Qt::PenStyle edgeType;
+	Qt::PenCapStyle edgeCap;
+	Qt::PenJoinStyle edgeJoin;
 	double edgeWidth;
 	uint minColor, maxColor;
 	QString lineColor;
+	bool lineVisible;
 	QString edgeColor;
 	QString fillColor;
+	int fillType;
 	QMap<uint, QString> ColorTableMap;
+	QRectF clipRect;
+	bool useClipRect;
+	bool clipSet;
+	QPainterPath regionPath;
+	bool recordRegion;
+	int currentRegion;
+	QMap<int, QPainterPath> regionMap;
 
 	QList<PageItem*> Elements;
 	int currentItemNr;

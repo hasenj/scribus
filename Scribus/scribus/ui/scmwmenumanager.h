@@ -5,9 +5,9 @@ a copyright and/or license notice that predates the release of Scribus 1.3.2
 for which a new license (GPL+exception) is in place.
 */
 /***************************************************************************
-                          pageitem.h  -  description
-                             -------------------
-    copyright            : Scribus Team
+	begin                : Jan 2010
+	copyright            : (C) 2010 by Craig Bradney
+	email                : cbradney@zip.com.au
  ***************************************************************************/
 
 /***************************************************************************
@@ -19,41 +19,23 @@ for which a new license (GPL+exception) is in place.
  *                                                                         *
  ***************************************************************************/
 
-#ifndef PAGEITEM_IMAGEFRAME_H
-#define PAGEITEM_IMAGEFRAME_H
+#ifndef SCMWMENUMANAGER_H
+#define SCMWMENUMANAGER_H
 
-#include <QString>
-#include <QRectF>
-#include <QKeyEvent>
+#include <QMenu>
+#include <QObject>
 
+#include "menumanager.h"
 #include "scribusapi.h"
-#include "pageitem.h"
-class ScPainter;
-class ScribusDoc;
 
-class SCRIBUS_API PageItem_ImageFrame : public PageItem
+class ScMWMenuManager : public MenuManager
 {
 	Q_OBJECT
+	public:
+		 ScMWMenuManager(QMenuBar* mb, QObject *parent=0);
 
-public:
-	PageItem_ImageFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, QString fill, QString outline);
-	PageItem_ImageFrame(const PageItem & p) : PageItem(p) {}
-	~PageItem_ImageFrame() {};
-
-	virtual PageItem_ImageFrame * asImageFrame() { return this; }
-	virtual bool isImageFrame() const { return true; }
-
-	virtual void handleModeEditKey(QKeyEvent *k, bool& keyRepeat);
-	virtual void clearContents();
-	
-	virtual bool createInfoGroup(QFrame *, QGridLayout *);
-//	virtual bool createContextMenu(QMenu *, int);
-	virtual void applicableActions(QStringList& actionList);
-	virtual QString infoDescription();
-	
-protected:
-	virtual void DrawObj_Item(ScPainter *p, QRectF e, double sc);
-
+	public slots:
+		void languageChange();
 };
 
-#endif
+#endif // SCMWMENUMANAGER_H

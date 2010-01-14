@@ -24,7 +24,7 @@ for which a new license (GPL+exception) is in place.
 #include <QToolButton>
 
 #include "filetoolbar.h"
-#include "menumanager.h"
+#include "ui/scmwmenumanager.h"
 #include "scraction.h"
 #include "scribus.h"
 
