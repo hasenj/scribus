@@ -47,12 +47,14 @@ PreferencesDialog::PreferencesDialog( QWidget* parent )
 	addItem( tr("Hyphenator"), loadIcon("hyphenate.png"), prefs_Hyphenator);
 	prefs_Fonts = new Prefs_Fonts(this);
 	addItem( tr("Fonts"), loadIcon("font.png"), prefs_Fonts);
-	prefs_Printer = new Prefs_Printer(this);
-	addItem( tr("Printer"), loadIcon("printer.png"), prefs_Printer);
 	prefs_ColorManagement = new Prefs_ColorManagement(this);
 	addItem( tr("Color Management"), loadIcon("blend.png"), prefs_ColorManagement);
+	prefs_Printer = new Prefs_Printer(this);
+	addItem( tr("Printer"), loadIcon("printer.png"), prefs_Printer);
 	prefs_PDFExport = new Prefs_PDFExport(this);
 	addItem( tr("PDF Export"), loadIcon("acroread32.png"), prefs_PDFExport);
+	prefs_PreflightVerifier = new Prefs_PreflightVerifier(this);
+	addItem( tr("Preflight Verifier"), loadIcon("checkdoc.png"), prefs_PreflightVerifier);
 	prefs_DocumentItemAttributes = new Prefs_DocumentItemAttributes(this);
 	addItem( tr("Document Item Attributes"), loadIcon("docattributes.png"), prefs_DocumentItemAttributes);
 	prefs_TableOfContents = new Prefs_TableOfContents(this);
@@ -73,6 +75,8 @@ PreferencesDialog::PreferencesDialog( QWidget* parent )
 	addItem( tr("Short Words"), loadIcon("tools.png"), prefs_ShortWords);
 	prefs_Scripter = new Prefs_Scripter(this);
 	addItem( tr("Scripter"), loadIcon("tools.png"), prefs_Scripter);
+	prefs_ImageCache = new Prefs_ImageCache(this);
+	addItem( tr("Image Cache"), loadIcon("tools.png"), prefs_ImageCache);
 
 	arrangeIcons();
 	preferencesTypeList->item(0)->setSelected(true);
@@ -119,12 +123,14 @@ void PreferencesDialog::setupGui()
 	prefs_OperatorTools->restoreDefaults(&localPrefs);
 	prefs_Hyphenator->restoreDefaults(&localPrefs);
 	prefs_Fonts->restoreDefaults(&localPrefs);
-	prefs_PDFExport->restoreDefaults(&localPrefs);
 	prefs_Printer->restoreDefaults(&localPrefs);
+	prefs_PDFExport->restoreDefaults(&localPrefs);
+	prefs_PreflightVerifier->restoreDefaults(&localPrefs);
 	prefs_ColorManagement->restoreDefaults(&localPrefs);
 	prefs_ColorManagement->setProfiles(&localPrefs, &ScCore->InputProfiles, &ScCore->InputProfilesCMYK, &ScCore->PrinterProfiles, &ScCore->MonitorProfiles);
 	prefs_Scrapbook->restoreDefaults(&localPrefs);
 	prefs_Display->restoreDefaults(&localPrefs);
+	prefs_ImageCache->restoreDefaults(&localPrefs);
 }
 
 
@@ -139,11 +145,13 @@ void PreferencesDialog::saveGuiToPrefs()
 	prefs_OperatorTools->saveGuiToPrefs(&localPrefs);
 	prefs_Hyphenator->saveGuiToPrefs(&localPrefs);
 	prefs_Fonts->saveGuiToPrefs(&localPrefs);
-	prefs_PDFExport->saveGuiToPrefs(&localPrefs);
 	prefs_Printer->saveGuiToPrefs(&localPrefs);
+	prefs_PDFExport->saveGuiToPrefs(&localPrefs);
+	prefs_PreflightVerifier->saveGuiToPrefs(&localPrefs);
 	prefs_ColorManagement->saveGuiToPrefs(&localPrefs);
 	prefs_Scrapbook->saveGuiToPrefs(&localPrefs);
 	prefs_Display->saveGuiToPrefs(&localPrefs);
+	prefs_ImageCache->saveGuiToPrefs(&localPrefs);
 }
 
 void PreferencesDialog::applyButtonClicked()
@@ -267,5 +275,6 @@ void PreferencesDialog::arrangeIcons()
 		startY += ir.height()+5;
 	}*/
 }
+
 
 

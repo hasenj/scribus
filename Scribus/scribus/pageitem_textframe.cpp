@@ -187,7 +187,7 @@ QRegion PageItem_TextFrame::availableRegion(QRegion clip)
 						continue;
 					if (docItem->textFlowAroundObject())
 						result = result.subtract(itemShape(docItem, 0, 0));
-					if (docItem->isGroupControl)
+					if (docItem->isGroupControl && !docItem->Groups.isEmpty())
 						currentGroup = docItem->Groups.top();
 				}
 			} // for all docItems
@@ -448,6 +448,9 @@ struct LineControl {
 		for (int j = line.firstItem; j <= last; ++j)
 			if ( (itemText.item(j)->effects() & ScStyle_SuppressSpace) == 0)
 				breakXPos += itemText.item(j)->glyph.wide();
+		// #8194, #8717 : update line ascent and descent with sensible values
+		// so that endOfLine() returns correct result
+		updateHeightMetrics(itemText);
 	}
 	
 	/// use the last remembered break to set line width and itemrange
@@ -490,7 +493,7 @@ struct LineControl {
 	}
 	
 	/// find x position where this line must end
-	double endOfLine(const QRegion& shape, const QTransform& pf2, double ascent, double descent, double morespace = 0)
+	double endOfLine(const QRegion& shape, const QTransform& pf2, double morespace = 0)
 	{
 		// Keep old code for reference
 		/*double EndX = floor(qMax(line.x, qMin(colRight,breakXPos) - 1));
@@ -511,8 +514,8 @@ struct LineControl {
 
 		double StartX = floor(qMax(line.x, qMin(colRight,breakXPos) - 1));
 		int xPos  = static_cast<int>(ceil(maxX + insets.Right));
-		int yDesc = static_cast<int>(yPos+descent);
-		int yAsc  = static_cast<int>(ceil(yPos-ascent));
+		int yDesc = static_cast<int>(yPos+line.descent);
+		int yAsc  = static_cast<int>(ceil(yPos-line.ascent));
 
 		QPoint pt12 (xPos, yDesc);
 		QPoint pt22 (xPos, yAsc);
@@ -591,6 +594,37 @@ struct LineControl {
 		}
 		return result;
 	}
+
+	double getLineDescent(const StoryText& itemText)
+	{
+		double result = 0;
+		if ((itemText.text(line.firstItem) == SpecialChars::PARSEP) || (itemText.text(line.firstItem) == SpecialChars::LINEBREAK))
+			result = itemText.charStyle(line.firstItem).font().descent(itemText.charStyle(line.firstItem).fontSize() / 10.0);
+		else if (itemText.object(line.firstItem) != 0)
+			result = 0.0;
+		else //if (itemText.charStyle(current.line.firstItem).effects() & ScStyle_DropCap == 0)
+			result = itemText.charStyle(line.firstItem).font().realCharDescent(itemText.text(line.firstItem), itemText.charStyle(line.firstItem).fontSize() / 10.0);
+		for (int zc = 0; zc < itemsInLine; ++zc)
+		{
+			QChar ch = itemText.text(line.firstItem + zc);
+			if ((ch == SpecialChars::PAGENUMBER) || (ch == SpecialChars::PAGECOUNT))
+				ch = '8'; // should have highest ascender even in oldstyle
+			const CharStyle& cStyle(itemText.charStyle(line.firstItem + zc));
+			if ((ch == SpecialChars::TAB) || (ch == QChar(10))
+				|| (ch == SpecialChars::PARSEP) || (ch == SpecialChars::NBHYPHEN)
+				|| (ch == SpecialChars::COLBREAK) || (ch == SpecialChars::LINEBREAK)
+				|| (ch == SpecialChars::FRAMEBREAK) || (ch.isSpace()))
+				continue;
+			double desc;
+			if (itemText.object(line.firstItem + zc) != 0)
+				desc = 0.0;
+			else //if (itemText.charStyle(current.line.firstItem + zc).effects() & ScStyle_DropCap == 0)
+				desc = cStyle.font().realCharDescent(ch, cStyle.fontSize() / 10.0);
+			//	qDebug() << QString("checking char 'x%2' with ascender %1 > %3").arg(asce).arg(ch.unicode()).arg(result);
+			result = qMax(result, desc);
+		}
+		return result;
+	}
 	
 	double getLineHeight(const StoryText& itemText)
 	{
@@ -616,6 +650,36 @@ struct LineControl {
 			result = qMax(result, asce);
 		}
 		return result;
+	}
+
+	void updateHeightMetrics(const StoryText& itemText)
+	{
+		double asce, desc;
+		line.ascent  = 0;
+		line.descent = 0;
+		for (int zc = 0; zc < itemsInLine; ++zc)
+		{
+			QChar ch = itemText.text(line.firstItem+zc);
+			if ((ch == SpecialChars::TAB) || (ch == QChar(10))
+				|| (ch == SpecialChars::PARSEP) || (ch == SpecialChars::NBHYPHEN)
+				|| (ch == SpecialChars::COLBREAK) || (ch == SpecialChars::FRAMEBREAK)
+				|| (ch == SpecialChars::LINEBREAK) || (ch.isSpace()))
+				continue;
+			const CharStyle& cStyle(itemText.charStyle(line.firstItem + zc));
+			if (itemText.object(line.firstItem+zc) != 0)
+			{
+				asce = (itemText.object(line.firstItem+zc)->gHeight + itemText.object(line.firstItem+zc)->lineWidth()) * (itemText.charStyle(line.firstItem+zc).scaleV() / 1000.0);
+				desc = 0.0;
+			}
+			else //if (itemText.charStyle(current.line.firstItem+zc).effects() & ScStyle_DropCap == 0)
+			{
+				asce = cStyle.font().realCharAscent(ch, cStyle.fontSize() / 10.0);
+				desc = cStyle.font().realCharDescent(ch, cStyle.fontSize() / 10.0);
+			}
+			//	qDebug() << QString("checking char 'x%2' with ascender %1 > %3").arg(asce).arg(ch.unicode()).arg(result);
+			line.ascent  = qMax(line.ascent, asce);
+			line.descent = qMax(line.descent, desc);
+		}
 	}
 	
 	
@@ -1948,7 +2012,7 @@ void PageItem_TextFrame::layout()
 				{
 					// find end of line
 					current.breakLine(itemText, a);
-					EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
+					EndX = current.endOfLine(cl, pf2, style.rightMargin());
 					current.finishLine(EndX);
 #if BIDI_LAYOUT
                     //bidi-line-break [dup#1] // end of paragraph
@@ -2019,7 +2083,7 @@ void PageItem_TextFrame::layout()
 							hl->glyph.xadvance = 0;
 						}
 						
-						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
+						EndX = current.endOfLine(cl, pf2, style.rightMargin());
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
                         //bidi-line-break [dup#2] // line wrap
@@ -2106,7 +2170,7 @@ void PageItem_TextFrame::layout()
 //						qDebug() << QString("style nb @%6: %1 -- %2, %4/%5 char: %3").arg(style.leftMargin()).arg(style.rightMargin())
 //							   .arg(style.charStyle().asString()).arg(style.name()).arg(style.parent())
 //							   .arg(a);
-						EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
+						EndX = current.endOfLine(cl, pf2, style.rightMargin());
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
                         //bidi-line-break [dup#3] ???
@@ -2434,7 +2498,7 @@ void PageItem_TextFrame::layout()
 		int a = itemText.length()-1;
 		hl = a >=0 ? itemText.item(a) : NULL;
 		current.breakLine(itemText, a);
-		EndX = current.endOfLine(cl, pf2, asce, desc, style.rightMargin());
+		EndX = current.endOfLine(cl, pf2, style.rightMargin());
 		current.finishLine(EndX);
 #if BIDI_LAYOUT
         //bidi-line-break [dup#4] // end of text

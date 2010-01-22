@@ -28,6 +28,7 @@ for which a new license (GPL+exception) is in place.
 #include "ui/prefs_hyphenator.h"
 #include "ui/prefs_miscellaneous.h"
 #include "ui/prefs_plugins.h"
+#include "ui/prefs_preflightverifier.h"
 #include "ui/prefs_scripter.h"
 #include "ui/prefs_scrapbook.h"
 #include "ui/prefs_shortwords.h"
@@ -38,6 +39,7 @@ for which a new license (GPL+exception) is in place.
 #include "ui/prefs_tableofcontents.h"
 #include "ui/prefs_pdfexport.h"
 #include "ui/prefs_documentitemattributes.h"
+#include "ui/prefs_imagecache.h"
 
 class PrefsManager;
 class ScribusMainWindow;
@@ -87,6 +89,7 @@ class SCRIBUS_API PreferencesDialog : public QDialog, Ui::PreferencesDialog
 		Prefs_Hyphenator *prefs_Hyphenator;
 		Prefs_Miscellaneous *prefs_Miscellaneous;
 		Prefs_Plugins *prefs_Plugins;
+		Prefs_PreflightVerifier *prefs_PreflightVerifier;
 		Prefs_Scripter *prefs_Scripter;
 		Prefs_Scrapbook *prefs_Scrapbook;
 		Prefs_ShortWords *prefs_ShortWords;
@@ -97,6 +100,7 @@ class SCRIBUS_API PreferencesDialog : public QDialog, Ui::PreferencesDialog
 		Prefs_TableOfContents *prefs_TableOfContents;
 		Prefs_PDFExport *prefs_PDFExport;
 		Prefs_DocumentItemAttributes *prefs_DocumentItemAttributes;
+		Prefs_ImageCache *prefs_ImageCache;
 
 		QMap<QListWidgetItem*, int> stackWidgetMap;
 		int counter;
@@ -109,5 +113,6 @@ class SCRIBUS_API PreferencesDialog : public QDialog, Ui::PreferencesDialog
 };
 
 #endif
+
 
 

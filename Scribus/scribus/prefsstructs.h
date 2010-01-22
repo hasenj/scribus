@@ -36,6 +36,7 @@ struct CheckerPrefs
 	bool checkRasterPDF;
 	bool checkForGIF;
 	bool ignoreOffLayers;
+	bool checkOffConflictLayers; //Check whether layers are marked as visible but not to be printed or vice versa
 	bool checkNotCMYKOrSpot; // colors must be either CMYK or spot (PDF/X-1a)
 	bool checkDeviceColorsAndOutputIntend; // unmanaged colors (device colors) must agree with output intend
 	bool checkFontNotEmbedded; // embedded PDF might use fonts without embedding
@@ -352,6 +353,15 @@ struct ScripterPrefs
 {
 };
 
+// Image Cache
+struct ImageCachePrefs
+{
+	bool cacheEnabled;    //!< Enable the image cache
+	int maxCacheSizeMiB;  //!< Maximum total size of image cache in MiB
+	int maxCacheEntries;  //!< Maximum number of cache entries
+	int compressionLevel; //!< Cache image compression level (see QImage)
+};
+
 struct ApplicationPrefs
 {
 	UIPrefs uiPrefs;
@@ -379,6 +389,7 @@ struct ApplicationPrefs
 	CheckerPrefsList checkerPrefsList;
 	StoryEditorPrefs storyEditorPrefs;
 	PrintPreviewPrefs printPreviewPrefs;
+	ImageCachePrefs imageCachePrefs;
 
 	QList<ArrowDesc> arrowStyles;
 	QMap<QString, VGradient> defaultGradients;
