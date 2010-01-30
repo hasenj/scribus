@@ -65,7 +65,9 @@ private:
 	bool convert(QString fn);
 	void decodeCmdData(QDataStream &ts, uint dataLen, quint8 cmd);
 	void decodeCmd(quint8 cmd, int pos);
-	void decodeSymbol(QDataStream &ds);
+	void decodeSymbol(QDataStream &ds, bool last = false);
+	void handleLineStyle(PageItem* currentItem, quint8 flags, QString lineColor);
+	void handleGradient(PageItem* currentItem, quint8 patternIndex, QString fillColor, QString backColor, QRectF bBox);
 	void handlePreviewBitmap(QDataStream &ds);
 	QString handleColor(ScColor &color, QString proposedName);
 	QString getColor(QDataStream &ds);
@@ -81,31 +83,81 @@ private:
 		double yoffset;
 		double width;
 		double height;
+		double lineWidth;
 		int nrOfItems;
 		int counter;
 		quint8 patternIndex;
+		quint8 flags;
 		QString fillColor;
+		QString lineColor;
+		QString backColor;
 		QList<PageItem*> GElements;
 	};
 	QStack<DRWGroup> groupStack;
+	struct DRWObjectList
+	{
+		double groupX;
+		double groupY;
+		double width;
+		double height;
+		quint16 nrOfItems;
+		quint16 counter;
+		QString itemGroupName;
+		PageItem* groupItem;
+		QList<PageItem*> GElements;
+	};
+	QStack<DRWObjectList> listStack;
+	struct DRWGradient
+	{
+		int type;
+		double xOffset;
+		double yOffset;
+		double angle;
+	};
+	QMap<int, DRWGradient> gradientMap;
+	QMap<int, QByteArray> patternDataMap;
+	QMap<QString, QString> patternMap;
 	double baseX, baseY;
 	double docWidth;
 	double docHeight;
 	QStringList importedColors;
+	QStringList importedPatterns;
 	QString lineColor;
 	QString fillColor;
 	double lineWidth;
 	int createObjCode;
 	int nrOfPoints;
 	PageItem *currentItem;
+
 	QImage tmpImage;
+	QImage tmpImage2;
 	quint16 bitsPerPixel;
 	quint16 bytesScanline;
 	quint16 planes;
 	quint16 imageHeight;
 	quint16 imageWidth;
 	quint16 scanLinesRead;
+	quint8 rTrans;
+	quint8 gTrans;
+	quint8 bTrans;
 	bool imageValid;
+
+	quint8 fontID;
+	quint8 fontStyle;
+	quint16 nrOfChars;
+	quint16 fontSize;
+	quint16 fontWidth;
+	quint16 nrOfParagraphs;
+	quint16 paragraphCounter;
+	QString fontName;
+	QString fontColor;
+	struct DRWParagraph
+	{
+		quint8 paragraphAlignment;
+		quint16 paragraphLen;
+	};
+	QList<DRWParagraph> paragraphList;
+	QMap<quint8, QString> fontMap;
 
 	int symbolCount;
 	int recordCount;

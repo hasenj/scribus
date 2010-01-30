@@ -264,6 +264,20 @@ bool XarPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				delete ss;
 				m_Doc->itemSelection_DeleteItem(tmpSel);
 				m_Doc->view()->updatesOn(true);
+				if (importedColors.count() != 0)
+				{
+					for (int cd = 0; cd < importedColors.count(); cd++)
+					{
+						m_Doc->PageColors.remove(importedColors[cd]);
+					}
+				}
+				if (importedPatterns.count() != 0)
+				{
+					for (int cd = 0; cd < importedPatterns.count(); cd++)
+					{
+						m_Doc->docPatterns.remove(importedPatterns[cd]);
+					}
+				}
 				m_Doc->m_Selection->delaySignalsOff();
 				// We must copy the TransationSettings object as it is owned
 				// by handleObjectImport method afterwards
@@ -332,6 +346,7 @@ bool XarPlug::convert(QString fn)
 	Coords.svgInit();
 	imageData.resize(0);
 	importedColors.clear();
+	importedPatterns.clear();
 	firstLayer = true;
 	inTextLine = false;
 	inTextBlock = false;
@@ -433,6 +448,13 @@ bool XarPlug::convert(QString fn)
 				for (int cd = 0; cd < importedColors.count(); cd++)
 				{
 					m_Doc->PageColors.remove(importedColors[cd]);
+				}
+			}
+			if (importedPatterns.count() != 0)
+			{
+				for (int cd = 0; cd < importedPatterns.count(); cd++)
+				{
+					m_Doc->docPatterns.remove(importedPatterns[cd]);
 				}
 			}
 		}
@@ -1655,6 +1677,8 @@ void XarPlug::handleBitmapTransparency(QDataStream &ts, quint32 dataLen)
 		QString fileName = getLongPathName(newItem->tempImageFile->fileName());
 		newItem->tempImageFile->close();
 		newItem->isInlineImage = true;
+		image.setDotsPerMeterY(2834);
+		image.setDotsPerMeterX(2834);
 		image.save(fileName, "PNG");
 		if (newItem->loadImage(fileName, false, 72, false))
 		{
@@ -1676,6 +1700,7 @@ void XarPlug::handleBitmapTransparency(QDataStream &ts, quint32 dataLen)
 		QString patternName = patternRef[bref]+"_"+newItem->itemName();
 		patternName = patternName.trimmed().simplified().replace(" ", "_");
 		m_Doc->addPattern(patternName, pat);
+		importedPatterns.append(patternName);
 		gc->maskPattern = patternName;
 		gc->patternMaskScaleX = distX / pat.width * 100;
 		gc->patternMaskScaleY = distY / pat.height * 100;
@@ -2238,6 +2263,8 @@ void XarPlug::handleContoneBitmapFill(QDataStream &ts, quint32 dataLen)
 		QString fileName = getLongPathName(newItem->tempImageFile->fileName());
 		newItem->tempImageFile->close();
 		newItem->isInlineImage = true;
+		image.setDotsPerMeterY(2834);
+		image.setDotsPerMeterX(2834);
 		image.save(fileName, "PNG");
 		if (newItem->loadImage(fileName, false, 72, false))
 		{
@@ -2259,6 +2286,7 @@ void XarPlug::handleContoneBitmapFill(QDataStream &ts, quint32 dataLen)
 		QString patternName = patternRef[bref]+"_"+newItem->itemName();
 		patternName = patternName.trimmed().simplified().replace(" ", "_");
 		m_Doc->addPattern(patternName, pat);
+		importedPatterns.append(patternName);
 		gc->fillPattern = patternName;
 		gc->patternScaleX = distX / pat.width * 100;
 		gc->patternScaleY = distY / pat.height * 100;
@@ -2387,6 +2415,8 @@ void XarPlug::defineBitmap(QDataStream &ts, quint32 dataLen, quint32 tag)
 		QString fileName = getLongPathName(newItem->tempImageFile->fileName());
 		newItem->tempImageFile->close();
 		newItem->isInlineImage = true;
+		image.setDotsPerMeterY(2834);
+		image.setDotsPerMeterX(2834);
 		image.save(fileName, "PNG");
 		if (newItem->loadImage(fileName, false, 72, false))
 		{
@@ -2408,6 +2438,7 @@ void XarPlug::defineBitmap(QDataStream &ts, quint32 dataLen, quint32 tag)
 		QString patternName = "Pattern_"+newItem->itemName();
 		patternName = patternName.trimmed().simplified().replace(" ", "_");
 		m_Doc->addPattern(patternName, pat);
+		importedPatterns.append(patternName);
 		patternRef.insert(recordCounter, patternName);
 	}
 }
@@ -3210,6 +3241,7 @@ void XarPlug::popGraphicContext()
 					QString patternName = "Pattern_"+groupItem->itemName();
 					patternName = patternName.trimmed().simplified().replace(" ", "_");
 					m_Doc->addPattern(patternName, pat);
+					importedPatterns.append(patternName);
 					m_Doc->DoDrawing = false;
 					brushRef.insert(gg.idNr, patternName);
 				}
