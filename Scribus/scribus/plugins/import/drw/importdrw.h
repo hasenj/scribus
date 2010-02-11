@@ -60,6 +60,7 @@ public:
 	\retval bool true if import was ok
 	 */
 	bool import(QString fn, const TransactionSettings& trSettings, int flags, bool showProgress = true);
+	QImage readThumbnail(QString fn);
 
 private:
 	bool convert(QString fn);
@@ -70,6 +71,7 @@ private:
 	void handleGradient(PageItem* currentItem, quint8 patternIndex, QString fillColor, QString backColor, QRectF bBox);
 	void handlePreviewBitmap(QDataStream &ds);
 	QString handleColor(ScColor &color, QString proposedName);
+	void getCommonData(QDataStream &ds);
 	QString getColor(QDataStream &ds);
 	void finishItem(PageItem* ite, bool scale = true);
 	double getValue(QDataStream &ds);
@@ -84,13 +86,18 @@ private:
 		double width;
 		double height;
 		double lineWidth;
+		double scaleX;
+		double scaleY;
+		double rotationAngle;
 		int nrOfItems;
 		int counter;
+		bool filled;
 		quint8 patternIndex;
 		quint8 flags;
 		QString fillColor;
 		QString lineColor;
 		QString backColor;
+		QPointF posPivot;
 		QList<PageItem*> GElements;
 	};
 	QStack<DRWGroup> groupStack;
@@ -100,6 +107,10 @@ private:
 		double groupY;
 		double width;
 		double height;
+		double scaleX;
+		double scaleY;
+		double rotationAngle;
+		QPointF posPivot;
 		quint16 nrOfItems;
 		quint16 counter;
 		QString itemGroupName;
@@ -124,10 +135,14 @@ private:
 	QStringList importedPatterns;
 	QString lineColor;
 	QString fillColor;
+	QString backColor;
 	double lineWidth;
 	int createObjCode;
 	int nrOfPoints;
 	PageItem *currentItem;
+	quint8 flags;
+	quint8 patternIndex;
+	QRectF bBox;
 
 	QImage tmpImage;
 	QImage tmpImage2;
@@ -165,6 +180,10 @@ private:
 	FPointArray Coords;
 	QByteArray cmdData;
 	double scaleFactor;
+	double scaleX;
+	double scaleY;
+	double rotationAngle;
+	QPointF posPivot;
 	bool interactive;
 	MultiProgressDialog * progressDialog;
 	bool cancel;
@@ -172,6 +191,8 @@ private:
 	Selection* tmpSel;
 	int importerFlags;
 	QString baseFile;
+	QImage thumbnailImage;
+	bool thumbRead;
 
 public slots:
 	void cancelRequested() { cancel = true; }

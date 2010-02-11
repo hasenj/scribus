@@ -97,8 +97,10 @@ void ImportCgmPlugin::registerFormats()
 	fmt.formatId = 0;
 	fmt.filter = tr("CGM File (*.cgm *.CGM)"); // QFileDialog filter
 	fmt.nameMatch = QRegExp("\\.cgm$", Qt::CaseInsensitive);
+	fmt.fileExtensions = QStringList() << "cgm";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
 	fmt.mimeTypes = QStringList(); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -160,4 +162,24 @@ bool ImportCgmPlugin::import(QString fileName, int flags)
 		UndoManager::instance()->setUndoEnabled(true);
 	delete dia;
 	return true;
+}
+
+QImage ImportCgmPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = ScCore->primaryMainWindow()->doc;
+	CgmPlug *dia = new CgmPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

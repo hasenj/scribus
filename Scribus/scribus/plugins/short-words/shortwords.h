@@ -10,7 +10,6 @@ for which a new license (GPL+exception) is in place.
 #include "scconfig.h"
 #include "pluginapi.h"
 #include "scplugin.h"
-//Added by qt3to4:
 #include <QPixmap>
 
 /*! \brief This is the Scribus Short Words plugin interface specification.
@@ -36,6 +35,8 @@ class PLUGIN_API ShortWordsPlugin : public ScActionPlugin
 		virtual void addToMainWindowMenu(ScribusMainWindow *) {};
 		/*! \brief Preference widget */
 		virtual bool newPrefsPanelWidget(QWidget* parent, PrefsPanel*& panel,
+										 QString& caption, QPixmap& icon);
+		virtual bool newPrefsPanelWidget(QWidget* parent, Prefs_Pane*& panel,
 										 QString& caption, QPixmap& icon);
 		// Special features (none)
 };

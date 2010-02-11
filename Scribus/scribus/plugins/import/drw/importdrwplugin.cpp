@@ -60,6 +60,7 @@ void ImportDrwPlugin::languageChange()
 	FileFormat* fmt = getFormatByExt("drw");
 	fmt->trName = tr("Micrografx DRW File");
 	fmt->filter = tr("Micrografx DRW File (*.drw *.DRW)");
+	fmt->fileExtensions = QStringList() << "drw";
 }
 
 ImportDrwPlugin::~ImportDrwPlugin()
@@ -97,8 +98,10 @@ void ImportDrwPlugin::registerFormats()
 	fmt.formatId = 0;
 	fmt.filter = tr("Micrografx DRW File (*.drw *.DRW)"); // QFileDialog filter
 	fmt.nameMatch = QRegExp("\\.drw$", Qt::CaseInsensitive);
+	fmt.fileExtensions = QStringList() << "drw";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
 	fmt.mimeTypes = QStringList(); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -160,4 +163,24 @@ bool ImportDrwPlugin::import(QString fileName, int flags)
 		UndoManager::instance()->setUndoEnabled(true);
 	delete dia;
 	return true;
+}
+
+QImage ImportDrwPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = ScCore->primaryMainWindow()->doc;
+	DrwPlug *dia = new DrwPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

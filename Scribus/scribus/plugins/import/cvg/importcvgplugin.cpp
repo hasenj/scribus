@@ -96,8 +96,10 @@ void ImportCvgPlugin::registerFormats()
 	fmt.formatId = FORMATID_CVGIMPORT;
 	fmt.filter = FormatsManager::instance()->extensionsForFormat(FormatsManager::CVG); // QFileDialog filter
 	fmt.nameMatch = QRegExp("\\."+FormatsManager::instance()->extensionListForFormat(FormatsManager::CVG, 1)+"$", Qt::CaseInsensitive);
+	fmt.fileExtensions = QStringList() << "cvg";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
 	fmt.mimeTypes = FormatsManager::instance()->mimetypeOfFormat(FormatsManager::CVG); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -159,4 +161,24 @@ bool ImportCvgPlugin::import(QString fileName, int flags)
 		UndoManager::instance()->setUndoEnabled(true);
 	delete dia;
 	return true;
+}
+
+QImage ImportCvgPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = ScCore->primaryMainWindow()->doc;
+	CvgPlug *dia = new CvgPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

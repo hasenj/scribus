@@ -61,7 +61,180 @@ DrwPlug::DrwPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
 	m_Doc=doc;
+	importerFlags = flags;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
+}
+
+QImage DrwPlug::readThumbnail(QString fName)
+{
+	QFileInfo fi = QFileInfo(fName);
+	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
+	bool haveDoc = false;
+	double b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
+	double h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
+	docWidth = b;
+	docHeight = h;
+	ScribusView* tempView;
+	progressDialog = NULL;
+	haveDoc = true;
+	m_Doc = new ScribusDoc();
+	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
+	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
+	m_Doc->addPage(0);
+	tempView = new ScribusView(0, ScCore->primaryMainWindow(), m_Doc);
+	tempView->setScale(1);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), tempView);
+	baseX = m_Doc->currentPage()->xOffset();
+	baseY = m_Doc->currentPage()->yOffset();
+	Elements.clear();
+	m_Doc->setLoading(true);
+	m_Doc->DoDrawing = false;
+	m_Doc->view()->updatesOn(false);
+	m_Doc->scMW()->ScriptRunning = true;
+	qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
+	QString CurDirP = QDir::currentPath();
+	QDir::setCurrent(fi.path());
+	int groupCount = m_Doc->GroupCounter;
+	int itemCount = m_Doc->TotalItems;
+	if (convert(fName))
+	{
+		if (!thumbRead)
+		{
+			tmpSel->clear();
+			QDir::setCurrent(CurDirP);
+			if (Elements.count() > 0)
+			{
+				bool isGroup = true;
+				int firstElem = -1;
+				if (Elements.at(0)->Groups.count() != 0)
+					firstElem = Elements.at(0)->Groups.top();
+				for (int bx = 0; bx < Elements.count(); ++bx)
+				{
+					PageItem* bxi = Elements.at(bx);
+					if (bxi->Groups.count() != 0)
+					{
+						if (bxi->Groups.top() != firstElem)
+							isGroup = false;
+					}
+					else
+						isGroup = false;
+				}
+				if (!isGroup)
+				{
+					double minx = 99999.9;
+					double miny = 99999.9;
+					double maxx = -99999.9;
+					double maxy = -99999.9;
+					uint lowestItem = 999999;
+					uint highestItem = 0;
+					for (int a = 0; a < Elements.count(); ++a)
+					{
+						Elements.at(a)->Groups.push(m_Doc->GroupCounter);
+						PageItem* currItem = Elements.at(a);
+						lowestItem = qMin(lowestItem, currItem->ItemNr);
+						highestItem = qMax(highestItem, currItem->ItemNr);
+						double x1, x2, y1, y2;
+						currItem->getVisualBoundingRect(&x1, &y1, &x2, &y2);
+						minx = qMin(minx, x1);
+						miny = qMin(miny, y1);
+						maxx = qMax(maxx, x2);
+						maxy = qMax(maxy, y2);
+					}
+					double gx = minx;
+					double gy = miny;
+					double gw = maxx - minx;
+					double gh = maxy - miny;
+					PageItem *high = m_Doc->Items->at(highestItem);
+					int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Rectangle, gx, gy, gw, gh, 0, m_Doc->itemToolPrefs.shapeFillColor, m_Doc->itemToolPrefs.shapeLineColor, true);
+					PageItem *neu = m_Doc->Items->takeAt(z);
+					m_Doc->Items->insert(lowestItem, neu);
+					neu->Groups.push(m_Doc->GroupCounter);
+					neu->setItemName( tr("Group%1").arg(neu->Groups.top()));
+					neu->AutoName = false;
+					neu->isGroupControl = true;
+					neu->groupsLastItem = high;
+					neu->setTextFlowMode(PageItem::TextFlowDisabled);
+					for (int a = 0; a < m_Doc->Items->count(); ++a)
+					{
+						m_Doc->Items->at(a)->ItemNr = a;
+					}
+					Elements.prepend(neu);
+					m_Doc->GroupCounter++;
+				}
+			}
+		}
+		m_Doc->DoDrawing = true;
+		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
+		m_Doc->m_Selection->delaySignalsOn();
+		QImage tmpImage;
+		if (thumbRead)
+		{
+			tmpImage = thumbnailImage;
+			tmpImage.setText("XSize", QString("%1").arg(docWidth));
+			tmpImage.setText("YSize", QString("%1").arg(docHeight));
+		}
+		else
+		{
+			if (Elements.count() > 0)
+			{
+				for (int dre=0; dre<Elements.count(); ++dre)
+				{
+					tmpSel->addItem(Elements.at(dre), true);
+				}
+				tmpSel->setGroupRect();
+				double xs = tmpSel->width();
+				double ys = tmpSel->height();
+				double sc = 500.0 / qMax(xs, ys);
+				m_Doc->scaleGroup(sc, sc, true, tmpSel);
+				tmpImage = Elements.at(0)->DrawObj_toImage();
+				tmpImage.setText("XSize", QString("%1").arg(xs));
+				tmpImage.setText("YSize", QString("%1").arg(ys));
+			}
+		}
+		m_Doc->itemSelection_DeleteItem(tmpSel);
+		m_Doc->view()->updatesOn(true);
+		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->setLoading(false);
+		if (importedColors.count() != 0)
+		{
+			for (int cd = 0; cd < importedColors.count(); cd++)
+			{
+				m_Doc->PageColors.remove(importedColors[cd]);
+			}
+		}
+		if (importedPatterns.count() != 0)
+		{
+			for (int cd = 0; cd < importedPatterns.count(); cd++)
+			{
+				m_Doc->docPatterns.remove(importedPatterns[cd]);
+			}
+		}
+		m_Doc->m_Selection->delaySignalsOff();
+		if (haveDoc)
+		{
+			delete tempView;
+			delete m_Doc;
+		}
+		m_Doc->GroupCounter = groupCount;
+		m_Doc->TotalItems = itemCount;
+		return tmpImage;
+	}
+	else
+	{
+		QDir::setCurrent(CurDirP);
+		m_Doc->DoDrawing = true;
+		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->view()->updatesOn(true);
+		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
+		if (haveDoc)
+		{
+			delete tempView;
+			delete m_Doc;
+		}
+	}
+	m_Doc->GroupCounter = groupCount;
+	m_Doc->TotalItems = itemCount;
+	return QImage();
 }
 
 bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
@@ -346,6 +519,7 @@ bool DrwPlug::convert(QString fn)
 	symbolCount = 0;
 	recordCount = 0;
 	imageValid = false;
+	thumbRead = false;
 	currentItem = NULL;
 	if(progressDialog)
 	{
@@ -375,8 +549,13 @@ bool DrwPlug::convert(QString fn)
 			ts >> cmd;
 			decodeCmdData(ts, dataLen, cmd);
 			decodeCmd(cmd, pos);
-			progressDialog->setProgress("GI", ts.device()->pos());
+			if (progressDialog)
+				progressDialog->setProgress("GI", ts.device()->pos());
 			if (cmd == 254)
+				break;
+			if ((importerFlags & LoadSavePlugin::lfCreateThumbnail) && (cmd == 11))
+				thumbRead = true;
+			if ((importerFlags & LoadSavePlugin::lfCreateThumbnail) && (cmd == 27) && (thumbRead))
 				break;
 			qApp->processEvents();
 		}
@@ -441,7 +620,8 @@ void DrwPlug::decodeCmdData(QDataStream &ts, uint dataLen, quint8 cmd)
 void DrwPlug::decodeCmd(quint8 cmd, int pos)
 {
 	recordCount++;
-/*	if ((recordCount > 12) && (recordCount < 14))
+	bool printMSG = false;
+/*	if ((recordCount > 15) && (recordCount < 17))
 	{
 		QFile f(QString("/home/franz/cmddatas%1.bin").arg(recordCount));
 		f.open(QIODevice::WriteOnly);
@@ -458,7 +638,6 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 	QString textFont;
 	ds.setByteOrder(QDataStream::LittleEndian);
 	QString cmdText = QString("Record %1 Type: ").arg(recordCount);
-	bool printMSG = false;
 	switch (cmd)
 	{
 		case 1:
@@ -476,7 +655,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				listStack.top().itemGroupName = QString(cmdData);
 			break;
 		case 5:
-			cmdText += "DRW Overlay";
+			cmdText += QString("DRW Overlay Data %1").arg(QString(cmdData.toHex().left(20)));
 			break;
 		case 6:
 			cmdText += "DRW Polygon";
@@ -484,15 +663,14 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			{
 				bool first = true;
 				bool first2 = true;
-				Coords.resize(0);
-				Coords.svgInit();
 				QPointF startP;
+				QPainterPath path;
 				for (int a = 0; a < nrOfPoints; a++)
 				{
 					QPointF coor = getCoordinate(ds);
 					if (first)
 					{
-						Coords.svgMoveTo(coor.x(), coor.y());
+						path.moveTo(coor);
 						if (first2)
 							startP = coor;
 						first = false;
@@ -503,17 +681,26 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 						if (coor == startP)
 						{
 							first = true;
-							if (createObjCode == 1)
-								Coords.svgClosePath();
+							path.closeSubpath();
 						}
 						else
-							Coords.svgLineTo(coor.x(), coor.y());
+							path.lineTo(coor);
 					}
 				}
 				if (currentItem != NULL)
 				{
-					currentItem->PoLine = Coords.copy();
+					currentItem->PoLine.fromQPainterPath(path);
+					QRectF bBoxO = path.boundingRect();
+					if (bBoxO.x() < 0)
+						currentItem->PoLine.translate(-bBoxO.x(), 0);
+					if (bBoxO.y() < 0)
+						currentItem->PoLine.translate(0, -bBoxO.y());
 					finishItem(currentItem);
+					if (currentItem != NULL)
+					{
+						handleLineStyle(currentItem, flags, lineColor);
+						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+					}
 				}
 				createObjCode = 0;
 				currentItem = NULL;
@@ -521,9 +708,8 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			else if (createObjCode == 2)
 			{
 				bool first = true;
-				Coords.resize(0);
-				Coords.svgInit();
 				QPointF startP;
+				QPainterPath path;
 				int a = 0;
 				while (a < nrOfPoints)
 				{
@@ -531,7 +717,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					{
 						QPointF coor = getCoordinate(ds);
 						a++;
-						Coords.svgMoveTo(coor.x(), coor.y());
+						path.moveTo(coor);
 						startP = coor;
 						first = false;
 					}
@@ -539,12 +725,22 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					QPointF p2 = getCoordinate(ds);
 					QPointF p3 = getCoordinate(ds);
 					a += 3;
-					Coords.svgCurveToCubic(p1.x(), p1.y(), p2.x(), p2.y(), p3.x(), p3.y());
+					path.cubicTo(p1, p2, p3);
 				}
 				if (currentItem != NULL)
 				{
-					currentItem->PoLine = Coords.copy();
-					finishItem(currentItem, false);
+					currentItem->PoLine.fromQPainterPath(path);
+					QRectF bBoxO = path.boundingRect();
+					if (bBoxO.x() < 0)
+						currentItem->PoLine.translate(-bBoxO.x(), 0);
+					if (bBoxO.y() < 0)
+						currentItem->PoLine.translate(0, -bBoxO.y());
+					finishItem(currentItem);
+					if (currentItem != NULL)
+					{
+						handleLineStyle(currentItem, flags, lineColor);
+						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+					}
 				}
 				createObjCode = 0;
 				currentItem = NULL;
@@ -552,34 +748,39 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			else if (createObjCode == 4)
 			{
 				bool first = true;
-				Coords.resize(0);
-				Coords.svgInit();
 				QPointF startP;
 				int a = 0;
-				QPainterPath pa;
+				QPainterPath path;
 				while (a < nrOfPoints-1)
 				{
 					if (first)
 					{
 						QPointF coor = getCoordinate(ds);
 						a++;
-						pa.moveTo(coor.x(), coor.y());
+						path.moveTo(coor);
 						startP = coor;
 						first = false;
 					}
 					QPointF p1 = getCoordinate(ds);
-					if ((p1.x() < -32768) || (p1.x() > 32768) || (p1.y() < -32768) || (p1.y() > 32768))
-						qDebug() << "Invalid Point";
+					a++;
 					QPointF p2 = getCoordinate(ds);
-					if ((p2.x() < -32768) || (p2.x() > 32768) || (p2.y() < -32768) || (p2.y() > 32768))
-						qDebug() << "Invalid Point";
-					a += 2;
-					pa.quadTo(p1.x(), p1.y(), p2.x(), p2.y());
+					a++;
+					path.quadTo(p1, p2);
 				}
 				if (currentItem != NULL)
 				{
-					currentItem->PoLine.fromQPainterPath(pa);
+					currentItem->PoLine.fromQPainterPath(path);
+					QRectF bBoxO = path.boundingRect();
+					if (bBoxO.x() < 0)
+						currentItem->PoLine.translate(-bBoxO.x(), 0);
+					if (bBoxO.y() < 0)
+						currentItem->PoLine.translate(0, -bBoxO.y());
 					finishItem(currentItem);
+					if (currentItem != NULL)
+					{
+						handleLineStyle(currentItem, flags, lineColor);
+						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+					}
 				}
 				createObjCode = 0;
 				currentItem = NULL;
@@ -595,13 +796,19 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			if (createObjCode == 5)
 			{
 				QString tx = QString(cmdData.left(nrOfChars));
+				QStringList parList = tx.split(QChar(13));
+				double yp = 0;
 				QPainterPath path;
 				QString fontN = "Arial";
 				if (fontMap.contains(fontID))
 					fontN = fontMap[fontID];
-				QFont textFont = QFont(fontN, fontSize);
-				path.addText( 0, 0, textFont, tx);
+				QFont textFont = QFont(fontN, fontSize * 0.8);
 				QFontMetrics fm(textFont);
+				for (int a = 0; a < parList.size(); a++)
+				{
+					path.addText( 0, yp, textFont, parList[a].trimmed());
+					yp += fm.lineSpacing();
+				}
 				QTransform txS;
 				QRectF bbox = path.boundingRect();
 				txS = QTransform();
@@ -615,6 +822,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				if (currentItem != NULL)
 				{
 					currentItem->PoLine.fromQPainterPath(path);
+					currentItem->setWidth(bbox.width());
 					finishItem(currentItem, false);
 				}
 				createObjCode = 0;
@@ -629,7 +837,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			break;
 		case 11:
 			cmdText += "DRW Preview Bitmap";
-//			handlePreviewBitmap(ds);
+			handlePreviewBitmap(ds);
 			break;
 		case 14:
 			cmdText += "DRW View";
@@ -638,16 +846,16 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			cmdText += "DRW Old Grid";
 			break;
 		case 16:
-			cmdText += "DRW Curr Overlay";
+			cmdText += QString("DRW Curr Overlay Data %1").arg(QString(cmdData.toHex().left(20)));
 			break;
 		case 17:
-			cmdText += "DRW Visible";
+			cmdText += QString("DRW Visible Data %1").arg(QString(cmdData.toHex().left(20)));
 			break;
 		case 18:
-			cmdText += "DRW Comment";
+			cmdText += QString("DRW Comment Data %1").arg(QString(cmdData.toHex().left(20)));
 			break;
 		case 19:
-			cmdText += "DRW Info";
+			cmdText += QString("DRW Info Data %1").arg(QString(cmdData).left(20));
 			break;
 		case 20:
 			cmdText += "DRW Bitmap";
@@ -701,7 +909,8 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			cmdText += "DRW Grid";
 			break;
 		case 23:
-			cmdText += "DRW Overlay Name";
+			cmdText += QString("DRW Overlay Name Data %1").arg(QString(cmdData).left(20));
+			printMSG = true;
 			break;
 		case 24:
 			cmdText += "DRW Dimensions";
@@ -752,7 +961,8 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			ds >> data16;
 			gradient.angle = data16 / 10.0;
 			gradientMap.insert(index, gradient);
-			cmdText += QString("DRW Gradient  Index: %1 Type: %2 Offsets: %3 %4").arg(index).arg(gradient.type).arg(gradient.xOffset).arg(gradient.yOffset);
+			cmdText += QString("DRW Gradient  Index: %1 Type: %2 Offsets: %3 %4 Angle: %5").arg(index).arg(gradient.type).arg(gradient.xOffset).arg(gradient.yOffset).arg(gradient.angle);
+			printMSG = true;
 			break;
 		case 31:
 			cmdText += "DRW Text Hdr";
@@ -841,7 +1051,6 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				{
 					if (currentItem != NULL)
 					{
-					//	tmpImage = tmpImage.convertToFormat(QImage::Format_ARGB32);
 						currentItem->tempImageFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_drw_XXXXXX.png");
 						currentItem->tempImageFile->open();
 						QString fileName = getLongPathName(currentItem->tempImageFile->fileName());
@@ -936,14 +1145,17 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 		case 254:
 			cmdText += "DRW EOF";
 			decodeSymbol(ds, true);
+			printMSG = true;
 			break;
 		case 255:
-			cmdText += QString("DRW Start File Data %1").arg(QString(cmdData.toHex().left(64)));
+			cmdText += QString("DRW Start File");
+			printMSG = true;
 			break;
 		default:
-			cmdText += QString("Unknown Cmd-Nr %1  Data %2").arg(cmd).arg(QString(cmdData.toHex().left(64)));
+			cmdText += QString("Unknown Cmd-Nr %1  Data %2 Size %3").arg(cmd).arg(QString(cmdData.toHex().left(64))).arg(cmdData.size());
 			break;
 	}
+	printMSG = false;
 	if (printMSG)
 	{
 		qDebug() << cmdText; // << QString("at %1").arg(pos, 8, 16);
@@ -989,15 +1201,6 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 					{
 						double scx = 1.0;
 						double scy = 1.0;
-						if ((tmpSel->width() != 0) && (tmpSel->height() != 0) && (popped.width != 0) && (popped.height != 0))
-						{
-							if (tmpSel->width() != popped.width)
-								scx = popped.width / tmpSel->width();
-							if (tmpSel->height() != popped.height)
-								scy = popped.height / tmpSel->height();
-							m_Doc->scaleGroup(scx, scy, true, tmpSel);
-						}
-						QRectF selRect = tmpSel->getGroupRect();
 						QPainterPath gesPa;
 						bool firstP = true;
 						for (uint i = 0; i < selectedItemCount; ++i)
@@ -1005,18 +1208,29 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 							QPainterPath pa;
 							PageItem *item = tmpSel->itemAt(i);
 							item->PoLine.translate(item->xPos(), item->yPos());
-							if (item->asPolyLine())
-								pa = item->PoLine.toQPainterPath(false);
-							else
-								pa = item->PoLine.toQPainterPath(true);
+							pa = item->PoLine.toQPainterPath(false);
 							if (!pa.isEmpty())
 							{
 								const QPainterPath::Element &elm = pa.elementAt(0);
-								QPointF lastP = gesPa.currentPosition();
+								QPointF lastP = pa.currentPosition();
 								bool conn = false;
-								if ((fabs(lastP.x() - elm.x) > 3) || (fabs(lastP.y() - elm.y) > 3))
+								bool conn2 = false;
+								if ((fabs(lastP.x() - elm.x) < 1) && (fabs(lastP.y() - elm.y) < 1))
+								{
+									pa.closeSubpath();
 									conn = true;
-								if ((firstP) || (conn))
+								}
+								if (!gesPa.isEmpty())
+								{
+									const QPainterPath::Element &elm2 = gesPa.elementAt(0);
+									QPointF lastP2 = gesPa.currentPosition();
+									if ((fabs(lastP2.x() - elm2.x) < 1) && (fabs(lastP2.y() - elm2.y) < 1))
+									{
+										gesPa.closeSubpath();
+										conn2 = true;
+									}
+								}
+								if ((firstP) || (conn) || (conn2))
 								{
 									gesPa.addPath(pa);
 									firstP = false;
@@ -1025,31 +1239,65 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 									gesPa.connectPath(pa);
 							}
 						}
-						FPointArray res;
-						res.fromQPainterPath(gesPa);
-						res.translate(-selRect.x(), -selRect.y());
-						PageItem *ite = tmpSel->takeItem(0);
+						if (!gesPa.isEmpty())
+						{
+							QRectF bb = gesPa.controlPointRect();
+							if (popped.rotationAngle != 0)
+							{
+								QTransform mt;
+								mt.translate(-bb.x(), -bb.y());
+								gesPa = mt.map(gesPa);
+								QTransform ma;
+								ma.translate(popped.posPivot.x(), popped.posPivot.y());
+								ma.rotate(-popped.rotationAngle / 10.0);
+								gesPa = ma.map(gesPa);
+							}
+							bb = gesPa.controlPointRect();
+							QTransform mt;
+							mt.translate(-bb.x(), -bb.y());
+							gesPa = mt.map(gesPa);
+							if ((bb.width() != 0) && (bb.height() != 0) && (popped.width != 0) && (popped.height != 0))
+							{
+								if (bb.width() != popped.width)
+									scx = popped.width / bb.width();
+								if (bb.height() != popped.height)
+									scy = popped.height / bb.height();
+								QTransform ms;
+								ms.scale(scx, scy);
+								gesPa = ms.map(gesPa);
+							}
+							if (popped.filled)
+								gesPa.closeSubpath();
+							FPointArray res;
+							res.fromQPainterPath(gesPa);
+							PageItem *ite = tmpSel->takeItem(0);
+							ite->setXYPos(popped.xoffset + baseX, popped.yoffset + baseY);
+							ite->PoLine = res.copy();
+							FPoint wh = getMaxClipF(&ite->PoLine);
+							ite->setWidthHeight(wh.x(),wh.y());
+							ite->OldB2 = ite->width();
+							ite->OldH2 = ite->height();
+							if (popped.filled)
+								ite->setFillColor(popped.fillColor);
+							else
+								ite->setFillColor(CommonStrings::None);
+							ite->setLineWidth(popped.lineWidth);
+							ite->setLineWidth(ite->lineWidth() / qMin(scx, scy));
+							handleLineStyle(ite, popped.flags, popped.lineColor);
+							if (popped.filled)
+								handleGradient(ite, popped.patternIndex, popped.fillColor, popped.backColor, QRectF(0, 0, ite->width(), ite->height()));
+							groupStack.top().GElements.append(ite);
+							listStack.top().GElements.append(ite);
+						}
 						selectedItemCount = tmpSel->count();
 						for (uint i = 0; i < selectedItemCount; ++i)
 						{
 							Elements.removeAll(tmpSel->itemAt(i));
 							listStack.top().GElements.removeAll(tmpSel->itemAt(i));
 						}
-						ite->setXYPos(popped.xoffset + m_Doc->currentPage()->xOffset(), popped.yoffset + m_Doc->currentPage()->yOffset());
-						ite->PoLine = res.copy();
-						FPoint wh = getMaxClipF(&ite->PoLine);
-						ite->setWidthHeight(wh.x(),wh.y());
-						ite->setFillColor(popped.fillColor);
-						ite->setLineWidth(popped.lineWidth);
-						ite->setLineWidth(ite->lineWidth() / qMin(scx, scy));
-						handleLineStyle(ite, popped.flags, popped.lineColor);
-						handleGradient(ite, popped.patternIndex, popped.fillColor, popped.backColor, QRectF(0, 0, ite->width(), ite->height()));
-						groupStack.top().GElements.append(ite);
-						listStack.top().GElements.append(ite);
 						m_Doc->itemSelection_DeleteItem(tmpSel);
 					}
 					tmpSel->clear();
-				//	cmdText += QString("dropping complex Object Offsets %1 %2\n").arg(cElements.xoffset).arg(cElements.yoffset);
 				}
 				else
 					break;
@@ -1072,15 +1320,42 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 				uint selectedItemCount = tmpSel->count();
 				if (selectedItemCount > 0)
 				{
-					if ((tmpSel->width() != 0) && (tmpSel->height() != 0) && (popped.width != 0) && (popped.height != 0))
+					if (popped.rotationAngle != 0)
 					{
-						double scx = 1.0;
-						if (tmpSel->width() != popped.width)
-							scx = popped.width / tmpSel->width();
-						double scy = 1.0;
-						if (tmpSel->height() != popped.height)
-							scy = popped.height / tmpSel->height();
-						m_Doc->scaleGroup(scx, scy, true, tmpSel);
+						PageItem* currItem;
+						QTransform ma;
+						ma.translate(popped.posPivot.x(), popped.posPivot.y());
+						ma.rotate(-popped.rotationAngle / 10.0);
+						FPoint n;
+						for (int a = 0; a < tmpSel->count(); ++a)
+						{
+							currItem = tmpSel->itemAt(a);
+							n = FPoint(currItem->xPos(), currItem->yPos());
+							currItem->setXYPos(ma.m11() * n.x() + ma.m21() * n.y() + ma.dx(), ma.m22() * n.y() + ma.m12() * n.x() + ma.dy());
+							currItem->rotateBy(-popped.rotationAngle / 10.0);
+						}
+					}
+					tmpSel->setGroupRect();
+					QRectF gr = tmpSel->getGroupRect();
+					double dx = popped.groupItem->xPos() - gr.x();
+					double dy = popped.groupItem->yPos() - gr.y();
+					for (int a = 0; a < tmpSel->count(); ++a)
+					{
+						tmpSel->itemAt(a)->moveBy(dx, dy);
+					}
+					tmpSel->setGroupRect();
+					if ((popped.scaleX != 0) || (popped.scaleY != 0))
+					{
+						if ((tmpSel->width() != 0) && (tmpSel->height() != 0) && (popped.width != 0) && (popped.height != 0))
+						{
+							double scx = 1.0;
+							if (tmpSel->width() != popped.width)
+								scx = popped.width / tmpSel->width();
+							double scy = 1.0;
+							if (tmpSel->height() != popped.height)
+								scy = popped.height / tmpSel->height();
+							m_Doc->scaleGroup(scx, scy, true, tmpSel);
+						}
 					}
 					listStack.top().GElements.append(popped.groupItem);
 					for (uint i = 0; i < selectedItemCount; ++i)
@@ -1118,11 +1393,10 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 		f.close();
 	} */
 	int z;
-	quint8 data8, flags, patternIndex, appFlags;
+	quint8 data8, appFlags;
 	quint16 dummy, nPoints, nItems;
 	double boundingBoxXO, boundingBoxYO, boundingBoxWO, boundingBoxHO, cornerRadius;
 	QRectF bBoxO;
-	QString backColor;
 	QString fillC = CommonStrings::None;
 	createObjCode = 0;
 	currentItem = NULL;
@@ -1130,23 +1404,22 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 // now reading common values
 	ds >> flags;
 	QPainterPath path;
-	QPointF posEnd, posStart;
+	QPointF posEnd, posMid, posStart;
 	QTransform mat;
 	QLineF sLin, eLin;
+	FPoint wh;
 	QPointF position = getCoordinate(ds);
 	double boundingBoxX = getValue(ds);
 	double boundingBoxY = getValue(ds);
 	double boundingBoxW = getValue(ds);
 	double boundingBoxH = getValue(ds);
-	QRectF bBox = QRectF(QPointF(boundingBoxX, boundingBoxY), QPointF(boundingBoxW, boundingBoxH)).normalized();
-	double rotationAngle = getRawValue(ds);
-	double scaleX = getRawValue(ds);
-	double scaleY = getRawValue(ds);
+	bBox = QRectF(QPointF(boundingBoxX, boundingBoxY), QPointF(boundingBoxW, boundingBoxH)).normalized();
+	rotationAngle = getRawValue(ds);
+	scaleX = getRawValue(ds);
+	scaleY = getRawValue(ds);
 	double rotS, rotE;
 	double posX = baseX + bBox.x() + bX + groupX;
 	double posY = baseY + bBox.y() + bY + groupY;
-//	double posX = baseX + position.x() + bX + groupX;
-//	double posY = baseY + position.y() + bY + groupY;
 	lineColor = getColor(ds);
 	ds >> dummy;		// handle
 	ds >> dummy;		// next
@@ -1161,34 +1434,33 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			posStart = getCoordinate(ds);
 			posEnd = getCoordinate(ds);
+			if (posStart == posEnd)
+				break;
 			boundingBoxXO = getValue(ds);
 			boundingBoxYO = getValue(ds);
 			boundingBoxWO = getValue(ds);
 			boundingBoxHO = getValue(ds);
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
-			sLin = QLineF(QPointF(boundingBoxWO / 2.0, boundingBoxHO / 2.0), posStart);
-			eLin = QLineF(QPointF(boundingBoxWO / 2.0, boundingBoxHO / 2.0), posEnd);
+			getCommonData(ds);
+			bBoxO = QRectF(QPointF(boundingBoxXO, boundingBoxYO), QPointF(boundingBoxWO, boundingBoxHO)).normalized();
+			sLin = QLineF(bBoxO.center(), posStart);
+			eLin = QLineF(bBoxO.center(), posEnd);
 			rotS = sLin.angle();
 			rotE = eLin.angle();
+			if (rotS > rotE)
+				rotS = rotS - 360;
 			rotE = rotE - rotS;
 			path = QPainterPath();
-			path.arcMoveTo(QRectF(0, 0, boundingBoxWO, boundingBoxHO), rotS);
-			path.arcTo(QRectF(0, 0, boundingBoxWO, boundingBoxHO), rotS, rotE);
-			path = mat.map(path);
-			bBoxO = path.boundingRect();
+			path.arcMoveTo(bBoxO, rotS);
+			path.arcTo(bBoxO, rotS, rotE);
+			scaleX = 1;
+			scaleY = 1;
 			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			currentItem->PoLine.fromQPainterPath(path);
-			currentItem->PoLine.translate(-bBoxO.x(), 0);
+			bBoxO = path.controlPointRect();
+			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
 			break;
@@ -1198,20 +1470,10 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 1;
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
@@ -1220,25 +1482,34 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 			break;
 		case 2:
-			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Rectangle, posX, posY, bBox.width(), bBox.height(), 0, fillC, fillC, true);
-			gList.groupItem = m_Doc->Items->at(z);
-			gList.groupX = groupX + bBox.x();
-			gList.groupY = groupY + bBox.y();
-			gList.width = bBox.width();
-			gList.height = bBox.height();
-			gList.itemGroupName = "";
+			getCommonData(ds);
 			ds.device()->seek(0x26);
 			ds >> dummy;
-			gList.nrOfItems = dummy;
-			gList.counter = 0;
-			listStack.push(gList);
-			gList.groupItem->ClipEdited = true;
-			gList.groupItem->FrameType = 3;
-			gList.groupItem->setTextFlowMode(PageItem::TextFlowDisabled);
-			gList.groupItem->OldB2 = gList.groupItem->width();
-			gList.groupItem->OldH2 = gList.groupItem->height();
-			gList.groupItem->updateClip();
-			Elements.append(gList.groupItem);
+			if (dummy > 0)
+			{
+				z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Rectangle, posX, posY, bBox.width(), bBox.height(), 0, fillC, fillC, true);
+				gList.groupItem = m_Doc->Items->at(z);
+				gList.groupX = groupX + bBox.x();
+				gList.groupY = groupY + bBox.y();
+				gList.width = bBox.width();
+				gList.height = bBox.height();
+				gList.scaleX = scaleX;
+				gList.scaleY = scaleY;
+				gList.rotationAngle = rotationAngle;
+				gList.nrOfItems = dummy;
+				gList.counter = 0;
+				gList.posPivot = posPivot;
+				gList.itemGroupName = "";
+				gList.GElements.clear();
+				listStack.push(gList);
+				gList.groupItem->ClipEdited = true;
+				gList.groupItem->FrameType = 3;
+				gList.groupItem->setTextFlowMode(PageItem::TextFlowDisabled);
+				gList.groupItem->OldB2 = gList.groupItem->width();
+				gList.groupItem->OldH2 = gList.groupItem->height();
+				gList.groupItem->updateClip();
+				Elements.append(gList.groupItem);
+			}
 			cmdText += QString("Group  Count %1").arg(dummy);
 			break;
 		case 3:
@@ -1247,11 +1518,6 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			boundingBoxXO = getValue(ds);
 			boundingBoxYO = getValue(ds);
 			boundingBoxWO = getValue(ds);
@@ -1259,17 +1525,15 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			bBoxO = QRectF(QPointF(boundingBoxXO, boundingBoxYO), QPointF(boundingBoxWO, boundingBoxHO));
 			cornerRadius = getValue(ds);
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Ellipse, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
-			handleLineStyle(currentItem, flags, lineColor);
-			handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 			finishItem(currentItem);
+			if (currentItem != NULL)
+			{
+				handleLineStyle(currentItem, flags, lineColor);
+				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+			}
 			break;
 		case 5:
 			cmdText += "Text";
@@ -1277,9 +1541,11 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			ds >> fontID;
 			ds >> nrOfChars;
 			ds >> fontSize;
+			fontColor = lineColor;
 			createObjCode = 5;
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), 0, lineColor, CommonStrings::None, true);
 			currentItem = m_Doc->Items->at(z);
+			scaleX = 0;
 			break;
 		case 6:
 			cmdText += "Line";
@@ -1287,30 +1553,16 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			posStart = getCoordinate(ds);
 			if (posStart == posEnd)
 				break;
-			if ((posEnd.x() < 0) || (posEnd.y() < 0) || (posStart.x() < 0) || (posStart.y() < 0))
-			{
-				QPointF tmp = posEnd;
-				posEnd = posStart;
-				posStart = tmp;
-			}
 			ds >> patternIndex;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			lineWidth = patternIndex * scaleFactor;
 			path = QPainterPath();
 			path.moveTo(posStart);
 			path.lineTo(posEnd);
-			bBoxO = path.boundingRect();
-			if ((bBoxO.x() < 0) || (bBoxO.y() < 0))
-			{
-				path = QPainterPath();
-				path.moveTo(posEnd);
-				path.lineTo(posStart);
-			}
 			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			currentItem->PoLine.fromQPainterPath(path);
+			bBoxO = path.boundingRect();
 			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
@@ -1321,20 +1573,10 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 3;
 			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
@@ -1343,6 +1585,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			break;
 		case 9:
 			cmdText += "Pie Wedge";
+			printMSG = true;
 			break;
 		case 10:
 		case 11:
@@ -1354,11 +1597,6 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			boundingBoxXO = getValue(ds);
 			boundingBoxYO = getValue(ds);
 			boundingBoxWO = getValue(ds);
@@ -1366,19 +1604,17 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			cornerRadius = getValue(ds);
 			bBoxO = QRectF(QPointF(boundingBoxXO, boundingBoxYO), QPointF(boundingBoxWO, boundingBoxHO));
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Rectangle, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
-			if (data8 == 11)
-				currentItem->setCornerRadius(cornerRadius);
-			handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+			if (currentItem != NULL)
+			{
+				if (data8 == 11)
+					currentItem->setCornerRadius(cornerRadius);
+				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+			}
 			break;
 		case 13:
 			cmdText += "filled Ellipse";
@@ -1386,11 +1622,6 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			boundingBoxXO = getValue(ds);
 			boundingBoxYO = getValue(ds);
 			boundingBoxWO = getValue(ds);
@@ -1398,17 +1629,13 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			bBoxO = QRectF(QPointF(boundingBoxXO, boundingBoxYO), QPointF(boundingBoxWO, boundingBoxHO));
 			cornerRadius = getValue(ds);
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Ellipse, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
-			handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+			if (currentItem != NULL)
+				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 			break;
 		case 14:
 			cmdText += "elliptical Arc, clockwise";
@@ -1416,39 +1643,62 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			posStart = getCoordinate(ds);
 			posEnd = getCoordinate(ds);
+			if (posStart == posEnd)
+				break;
 			boundingBoxXO = getValue(ds);
 			boundingBoxYO = getValue(ds);
 			boundingBoxWO = getValue(ds);
 			boundingBoxHO = getValue(ds);
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
-			sLin = QLineF(QPointF(boundingBoxWO / 2.0, boundingBoxHO / 2.0), posStart);
-			eLin = QLineF(QPointF(boundingBoxWO / 2.0, boundingBoxHO / 2.0), posEnd);
+			getCommonData(ds);
+			bBoxO = QRectF(QPointF(boundingBoxXO, boundingBoxYO), QPointF(boundingBoxWO, boundingBoxHO)).normalized();
+			sLin = QLineF(bBoxO.center(), posStart);
+			eLin = QLineF(bBoxO.center(), posEnd);
 			rotS = sLin.angle();
 			rotE = eLin.angle();
-			rotE = rotE - rotS;
+			if (rotS < rotE)
+				rotS = rotS + 360;
+			rotE = rotS - rotE;
 			path = QPainterPath();
-			path.arcMoveTo(QRectF(0, 0, boundingBoxWO, boundingBoxHO), rotS);
-			path.arcTo(QRectF(0, 0, boundingBoxWO, boundingBoxHO), rotS, rotE);
-			path = mat.map(path);
-			bBoxO = path.boundingRect();
+			path.arcMoveTo(bBoxO, rotS);
+			path.arcTo(bBoxO, rotS, -rotE);
+			scaleX = 1;
+			scaleY = 1;
 			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			currentItem->PoLine.fromQPainterPath(path);
-			currentItem->PoLine.translate(-bBoxO.x(), 0);
+			bBoxO = path.controlPointRect();
+			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
 			break;
 		case 15:
 			cmdText += "filled parabolic Arc";
+			ds >> patternIndex;
+			fillColor = getColor(ds);
+			if (patternIndex != 0)
+				fillC = fillColor;
+			posStart = getCoordinate(ds);
+			posMid = getCoordinate(ds);
+			posEnd = getCoordinate(ds);
+			if (posStart == posEnd)
+				break;
+			getCommonData(ds);
+			path = QPainterPath();
+			path.moveTo(posStart);
+			path.cubicTo(posMid, posMid, posEnd);
+			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
+			currentItem = m_Doc->Items->at(z);
+			currentItem->PoLine.fromQPainterPath(path);
+			bBoxO = path.controlPointRect();
+			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
+			finishItem(currentItem);
+			if (currentItem != NULL)
+			{
+				handleLineStyle(currentItem, flags, lineColor);
+				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
+			}
 			break;
 		case 16:
 			cmdText += "filled quadratic Spline";
@@ -1456,46 +1706,39 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 4;
-			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX + bBox.x() + bX + groupX, baseY + bBox.y() + bY + groupY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
+			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
 			handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 			break;
 		case 17:
+		case 20:
 			ds >> patternIndex;
 			fillColor = getColor(ds);
 			ds.device()->seek(0x2B);
 			ds >> nItems;
 			ds >> dummy;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			gElements.xoffset = bX + bBox.x() + groupX;
 			gElements.yoffset = bY + bBox.y() + groupY;
 			gElements.width = bBox.width();
 			gElements.height = bBox.height();
 			gElements.lineWidth = lineWidth;
+			gElements.scaleX = scaleX;
+			gElements.scaleY = scaleY;
+			gElements.rotationAngle = rotationAngle;
+			gElements.posPivot = posPivot;
+			if (data8 == 17)
+				gElements.filled = true;
+			else
+				gElements.filled = false;
 			gElements.nrOfItems = nItems;
 			gElements.counter = 0;
 			gElements.patternIndex = patternIndex;
@@ -1511,10 +1754,30 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			gList.nrOfItems = 0xFFFF;
 			gList.counter = 0;
 			listStack.push(gList);
-			cmdText += QString("filled complex Object Count %1  Fill %2 Line %3 LW %4").arg(nItems).arg(fillColor).arg(lineColor).arg(lineWidth);
+			cmdText += QString("filled complex Object Count %1  Scale %2 %3 LW %4").arg(nItems).arg(scaleX).arg(scaleY).arg(lineWidth);
 			break;
 		case 18:
 			cmdText += "parabolic Arc";
+			ds >> patternIndex;
+			fillColor = getColor(ds);
+			if (patternIndex != 0)
+				fillC = fillColor;
+			posStart = getCoordinate(ds);
+			posMid = getCoordinate(ds);
+			posEnd = getCoordinate(ds);
+			if (posStart == posEnd)
+				break;
+			getCommonData(ds);
+			path = QPainterPath();
+			path.moveTo(posStart);
+			path.cubicTo(posMid, posMid, posEnd);
+			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
+			currentItem = m_Doc->Items->at(z);
+			currentItem->PoLine.fromQPainterPath(path);
+			bBoxO = path.controlPointRect();
+			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
+			handleLineStyle(currentItem, flags, lineColor);
+			finishItem(currentItem);
 			break;
 		case 19:
 			cmdText += "quadratic Spline";
@@ -1522,28 +1785,15 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 4;
-			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, baseX + bBox.x() + bX + groupX, baseY + bBox.y() + bY + groupY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
+			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
-			break;
-		case 20:
-			cmdText += "complex Polyline";
 			break;
 		case 22:
 			cmdText += "Bitmap monochrome";
@@ -1561,6 +1811,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			ds >> rTrans;
 			ds >> gTrans;
 			ds >> bTrans;
+			getCommonData(ds);
 			if ((bitsPerPixel == 24) || (bitsPerPixel == 8))
 			{
 				z = m_Doc->itemAdd(PageItem::ImageFrame, PageItem::Rectangle, posX, posY, bBox.width(), bBox.height(), lineWidth, CommonStrings::None, CommonStrings::None, true);
@@ -1582,12 +1833,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 2;
 			z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
@@ -1600,20 +1846,10 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			fillColor = getColor(ds);
 			if (patternIndex != 0)
 				fillC = fillColor;
-			if (groupStack.count() > 1)
-			{
-				if (groupStack.top().patternIndex != 0)
-					fillC = groupStack.top().fillColor;
-			}
 			ds >> dummy;
 			ds >> nPoints;
 			ds >> appFlags;
-			ds >> dummy;
-			ds >> dummy;
-			ds >> dummy;
-			ds.device()->seek(0x38);
-			backColor = getColor(ds);
-			lineWidth = getValue(ds);
+			getCommonData(ds);
 			nrOfPoints = nPoints;
 			createObjCode = 2;
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor, true);
@@ -1624,6 +1860,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 		case 25:
 			cmdText += "Rich Text";
 			fontColor = lineColor;
+			getCommonData(ds);
 			createObjCode = 6;
 			z = m_Doc->itemAdd(PageItem::TextFrame, PageItem::Rectangle, posX, posY, bBox.width(), bBox.height(), 0, CommonStrings::None, CommonStrings::None, true);
 			currentItem = m_Doc->Items->at(z);
@@ -1632,15 +1869,19 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			break;
 		case 26:
 			cmdText += "virtual Bitmap";
+			printMSG = true;
 			break;
 		case 27:
 			cmdText += "simple Clip Path";
+			printMSG = true;
 			break;
 		case 28:
 			cmdText += "tiled Clip Path";
+			printMSG = true;
 			break;
 		case 29:
 			cmdText += "Path Text";
+			printMSG = true;
 			break;
 		default:
 			cmdText += "Unknown";
@@ -1690,12 +1931,15 @@ void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString
 		return;
 	if ((patternIndex > 0x40) && (patternIndex < 0x80))
 	{
-//		qDebug() << "Gradfill Item:" << currentItem->itemName() << QString("Pattern %1").arg(patternIndex, 2, 16, QChar('0'));
 		quint8 ind = patternIndex - 0x40;
 		DRWGradient grad;
 		if (gradientMap.contains(ind))
 		{
 			grad = gradientMap[ind];
+			if (grad.xOffset > 1)
+				grad.xOffset -= 1;
+			if (grad.yOffset > 1)
+				grad.yOffset -= 1;
 			double xoff = bBox.width() * grad.xOffset;
 			double yoff = bBox.height() * grad.yOffset;
 			VGradient FillGradient = VGradient(VGradient::linear);
@@ -1703,18 +1947,20 @@ void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString
 			const ScColor& gradC1 = m_Doc->PageColors[fillColor];
 			FillGradient.addStop( ScColorEngine::getRGBColor(gradC1, m_Doc), 0.0, 0.5, 1.0, fillColor, 100 );
 			const ScColor& gradC2 = m_Doc->PageColors[backColor];
-			FillGradient.addStop( ScColorEngine::getRGBColor(gradC2, m_Doc), 1.0, 0.5, 1.0, backColor, 100 );
 			if (grad.type == 1)
 			{
+				FillGradient.addStop( ScColorEngine::getRGBColor(gradC2, m_Doc), qMin(grad.yOffset, 0.99), 0.5, 1.0, backColor, 100 );
+				FillGradient.addStop( ScColorEngine::getRGBColor(gradC1, m_Doc), 1.0, 0.5, 1.0, fillColor, 100 );
 				currentItem->GrType = 6;
 				currentItem->fill_gradient = FillGradient;
-				currentItem->setGradientVector(bBox.width() / 2.0, 0, bBox.width() / 2.0, yoff, 0, 0, 1, 0);
+				currentItem->setGradientVector(bBox.width() / 2.0, 0, bBox.width() / 2.0, bBox.height(), 0, 0, 1, 0);
 			}
 			else
 			{
+				FillGradient.addStop( ScColorEngine::getRGBColor(gradC2, m_Doc), 1.0, 0.5, 1.0, backColor, 100 );
 				currentItem->GrType = 7;
 				currentItem->fill_gradient = FillGradient;
-				currentItem->setGradientVector(xoff, yoff, 0.0, 0.0, xoff, yoff, 1, 0);
+				currentItem->setGradientVector(xoff, yoff, qMax(bBox.width(), bBox.height()), qMax(bBox.width(), bBox.height()), xoff, yoff, 1, 0);
 			}
 		}
 	}
@@ -1750,6 +1996,7 @@ void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString
 						*q++ = data[offs++];
 						*q++ = data[offs++];
 					}
+					image = image.scaled(96, 48);
 				}
 				else
 				{
@@ -1763,6 +2010,7 @@ void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString
 						*q++ = data[offs++];
 						offs++;
 					}
+					image = image.scaled(48, 48);
 				}
 				image = image.convertToFormat(QImage::Format_ARGB32);
 				ScPattern pat = ScPattern();
@@ -1803,102 +2051,27 @@ void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString
 				patternName = patternMap[patNa];
 			importedPatterns.append(patternName);
 			currentItem->setPattern(patternName);
+			currentItem->setPatternTransform(16.6666, 16.6666, 0, 0, 0, 0, 0);
 			currentItem->GrType = 8;
 		}
 	}
-//	else
-//		qDebug() << "Patternfill Item:" << currentItem->itemName() << QString("Pattern %1").arg(patternIndex, 2, 16, QChar('0'));
 }
 
 void DrwPlug::handlePreviewBitmap(QDataStream &ds)
 {
-	quint16 w, h, offs, flag, dummy;
-	ds >> offs;					// read Offset to ColorTable
-	ds >> dummy;
-	ds >> w;					// read Width
-	ds >> dummy;
-	ds >> h;					// read Height;
-	ds >> dummy;
-	ds >> dummy;				// might indicate image type 1 = indexed
-	ds >> dummy;				// might indicate bits used for data
-	ds >> flag;					// flag for image data, 0 = uncompressed, 1 = compressed
-	ds.device()->seek(offs);	// jump to start of ColorTable
-	QVector<QRgb> colors;
-	for (quint16 cc = 0; cc < 256; cc++)	// now reading ColorTable, exactly 1024 bytes
-	{
-		quint8 r, g, b, a;
-		ds >> b >> g >> r >> a;				// values are stored in BGR order
-		colors.append(qRgb(r, g, b));
-	}
-	QImage image = QImage(w, h, QImage::Format_Indexed8);
-	image.setColorTable(colors);
-	for (quint16 yy = 0; yy < h; yy++)		// now reading Image, data are index values to ColorTable
-	{
-		QByteArray data;
-		data.resize(w);
-		if (flag == 0)							// raw uncompressed data
-		{
-			ds.readRawData(data.data(), w);
-			uint adj = ds.device()->pos() % 4;	// scanline data is aligned to 32bit words
-			if (adj != 0)
-				ds.skipRawData(adj);
-		}
-		else if (flag == 1)						// data is compressed
-		{
-			data.resize(0);
-			quint16 count = 0;
-			quint8 dd, val;
-			while (count < w)
-			{
-				ds >> dd;								// read byte count
-				if (dd != 0)
-				{
-					ds >> val;							// read value
-					for (quint8 r = 0; r < dd; r++)
-					{
-						data.append(val);
-					}
-					count += dd;
-				}
-				else									// if byte count == 0, next byte is a counter
-				{										// of uncompressed bytes to copy to result
-					ds >> dd;
-					for (quint8 r = 0; r < dd; r++)
-					{
-						ds >> val;
-						data.append(val);
-					}
-					count += dd;
-				}
-			}
-			ds >> dummy;
-		}
-		memcpy(image.scanLine(yy), data.data(), w);
-	}
-	image = image.convertToFormat(QImage::Format_ARGB32);
-	image = image.mirrored(false, true);	// image data is upside down
-
-	int z = m_Doc->itemAdd(PageItem::ImageFrame, PageItem::Unspecified, baseX, baseY, image.width(), image.height(), 0, m_Doc->itemToolPrefs.imageFillColor, CommonStrings::None, true);
-	PageItem *ite = m_Doc->Items->at(z);
-	ite->tempImageFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_drw_XXXXXX.png");
-	ite->tempImageFile->open();
-	QString fileName = getLongPathName(ite->tempImageFile->fileName());
-	ite->tempImageFile->close();
-	ite->isInlineImage = true;
-	image.save(fileName, "PNG");
-	ite->moveBy(m_Doc->currentPage()->xOffset(), m_Doc->currentPage()->yOffset());
-	m_Doc->LoadPict(fileName, z);
-	ite->setImageScalingMode(false, false);
-	ite->ClipEdited = true;
-	ite->FrameType = 3;
-	FPoint wh = getMaxClipF(&ite->PoLine);
-	ite->setWidthHeight(wh.x(),wh.y());
-	ite->setTextFlowMode(PageItem::TextFlowDisabled);
-	m_Doc->AdjustItemSize(ite);
-	ite->OldB2 = ite->width();
-	ite->OldH2 = ite->height();
-	ite->updateClip();
-	Elements.append(ite);
+	/* create a fake BMP header section */
+	QByteArray header;
+	header.resize(14);
+	header.fill(0);
+	QDataStream hs(&header, QIODevice::ReadWrite);
+	hs.setByteOrder(QDataStream::LittleEndian);
+	quint16 size;
+	size = 0x4D42;
+	hs << size;
+	size = cmdData.size() + 14;
+	hs << size;
+	header.append(cmdData);
+	thumbnailImage.loadFromData(header, "BMP");
 }
 
 QString DrwPlug::handleColor(ScColor &color, QString proposedName)
@@ -1961,6 +2134,17 @@ QString DrwPlug::handleColor(ScColor &color, QString proposedName)
 	return tmpName;
 }
 
+
+void DrwPlug::getCommonData(QDataStream &ds)
+{
+	quint16 dummy;
+	ds.device()->seek(0x38);
+	backColor = getColor(ds);
+	lineWidth = getValue(ds);
+	ds >> dummy;
+	posPivot = getCoordinate(ds);
+}
+
 QString DrwPlug::getColor(QDataStream &ds)
 {
 	quint8 r, g, b, a;
@@ -1971,31 +2155,53 @@ QString DrwPlug::getColor(QDataStream &ds)
 
 void DrwPlug::finishItem(PageItem* ite, bool scale)
 {
+	if (ite->PoLine.size() < 4)
+	{
+		tmpSel->clear();
+		tmpSel->addItem(ite, true);
+		m_Doc->itemSelection_DeleteItem(tmpSel);
+		currentItem = NULL;
+		createObjCode = 0;
+		tmpSel->clear();
+		return;
+	}
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
+	if (rotationAngle != 0)
+	{
+		QTransform ma;
+		ma.translate(posPivot.x(), posPivot.y());
+		ma.rotate(-rotationAngle / 10.0);
+		ite->PoLine.map(ma);
+		FPoint tp2(getMinClipF(&ite->PoLine));
+		ite->PoLine.translate(-tp2.x(), -tp2.y());
+	}
 	if (scale)
 	{
-		QPainterPath pa = ite->PoLine.toQPainterPath(true);
-		QRectF bb = pa.boundingRect();
-		double scx = 1.0;
-		double scy = 1.0;
-		if ((bb.width() != 0.0) && (ite->width() != 0.0))
-			scx = ite->width() / bb.width();
-		else
-			scx = 1.0;
-		if ((bb.height() != 0.0) && (ite->height() != 0.0))
-			scy = ite->height() / bb.height();
-		else
-			scy = 1.0;
-		ite->PoLine.scale(scx, scy);
-		ite->setLineWidth(ite->lineWidth() / qMin(scx, scy));
+		if ((scaleX != 0) || (scaleY != 0))
+		{
+			QPainterPath pa = ite->PoLine.toQPainterPath(true);
+			QRectF bb = pa.controlPointRect();
+			double scx = 1.0;
+			double scy = 1.0;
+			if ((bb.width() != 0.0) && (ite->width() != 0.0))
+				scx = ite->width() / bb.width();
+			else
+				scx = 1.0;
+			if ((bb.height() != 0.0) && (ite->height() != 0.0))
+				scy = ite->height() / bb.height();
+			else
+				scy = 1.0;
+			ite->PoLine.scale(scx, scy);
+			ite->setLineWidth(ite->lineWidth() / qMin(scx, scy));
+		}
 	}
 	ite->OldB2 = ite->width();
 	ite->OldH2 = ite->height();
 	ite->updateClip();
 	Elements.append(ite);
-	if (groupStack.count() != 0)
+	if (groupStack.count() > 1)
 		groupStack.top().GElements.append(ite);
 	if (listStack.count() > 1)
 		listStack.top().GElements.append(ite);

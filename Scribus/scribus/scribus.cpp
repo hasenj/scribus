@@ -1591,8 +1591,9 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 {
 	//Do not quit if Preferences or new doc window is open
 	Preferences *prefsWin = findChild<Preferences *>(QString::fromLocal8Bit("PreferencesWindow"));
+	PreferencesDialog *prefsDialog = findChild<PreferencesDialog *>(QString::fromLocal8Bit("PreferencesDialog"));
 	NewDoc *newDocWin = findChild<NewDoc *>(QString::fromLocal8Bit("NewDocumentWindow"));
-	if (prefsWin!=NULL || newDocWin!=NULL)
+	if (prefsWin!=NULL || prefsDialog!=NULL || newDocWin!=NULL)
 	{
 		ce->ignore();
 		return;
@@ -4362,61 +4363,11 @@ bool ScribusMainWindow::DoFileClose()
 	closeActiveWindowMasterPageEditor();
 	slotSelect();
 	doc->autoSaveTimer->stop();
-	ScCore->fileWatcher->stop();
 	disconnect(doc->autoSaveTimer, SIGNAL(timeout()), doc->WinHan, SLOT(slotAutoSave()));
 	disconnect(doc->WinHan, SIGNAL(AutoSaved()), this, SLOT(slotAutoSaved()));
 	disconnect(ScCore->fileWatcher, SIGNAL(fileChanged(QString )), doc, SLOT(updatePict(QString)));
 	disconnect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString )), doc, SLOT(removePict(QString)));
 	disconnect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), doc, SLOT(updatePictDir(QString )));
-	for (int a = 0; a < doc->DocItems.count(); ++a)
-	{
-		PageItem *currItem = doc->DocItems.at(a);
-		if (currItem->PictureIsAvailable)
-			ScCore->fileWatcher->removeFile(currItem->Pfile);
-		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
-		{
-			QFileInfo fi(currItem->Pfile);
-			ScCore->fileWatcher->removeDir(fi.absolutePath());
-		}
-	}
-	for (int a = 0; a < doc->MasterItems.count(); ++a)
-	{
-		PageItem *currItem = doc->MasterItems.at(a);
-		if (currItem->PictureIsAvailable)
-			ScCore->fileWatcher->removeFile(currItem->Pfile);
-		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
-		{
-			QFileInfo fi(currItem->Pfile);
-			ScCore->fileWatcher->removeDir(fi.absolutePath());
-		}
-	}
-	for (int a = 0; a < doc->FrameItems.count(); ++a)
-	{
-		PageItem *currItem = doc->FrameItems.at(a);
-		if (currItem->PictureIsAvailable)
-			ScCore->fileWatcher->removeFile(currItem->Pfile);
-		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
-		{
-			QFileInfo fi(currItem->Pfile);
-			ScCore->fileWatcher->removeDir(fi.absolutePath());
-		}
-	}
-	QStringList patterns = doc->docPatterns.keys();
-	for (int c = 0; c < patterns.count(); ++c)
-	{
-		ScPattern pa = doc->docPatterns[patterns[c]];
-		for (int o = 0; o < pa.items.count(); o++)
-		{
-			PageItem *currItem = pa.items.at(o);
-			if (currItem->PictureIsAvailable)
-				ScCore->fileWatcher->removeFile(currItem->Pfile);
-			if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
-			{
-				QFileInfo fi(currItem->Pfile);
-				ScCore->fileWatcher->removeDir(fi.absolutePath());
-			}
-		}
-	}
 	if (ScCore->haveCMS())
 		doc->CloseCMSProfiles();
 	//<<Palettes
@@ -4573,7 +4524,6 @@ bool ScribusMainWindow::DoFileClose()
 		Q_ASSERT(plugin); // all the returned names should represent loaded plugins
 		plugin->unsetDoc();
 	}
-	QString fName(view->Doc->DocName);
 	view->close();
 // 	delete view;
 	//CB Yes, we are setting it to NULL without deleting it. ActWin(ScribusWin) owns the view
@@ -4586,7 +4536,6 @@ bool ScribusMainWindow::DoFileClose()
 	styleManager->setDoc(0);
 	layerPalette->ClearInhalt();
 	docCheckerPalette->buildErrorList(0);
-	ScCore->fileWatcher->removeFile(fName);
 	HaveDoc--;
 	delete doc;
 	doc = NULL;
@@ -4599,7 +4548,6 @@ bool ScribusMainWindow::DoFileClose()
 		else
 			QDir::setCurrent( QDir::homePath() );
 	}
-	ScCore->fileWatcher->start();
 	return true;
 }
 
@@ -7540,11 +7488,12 @@ void ScribusMainWindow::slotPrefsOrg()
 
 void ScribusMainWindow::slotPrefs150Org()
 {
-	QString oldMonitorProfile = ScCore->monitorProfile.productDescription();
+	QString oldMonitorProfile(ScCore->monitorProfile.productDescription());
 	slotSelect();
 	struct ApplicationPrefs oldPrefs(prefsManager->appPrefs);
 	PreferencesDialog prefsDialog(this);
-	if (prefsDialog.exec()==QDialog::Accepted)
+	int prefsResult=prefsDialog.exec();
+	if (prefsResult==QDialog::Accepted)
 	{
 		struct ApplicationPrefs newPrefs(prefsDialog.prefs());
 		prefsManager->setNewPrefs(newPrefs);
@@ -7611,9 +7560,9 @@ void ScribusMainWindow::slotPrefs150Org()
 		icm.setMaxCacheSizeMiB(newPrefs.imageCachePrefs.maxCacheSizeMiB);
 		icm.setMaxCacheEntries(newPrefs.imageCachePrefs.maxCacheEntries);
 		icm.setCompressionLevel(newPrefs.imageCachePrefs.compressionLevel);
-	}
 
-	prefsManager->SavePrefs();
+		prefsManager->SavePrefs();
+	}
 }
 
 void ScribusMainWindow::ShowSubs()

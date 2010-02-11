@@ -96,8 +96,10 @@ void ImportXfigPlugin::registerFormats()
 	fmt.formatId = FORMATID_XFIGIMPORT;
 	fmt.filter = FormatsManager::instance()->extensionsForFormat(FormatsManager::XFIG); // QFileDialog filter
 	fmt.nameMatch = QRegExp("\\."+FormatsManager::instance()->extensionListForFormat(FormatsManager::XFIG, 1)+"$", Qt::CaseInsensitive);
+	fmt.fileExtensions = QStringList() << "fig";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
 	fmt.mimeTypes = FormatsManager::instance()->mimetypeOfFormat(FormatsManager::XFIG); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -159,4 +161,24 @@ bool ImportXfigPlugin::import(QString fileName, int flags)
 		UndoManager::instance()->setUndoEnabled(true);
 	delete dia;
 	return true;
+}
+
+QImage ImportXfigPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = ScCore->primaryMainWindow()->doc;
+	XfigPlug *dia = new XfigPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

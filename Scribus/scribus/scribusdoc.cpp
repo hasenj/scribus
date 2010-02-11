@@ -519,6 +519,57 @@ ScribusDoc::~ScribusDoc()
 {
 	m_guardedObject.nullify();
 	CloseCMSProfiles();
+	ScCore->fileWatcher->stop();
+	ScCore->fileWatcher->removeFile(DocName);
+	for (int a = 0; a < DocItems.count(); ++a)
+	{
+		PageItem *currItem = DocItems.at(a);
+		if (currItem->PictureIsAvailable)
+			ScCore->fileWatcher->removeFile(currItem->Pfile);
+		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
+		{
+			QFileInfo fi(currItem->Pfile);
+			ScCore->fileWatcher->removeDir(fi.absolutePath());
+		}
+	}
+	for (int a = 0; a < MasterItems.count(); ++a)
+	{
+		PageItem *currItem = MasterItems.at(a);
+		if (currItem->PictureIsAvailable)
+			ScCore->fileWatcher->removeFile(currItem->Pfile);
+		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
+		{
+			QFileInfo fi(currItem->Pfile);
+			ScCore->fileWatcher->removeDir(fi.absolutePath());
+		}
+	}
+	for (int a = 0; a < FrameItems.count(); ++a)
+	{
+		PageItem *currItem = FrameItems.at(a);
+		if (currItem->PictureIsAvailable)
+			ScCore->fileWatcher->removeFile(currItem->Pfile);
+		if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
+		{
+			QFileInfo fi(currItem->Pfile);
+			ScCore->fileWatcher->removeDir(fi.absolutePath());
+		}
+	}
+	QStringList patterns = docPatterns.keys();
+	for (int c = 0; c < patterns.count(); ++c)
+	{
+		ScPattern pa = docPatterns[patterns[c]];
+		for (int o = 0; o < pa.items.count(); o++)
+		{
+			PageItem *currItem = pa.items.at(o);
+			if (currItem->PictureIsAvailable)
+				ScCore->fileWatcher->removeFile(currItem->Pfile);
+			if ((currItem->asImageFrame()) && (!currItem->Pfile.isEmpty()))
+			{
+				QFileInfo fi(currItem->Pfile);
+				ScCore->fileWatcher->removeDir(fi.absolutePath());
+			}
+		}
+	}
 	while (!DocItems.isEmpty())
 	{
 		delete DocItems.takeFirst();
@@ -548,6 +599,7 @@ ScribusDoc::~ScribusDoc()
 	if (docHyphenator)
 		delete docHyphenator;
 	delete m_serializer;
+	ScCore->fileWatcher->start();
 }
 
 
@@ -4388,6 +4440,7 @@ void ScribusDoc::reformPages(bool moveObjects)
 	}
 	if (!isLoading())
 	{
+		undoManager->setUndoEnabled(false);
 		uint docItemsCount=Items->count();
 		for (uint ite = 0; ite < docItemsCount; ++ite)
 		{
@@ -4417,6 +4470,7 @@ void ScribusDoc::reformPages(bool moveObjects)
 			}
 			item->setRedrawBounding();
 		}
+		undoManager->setUndoEnabled(true);
 	}
 
 	if(isLoading() && is12doc)
@@ -4877,35 +4931,19 @@ void ScribusDoc::updateSectionPageNumbersToPages()
 
 void ScribusDoc::addPageToSection(const uint otherPageIndex, const uint location, const uint count)
 {
-	//Get the section of the new page index.
-	bool found=false;
+	uint fromIndex, toIndex;
+	uint searchedIndex = (otherPageIndex > 0) ? (otherPageIndex - 1) : 0;
+	if ((location == 0) && (searchedIndex > 0))
+		--searchedIndex;
 	DocumentSectionMap::Iterator it = sections.begin();
-	if (otherPageIndex==0)
-		found=true;
 	for (; it!= sections.end(); ++it)
 	{
-		if (otherPageIndex-1>=it.value().fromindex && otherPageIndex-1<=it.value().toindex)
-		{
-			found=true;
-			break;
-		}
-	}
-	//Our page was not in a section
-	if (!found)
-		return;
-	DocumentSectionMap::Iterator it2(it);
-
-	//For this if: We are adding before the beginning of a section, so we must put this
-	//new page in the previous section and then increment the rest
-	if (otherPageIndex-1==it.value().fromindex && location==0 && it!=sections.begin())
-		--it2;
-	it2.value().toindex+=count;
-	++it2;
-	while (it2!=sections.end())
-	{
-		it2.value().fromindex+=count;
-		it2.value().toindex+=count;
-		++it2;
+		fromIndex = it.value().fromindex;
+		toIndex   = it.value().toindex;
+		if  (fromIndex > searchedIndex)
+			it.value().fromindex += count;
+		if  (toIndex >= searchedIndex)
+			it.value().toindex += count;
 	}
 	//Now update the Pages' internal storage of their page number
 	updateSectionPageNumbersToPages();
@@ -4915,27 +4953,28 @@ void ScribusDoc::addPageToSection(const uint otherPageIndex, const uint location
 void ScribusDoc::removePageFromSection(const uint pageIndex)
 {
 	//Get the section of the new page index.
-	bool found=false;
+	bool found = false;
+	uint fromIndex, toIndex;
 	DocumentSectionMap::Iterator it = sections.begin();
 	for (; it!= sections.end(); ++it)
 	{
 		if (pageIndex>=it.value().fromindex && pageIndex<=it.value().toindex)
 		{
-			found=true;
+			fromIndex = it.value().fromindex;
+			toIndex   = it.value().toindex - 1;
+			if (fromIndex > toIndex) // Remove section in that case
+				sections.remove(it.key());
 			break;
 		}
 	}
-	//Our page was not in a section
-	if (!found)
-		return;
-
-	--it.value().toindex;
-	++it;
-	while (it!=sections.end())
+	for (it = sections.begin(); it != sections.end(); ++it)
 	{
-		--it.value().fromindex;
-		--it.value().toindex;
-		++it;
+		fromIndex = it.value().fromindex;
+		toIndex   = it.value().toindex;
+		if  (fromIndex > pageIndex)
+			--it.value().fromindex;
+		if  (toIndex >= pageIndex)
+			--it.value().toindex;
 	}
 	//Now update the Pages' internal storage of their page number
 	updateSectionPageNumbersToPages();
@@ -10040,6 +10079,7 @@ bool ScribusDoc::SizeItem(double newX, double newY, PageItem *pi, bool fromMP, b
 	ma.rotate(currItem->rotation());
 	double dX = ma.m11() * (currItem->width() - newX) + ma.m21() * (currItem->height() - newY) + ma.dx();
 	double dY = ma.m22() * (currItem->height() - newY) + ma.m12() * (currItem->width() - newX) + ma.dy();
+//	#8541, #8761: "when resizing with ALT-arrow, the size values in the PP aren't updated"
 //	currItem->setWidthHeight(newX, newY, true);
 	currItem->setWidthHeight(newX, newY);
 	if ((rotMode != 0) && (fromMP) && (!isLoading()) && (appMode == modeNormal))

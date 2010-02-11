@@ -62,7 +62,85 @@ XarPlug::XarPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
 	m_Doc=doc;
+	importerFlags = flags;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
+}
+
+QImage XarPlug::readThumbnail(QString fName)
+{
+	progressDialog = NULL;
+	QImage image = QImage();
+	QFile f(fName);
+	if (f.open(QIODevice::ReadOnly))
+	{
+		QDataStream ts(&f);
+		ts.setByteOrder(QDataStream::LittleEndian);
+		quint32 id;
+		ts >> id;
+		if (id != 0x41524158)
+			return image;
+		ts >> id;
+		if (id != 0x0A0DA3A3)
+			return image;
+		while (!ts.atEnd())
+		{
+			quint32 opCode, dataLen;
+			ts >> opCode;
+			ts >> dataLen;
+			if (opCode == 30)
+			{
+				ts.skipRawData(dataLen);
+				quint64 pos = ts.device()->pos();
+				QtIOCompressor compressor(ts.device(), 6, 1);
+				compressor.setStreamFormat(QtIOCompressor::RawZipFormat);
+				compressor.open(QIODevice::ReadOnly);
+				QDataStream tsc(&compressor);
+				tsc.setByteOrder(QDataStream::LittleEndian);
+				tsc.device()->seek(pos);
+				while (!tsc.atEnd())
+				{
+					tsc >> opCode;
+					tsc >> dataLen;
+					recordCounter++;
+					if (opCode == 31)
+					{
+						tsc.skipRawData(dataLen);
+						break;
+					}
+					if ((opCode == 61) || (opCode == 62) || (opCode == 63))
+					{
+						QByteArray data;
+						data.resize(dataLen);
+						tsc.readRawData(data.data(), dataLen);
+						image.loadFromData(data);
+					}
+					else if (opCode == 45)
+						handleSpreadInfo(tsc);
+					else
+						tsc.skipRawData(dataLen);
+				}
+				ts.skipRawData(dataLen+1);
+			}
+			else
+			{
+				if ((opCode == 61) || (opCode == 62) || (opCode == 63))
+				{
+					QByteArray data;
+					data.resize(dataLen);
+					ts.readRawData(data.data(), dataLen);
+					image.loadFromData(data);
+				}
+				else if (opCode == 45)
+					handleSpreadInfo(ts);
+				else
+					ts.skipRawData(dataLen);
+			}
+		}
+		f.close();
+	}
+	image.setText("XSize", QString("%1").arg(docWidth));
+	image.setText("YSize", QString("%1").arg(docHeight));
+	return image;
 }
 
 bool XarPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)

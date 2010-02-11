@@ -96,8 +96,10 @@ void ImportWpgPlugin::registerFormats()
 	fmt.formatId = FORMATID_WPGIMPORT;
 	fmt.filter = FormatsManager::instance()->extensionsForFormat(FormatsManager::WPG); // QFileDialog filter
 	fmt.nameMatch = QRegExp("\\."+FormatsManager::instance()->extensionListForFormat(FormatsManager::WPG, 1)+"$", Qt::CaseInsensitive);
+	fmt.fileExtensions = QStringList() << "wpg";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
 	fmt.mimeTypes = FormatsManager::instance()->mimetypeOfFormat(FormatsManager::WPG); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -159,4 +161,24 @@ bool ImportWpgPlugin::import(QString fileName, int flags)
 		UndoManager::instance()->setUndoEnabled(true);
 	delete dia;
 	return true;
+}
+
+QImage ImportWpgPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = ScCore->primaryMainWindow()->doc;
+	WpgPlug *dia = new WpgPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

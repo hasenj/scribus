@@ -60,6 +60,8 @@ struct SCRIBUS_API GlyphLayout {
 	GlyphLayout() : xadvance(0.0f), yadvance(0.0f), xoffset(0.0f), yoffset(0.0f),
 		scaleV(1.0), scaleH(1.0), glyph(0), more(NULL) 
 	{ }
+	virtual ~GlyphLayout()
+	{ }
 	double wide() const 
 	{ 
 		double ret = 0; 
@@ -137,6 +139,15 @@ public:
 		PtransX(other.PtransX), PtransY(other.PtransY), PRot(other.PRot), PDx(other.PDx), 
 		embedded(other.embedded), ch(other.ch)
 	{
+		glyph.more = NULL;
+		GlyphLayout *layout = &glyph;
+		const GlyphLayout *otherLayout = &other.glyph;
+		while (otherLayout->more)
+		{
+			layout->more = new GlyphLayout(*otherLayout->more);
+			layout       = layout->more;
+			otherLayout  = otherLayout->more;
+		}
 		if (other.parstyle)
 			parstyle = new ParagraphStyle(*other.parstyle);
 	}

@@ -189,7 +189,7 @@ bool PDFLibCore::doExport(const QString& fn, const QString& nam, int Components,
 		QMap<int, int> pageNsMpa;
 		for (uint a = 0; a < pageNs.size(); ++a)
 		{
-			pageNsMpa.insert(doc.MasterNames[doc.Pages->at(pageNs[a]-1)->MPageNam], 0);
+			pageNsMpa.insert(doc.MasterNames[doc.DocPages.at(pageNs[a]-1)->MPageNam], 0);
 		}
 		if (usingGUI)
 		{
@@ -225,11 +225,11 @@ bool PDFLibCore::doExport(const QString& fn, const QString& nam, int Components,
 			qApp->processEvents();
 			if (abortExport) break;
 
-			PDF_Begin_Page(doc.Pages->at(pageNs[a]-1), pm);
+			PDF_Begin_Page(doc.DocPages.at(pageNs[a]-1), pm);
 			qApp->processEvents();
 			if (abortExport) break;
 
-			if (!PDF_ProcessPage(doc.Pages->at(pageNs[a]-1), pageNs[a]-1, doc.PDF_Options.doClip))
+			if (!PDF_ProcessPage(doc.DocPages.at(pageNs[a]-1), pageNs[a]-1, doc.PDF_Options.doClip))
 				error = abortExport = true;
 			qApp->processEvents();
 			if (abortExport) break;
@@ -943,9 +943,11 @@ bool PDFLibCore::PDF_Begin_Doc(const QString& fn, SCFonts &AllFonts, QMap<QStrin
 		{
 			if (pgit->isAnnotation())
 			{
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= 2) && (annotType <= 6) && (annotType != 4));
 				if (pgit->annotation().Type() == 4)
 					StdFonts.insert("/ZapfDingbats", "");
-				if (pgit->itemText.length() > 0)
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
 					if (Options.Version < PDFOptions::PDFVersion_14)
 						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
@@ -965,9 +967,11 @@ bool PDFLibCore::PDF_Begin_Doc(const QString& fn, SCFonts &AllFonts, QMap<QStrin
 		{
 			if (pgit->isAnnotation())
 			{
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= 2) && (annotType <= 6) && (annotType != 4));
 				if (pgit->annotation().Type() == 4)
 					StdFonts.insert("/ZapfDingbats", "");
-				if (pgit->itemText.length() > 0)
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
 					if (Options.Version < PDFOptions::PDFVersion_14)
 						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
@@ -987,9 +991,11 @@ bool PDFLibCore::PDF_Begin_Doc(const QString& fn, SCFonts &AllFonts, QMap<QStrin
 		{
 			if (pgit->isAnnotation())
 			{
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= 2) && (annotType <= 6) && (annotType != 4));
 				if (pgit->annotation().Type() == 4)
 					StdFonts.insert("/ZapfDingbats", "");
-				if (pgit->itemText.length() > 0)
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
 					if (Options.Version < PDFOptions::PDFVersion_14)
 						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
@@ -1949,7 +1955,9 @@ bool PDFLibCore::PDF_TemplatePage(const Page* pag, bool )
 					for ( it = ite->DashValues.begin(); it != ite->DashValues.end(); ++it )
 					{
 						int da = static_cast<int>(*it);
-						if (da != 0)
+						// #8758: Custom dotted lines don't export properly to pdf
+						// Null values have to be exported if line end != flat
+						if ((da != 0) || (ite->lineEnd() != Qt::FlatCap))
 							PutPage(QString::number(da)+" ");
 					}
 					PutPage("] "+QString::number(static_cast<int>(ite->DashOffset))+" d\n");
@@ -3025,13 +3033,14 @@ bool PDFLibCore::PDF_ProcessPage(const Page* pag, uint PNr, bool clip)
 	PutPage("q\n"); // Save
 	if ((Options.cropMarks) || (Options.bleedMarks) || (Options.registrationMarks) || (Options.colorMarks) || (Options.docInfoMarks))
 		markOffs = 20.0 + Options.markOffset;
-	if (!pag->MPageNam.isEmpty())
-	{
+	// #8773 - incorrect page position if MPageNam.isEmpty()
+	/*if (!pag->MPageNam.isEmpty())
+	{*/
 		getBleeds(ActPageP, bleedLeft, bleedRight);
 		PutPage("1 0 0 1 "+FToStr(bleedLeft+markOffs)+" "+FToStr(Options.bleeds.Bottom+markOffs)+" cm\n");
 		bleedDisplacementX = bleedLeft+markOffs;
 		bleedDisplacementY = Options.bleeds.Bottom+markOffs;
-	}
+	/*}*/
 	if ( (Options.MirrorH) && (!pag->MPageNam.isEmpty()) )
 		PutPage("-1 0 0 1 "+FToStr(ActPageP->width())+" 0 cm\n");
 	if ( (Options.MirrorV) && (!pag->MPageNam.isEmpty()) )
@@ -3072,7 +3081,7 @@ bool PDFLibCore::PDF_ProcessMasterElements(const ScLayer& layer, const Page* pag
 		return true;
 	if (doc.MasterItems.count() <= 0)
 		return true;
-	const Page* mPage = doc.MasterPages.at(doc.MasterNames[doc.Pages->at(PNr)->MPageNam]);
+	const Page* mPage = doc.MasterPages.at(doc.MasterNames[doc.DocPages.at(PNr)->MPageNam]);
 	int   mPageIndex  = doc.MasterPages.indexOf((Page* const) mPage) + 1;
 
 	if (!Options.MirrorH)
@@ -3410,7 +3419,9 @@ QString PDFLibCore::PDF_ProcessTableItem(PageItem* ite, const Page* pag)
 		for ( it = ite->DashValues.begin(); it != ite->DashValues.end(); ++it )
 		{
 			int da = static_cast<int>(*it);
-			if (da != 0)
+			// #8758: Custom dotted lines don't export properly to pdf
+			// Null values have to be exported if line end != flat
+			if ((da != 0) || (ite->lineEnd() != Qt::FlatCap))
 				tmp += QString::number(da)+" ";
 		}
 		tmp += "] "+QString::number(static_cast<int>(ite->DashOffset))+" d\n";
@@ -3546,7 +3557,9 @@ bool PDFLibCore::PDF_ProcessItem(QString& output, PageItem* ite, const Page* pag
 		for ( it = ite->DashValues.begin(); it != ite->DashValues.end(); ++it )
 		{
 			int da = static_cast<int>(*it);
-			if (da != 0)
+			// #8758: Custom dotted lines don't export properly to pdf
+			// Null values have to be exported if line end != flat
+			if ((da != 0) || (ite->lineEnd() != Qt::FlatCap))
 				tmp += QString::number(da)+" ";
 		}
 		tmp += "] "+QString::number(static_cast<int>(ite->DashOffset))+" d\n";
@@ -5029,7 +5042,9 @@ bool PDFLibCore::setTextCh(PageItem *ite, uint PNr, double x,  double y, uint d,
 				for ( it = embedded->DashValues.begin(); it != embedded->DashValues.end(); ++it )
 				{
 					int da = static_cast<int>(*it);
-					if (da != 0)
+					// #8758: Custom dotted lines don't export properly to pdf
+					// Null values have to be exported if line end != flat
+					if ((da != 0) || (embedded->lineEnd() != Qt::FlatCap))
 						tmp2 += QString::number(da)+" ";
 				}
 				tmp2 += "] "+QString::number(static_cast<int>(embedded->DashOffset))+" d\n";
@@ -6038,7 +6053,7 @@ bool PDFLibCore::PDF_PatternFillStroke(QString& output, PageItem *currItem, int 
 		tmp2 +=  "1 0 0 1 "+FToStr(item->gXpos)+" "+FToStr(-(item->gYpos - pat->height))+" cm\n";
 		item->setXYPos(item->xPos() + ActPageP->xOffset(), item->yPos() + ActPageP->yOffset(), true);
 		inPattern++;
-		if (!PDF_ProcessItem(tmpOut, item, doc.Pages->at(0), 0, true, true))
+		if (!PDF_ProcessItem(tmpOut, item, doc.DocPages.at(0), 0, true, true))
 			return false;
 		tmp2 += tmpOut;
 		item->setXYPos(item->xPos() - ActPageP->xOffset(), item->yPos() - ActPageP->yOffset(), true);
@@ -6084,7 +6099,9 @@ bool PDFLibCore::PDF_PatternFillStroke(QString& output, PageItem *currItem, int 
 			for ( it = item->DashValues.begin(); it != item->DashValues.end(); ++it )
 			{
 				int da = static_cast<int>(*it);
-				if (da != 0)
+				// #8758: Custom dotted lines don't export properly to pdf
+				// Null values have to be exported if line end != flat
+				if ((da != 0) || (item->lineEnd() != Qt::FlatCap))
 					tmp2 += QString::number(da)+" ";
 			}
 			tmp2 += "] "+QString::number(static_cast<int>(item->DashOffset))+" d\n";
@@ -6704,7 +6721,7 @@ bool PDFLibCore::PDF_Gradient(QString& output, PageItem *currItem)
 			tmp2 +=  "1 0 0 1 "+FToStr(item->gXpos)+" "+FToStr(-(item->gYpos - pat->height))+" cm\n";
 			item->setXYPos(item->xPos() + ActPageP->xOffset(), item->yPos() + ActPageP->yOffset(), true);
 			inPattern++;
-			if (!PDF_ProcessItem(tmpOut, item, doc.Pages->at(0), 0, true, true))
+			if (!PDF_ProcessItem(tmpOut, item, doc.DocPages.at(0), 0, true, true))
 				return false;
 			tmp2 += tmpOut;
 			item->setXYPos(item->xPos() - ActPageP->xOffset(), item->yPos() - ActPageP->yOffset(), true);
@@ -6750,7 +6767,9 @@ bool PDFLibCore::PDF_Gradient(QString& output, PageItem *currItem)
 				for ( it = item->DashValues.begin(); it != item->DashValues.end(); ++it )
 				{
 					int da = static_cast<int>(*it);
-					if (da != 0)
+					// #8758: Custom dotted lines don't export properly to pdf
+					// Null values have to be exported if line end != flat
+					if ((da != 0) || (item->lineEnd() != Qt::FlatCap))
 						tmp2 += QString::number(da)+" ";
 				}
 				tmp2 += "] "+QString::number(static_cast<int>(item->DashOffset))+" d\n";
@@ -9371,8 +9390,8 @@ bool PDFLibCore::PDF_End_Doc(const QString& PrintPr, const QString& Name, int Co
 						bd.Prev = ccb - 1;
 						ccb++;
 						bd.Page = PageTree.Kids[tel->OwnPage];
-						bd.Recht = QRect(static_cast<int>(tel->xPos() - doc.Pages->at(tel->OwnPage)->xOffset()),
-									static_cast<int>(doc.Pages->at(tel->OwnPage)->height() - (tel->yPos()  - doc.Pages->at(tel->OwnPage)->yOffset())),
+						bd.Recht = QRect(static_cast<int>(tel->xPos() - doc.DocPages.at(tel->OwnPage)->xOffset()),
+									static_cast<int>(doc.DocPages.at(tel->OwnPage)->height() - (tel->yPos()  - doc.DocPages.at(tel->OwnPage)->yOffset())),
 									static_cast<int>(tel->width()),
 									static_cast<int>(tel->height()));
 						Beads.append(bd);
@@ -9385,8 +9404,8 @@ bool PDFLibCore::PDF_End_Doc(const QString& PrintPr, const QString& Name, int Co
 				if ((tel->OwnPage != -1) && PageTree.Kids.contains(tel->OwnPage))
 				{
 					bd.Page = PageTree.Kids[tel->OwnPage];
-					bd.Recht = QRect(static_cast<int>(tel->xPos() - doc.Pages->at(tel->OwnPage)->xOffset()),
-								static_cast<int>(doc.Pages->at(tel->OwnPage)->height() - (tel->yPos()  - doc.Pages->at(tel->OwnPage)->yOffset())),
+					bd.Recht = QRect(static_cast<int>(tel->xPos() - doc.DocPages.at(tel->OwnPage)->xOffset()),
+								static_cast<int>(doc.DocPages.at(tel->OwnPage)->height() - (tel->yPos()  - doc.DocPages.at(tel->OwnPage)->yOffset())),
 								static_cast<int>(tel->width()),
 								static_cast<int>(tel->height()));
 					Beads.append(bd);

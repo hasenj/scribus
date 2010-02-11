@@ -5,22 +5,26 @@ ${CMAKE_SOURCE_DIR}/scribus
 
 SET(SHORTWORDS_PLUGIN_UI_SRC
   swdialog.ui
+  prefs_shortwordsbase.ui
 )
 
 SET(SHORTWORDS_PLUGIN_MOC_CLASSES
   configuration.h
   parse.h
+  prefs_shortwords.h
   shortwords.h
   swprefsgui.h
-  vlnadialog.h
+  swdialog.h
 )
 
 SET(SHORTWORDS_PLUGIN_SOURCES
   configuration.cpp
   parse.cpp
+  prefs_shortwords.cpp
   shortwords.cpp
   swprefsgui.cpp
-  vlnadialog.cpp
+  swsyntaxhighlighter.cpp
+  swdialog.cpp
 )
 
 SET(SCRIBUS_SHORTWORDS_PLUGIN "scribusshortwords")

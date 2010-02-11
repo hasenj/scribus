@@ -14,7 +14,9 @@ for which a new license (GPL+exception) is in place.
 #include "ui/preferencesdialog.h"
 
 #include "commonstrings.h"
+#include "pluginmanager.h"
 #include "prefsmanager.h"
+#include "scplugin.h"
 #include "scribus.h"
 #include "scribuscore.h"
 #include "units.h"
@@ -29,58 +31,57 @@ PreferencesDialog::PreferencesDialog( QWidget* parent )
 	setupListWidget();
 	while (prefsStackWidget->currentWidget()!=0)
 		prefsStackWidget->removeWidget(prefsStackWidget->currentWidget());
-	prefs_UserInterface = new Prefs_UserInterface(this);
+	prefs_UserInterface = new Prefs_UserInterface(prefsStackWidget);
 	addItem( tr("User Interface"), loadIcon("scribus.png"), prefs_UserInterface);
-	prefs_Paths = new Prefs_Paths(this);
-	addItem( tr("Paths"), loadIcon("tools.png"), prefs_Paths);
-	prefs_DocumentSetup = new Prefs_DocumentSetup(this);
+	prefs_Paths = new Prefs_Paths(prefsStackWidget);
+	addItem( tr("Paths"), loadIcon("22/system-file-manager.png"), prefs_Paths);
+	prefs_DocumentSetup = new Prefs_DocumentSetup(prefsStackWidget);
 	addItem( tr("Document Setup"), loadIcon("scribusdoc.png"), prefs_DocumentSetup);
-	prefs_Guides = new Prefs_Guides(this);
+	prefs_Guides = new Prefs_Guides(prefsStackWidget);
 	addItem( tr("Guides"), loadIcon("guides.png"), prefs_Guides);
-	prefs_Typography = new Prefs_Typography(this);
+	prefs_Typography = new Prefs_Typography(prefsStackWidget);
 	addItem( tr("Typography"), loadIcon("typography.png"), prefs_Typography);
-	prefs_ItemTools = new Prefs_ItemTools(this);
+	prefs_ItemTools = new Prefs_ItemTools(prefsStackWidget);
 	addItem( tr("Item Tools"), loadIcon("tools.png"), prefs_ItemTools);
-	prefs_OperatorTools = new Prefs_OperatorTools(this);
+	prefs_OperatorTools = new Prefs_OperatorTools(prefsStackWidget);
 	addItem( tr("Operator Tools"), loadIcon("tools.png"), prefs_OperatorTools);
-	prefs_Hyphenator = new Prefs_Hyphenator(this);
+	prefs_Hyphenator = new Prefs_Hyphenator(prefsStackWidget);
 	addItem( tr("Hyphenator"), loadIcon("hyphenate.png"), prefs_Hyphenator);
-	prefs_Fonts = new Prefs_Fonts(this);
-	addItem( tr("Fonts"), loadIcon("font.png"), prefs_Fonts);
-	prefs_ColorManagement = new Prefs_ColorManagement(this);
+	prefs_Fonts = new Prefs_Fonts(prefsStackWidget);
+	addItem( tr("Fonts"), loadIcon("22/preferences-desktop-font.png"), prefs_Fonts);
+	prefs_ColorManagement = new Prefs_ColorManagement(prefsStackWidget);
 	addItem( tr("Color Management"), loadIcon("blend.png"), prefs_ColorManagement);
-	prefs_Printer = new Prefs_Printer(this);
-	addItem( tr("Printer"), loadIcon("printer.png"), prefs_Printer);
-	prefs_PDFExport = new Prefs_PDFExport(this);
+	prefs_Printer = new Prefs_Printer(prefsStackWidget);
+	addItem( tr("Printer"), loadIcon("22/printer.png"), prefs_Printer);
+	prefs_PDFExport = new Prefs_PDFExport(prefsStackWidget);
 	addItem( tr("PDF Export"), loadIcon("acroread32.png"), prefs_PDFExport);
-	prefs_PreflightVerifier = new Prefs_PreflightVerifier(this);
+	prefs_PreflightVerifier = new Prefs_PreflightVerifier(prefsStackWidget);
 	addItem( tr("Preflight Verifier"), loadIcon("checkdoc.png"), prefs_PreflightVerifier);
-	prefs_DocumentItemAttributes = new Prefs_DocumentItemAttributes(this);
+	prefs_DocumentItemAttributes = new Prefs_DocumentItemAttributes(prefsStackWidget);
 	addItem( tr("Document Item Attributes"), loadIcon("docattributes.png"), prefs_DocumentItemAttributes);
-	prefs_TableOfContents = new Prefs_TableOfContents(this);
+	prefs_TableOfContents = new Prefs_TableOfContents(prefsStackWidget);
 	addItem( tr("Tables of Contents"), loadIcon("tabtocindex.png"), prefs_TableOfContents);
-	prefs_KeyboardShortcuts = new Prefs_KeyboardShortcuts(this);
-	addItem( tr("Keyboard Shortcuts"), loadIcon("key_bindings.png"), prefs_KeyboardShortcuts);
-	prefs_Scrapbook = new Prefs_Scrapbook(this);
+	prefs_KeyboardShortcuts = new Prefs_KeyboardShortcuts(prefsStackWidget);
+	addItem( tr("Keyboard Shortcuts"), loadIcon("22/preferences-desktop-keyboard-shortcuts.png"), prefs_KeyboardShortcuts);
+	prefs_Scrapbook = new Prefs_Scrapbook(prefsStackWidget);
 	addItem( tr("Scrapbook"), loadIcon("scrap.png"), prefs_Scrapbook);
-	prefs_Display = new Prefs_Display(this);
-	addItem( tr("Display"), loadIcon("screen.png"), prefs_Display);
-	prefs_ExternalTools = new Prefs_ExternalTools(this);
+	prefs_Display = new Prefs_Display(prefsStackWidget);
+	addItem( tr("Display"), loadIcon("22/video-display.png"), prefs_Display);
+	prefs_ExternalTools = new Prefs_ExternalTools(prefsStackWidget);
 	addItem( tr("External Tools"), loadIcon("externaltools.png"), prefs_ExternalTools);
-	prefs_Miscellaneous = new Prefs_Miscellaneous(this);
+	prefs_Miscellaneous = new Prefs_Miscellaneous(prefsStackWidget);
 	addItem( tr("Miscellaneous"), loadIcon("misc.png"), prefs_Miscellaneous);
-	prefs_Plugins = new Prefs_Plugins(this);
+	prefs_Plugins = new Prefs_Plugins(prefsStackWidget);
 	addItem( tr("Plugins"), loadIcon("plugins.png"), prefs_Plugins);
-	prefs_ShortWords = new Prefs_ShortWords(this);
-	addItem( tr("Short Words"), loadIcon("tools.png"), prefs_ShortWords);
-	prefs_Scripter = new Prefs_Scripter(this);
-	addItem( tr("Scripter"), loadIcon("tools.png"), prefs_Scripter);
-	prefs_ImageCache = new Prefs_ImageCache(this);
-	addItem( tr("Image Cache"), loadIcon("tools.png"), prefs_ImageCache);
+	prefs_ImageCache = new Prefs_ImageCache(prefsStackWidget);
+	addItem( tr("Image Cache"), loadIcon("22/image-x-generic.png"), prefs_ImageCache);
 
 	arrangeIcons();
-	preferencesTypeList->item(0)->setSelected(true);
-	itemSelected(preferencesTypeList->item(0));
+	if (preferencesTypeList->count()>0)
+	{
+		preferencesTypeList->item(0)->setSelected(true);
+		itemSelected(preferencesTypeList->item(0));
+	}
 
 	connect(okButton, SIGNAL(clicked()), this, SLOT(accept()));
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
@@ -89,7 +90,7 @@ PreferencesDialog::PreferencesDialog( QWidget* parent )
 
 	initPreferenceValues();
 	setupGui();
-
+	addPlugins();
 }
 
 
@@ -128,10 +129,13 @@ void PreferencesDialog::setupGui()
 	prefs_PreflightVerifier->restoreDefaults(&localPrefs);
 	prefs_DocumentItemAttributes->restoreDefaults(&localPrefs);
 	prefs_TableOfContents->restoreDefaults(&localPrefs);
+	prefs_KeyboardShortcuts->restoreDefaults(&localPrefs);
 	prefs_ColorManagement->restoreDefaults(&localPrefs);
 	prefs_ColorManagement->setProfiles(&localPrefs, &ScCore->InputProfiles, &ScCore->InputProfilesCMYK, &ScCore->PrinterProfiles, &ScCore->MonitorProfiles);
 	prefs_Scrapbook->restoreDefaults(&localPrefs);
 	prefs_Display->restoreDefaults(&localPrefs);
+	prefs_ExternalTools->restoreDefaults(&localPrefs);
+	prefs_Miscellaneous->restoreDefaults(&localPrefs);
 	prefs_ImageCache->restoreDefaults(&localPrefs);
 }
 
@@ -152,9 +156,12 @@ void PreferencesDialog::saveGuiToPrefs()
 	prefs_PreflightVerifier->saveGuiToPrefs(&localPrefs);
 	prefs_DocumentItemAttributes->saveGuiToPrefs(&localPrefs);
 	prefs_TableOfContents->saveGuiToPrefs(&localPrefs);
+	prefs_KeyboardShortcuts->saveGuiToPrefs(&localPrefs);
 	prefs_ColorManagement->saveGuiToPrefs(&localPrefs);
 	prefs_Scrapbook->saveGuiToPrefs(&localPrefs);
 	prefs_Display->saveGuiToPrefs(&localPrefs);
+	prefs_ExternalTools->saveGuiToPrefs(&localPrefs);
+	prefs_Miscellaneous->saveGuiToPrefs(&localPrefs);
 	prefs_ImageCache->saveGuiToPrefs(&localPrefs);
 }
 
@@ -168,7 +175,8 @@ void PreferencesDialog::applyButtonClicked()
 void PreferencesDialog::accept()
 {
 	saveGuiToPrefs();
-	QDialog::accept ();
+	emit accepted();
+	return QDialog::accept();
 }
 
 void PreferencesDialog::setupListWidget()
@@ -191,7 +199,7 @@ void PreferencesDialog::setupListWidget()
 
 }
 
-int PreferencesDialog::addItem(QString name, QPixmap icon, QWidget *tab)
+int PreferencesDialog::addItem(QString name, QPixmap icon, QWidget* tab)
 {
 	//TODO: Can we avoid using this name and duplicating strings by getting it from the tab UIs
 	QListWidgetItem* newItem = new QListWidgetItem(icon, name, preferencesTypeList);
@@ -236,6 +244,45 @@ void PreferencesDialog::changeEvent(QEvent *e)
 void PreferencesDialog::languageChange()
 {
 	setWindowTitle( tr( "Preferences" ) );
+}
+
+void PreferencesDialog::addPlugins()
+{
+	// Scan for plugins that provide a prefs widget, and add it to the
+	// prefs dialog.
+	// For each plugin, enabled or not:
+	ScPlugin* plugin = 0;
+	Prefs_Pane* panel = 0;
+	QString panelCaption;
+	QPixmap panelIcon;
+
+	PluginManager& pluginManager = PluginManager::instance();
+	QStringList pluginNames(pluginManager.pluginNames(true));
+
+	foreach (QString pName, pluginManager.pluginNames(true))
+	{
+		// Ask the plugin manager for a plugin (skipping disabled plugins).
+		plugin = pluginManager.getPlugin(pName, false);
+		// If we got a plugin (which we know is enabled):
+		if (plugin)
+		{
+			// Ask the plugin for a prefs widget
+			bool wantPanel = plugin->newPrefsPanelWidget(prefsStackWidget, panel, panelCaption, panelIcon);
+			// If it gave us one...
+			if (wantPanel)
+			{
+				// Ensure that we got sane return values
+				Q_ASSERT(panel);
+				Q_ASSERT(!panelIcon.isNull());
+				Q_ASSERT(!panelCaption.isNull());
+				// plug it in to the dialog,
+				addItem(panelCaption, panelIcon, panel);
+				// and connect a signal to tell it to save its
+				// settings.
+				connect(this, SIGNAL(accepted()), panel, SLOT(apply()));
+			}
+		}
+	}
 }
 
 void PreferencesDialog::arrangeIcons()

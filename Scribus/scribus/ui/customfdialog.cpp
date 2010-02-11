@@ -38,6 +38,10 @@ for which a new license (GPL+exception) is in place.
 
 #include "customfdialog.h"
 
+#include "fileloader.h"
+#include "loadsaveplugin.h"
+#include "../plugins/formatidlist.h"
+#include "prefsmanager.h"
 #include "scfilewidget.h"
 #include "cmsettings.h"
 #include "commonstrings.h"
@@ -45,6 +49,9 @@ for which a new license (GPL+exception) is in place.
 #include "scimage.h"
 #include "scribusstructs.h"
 #include "scslainforeader.h"
+#include "stencilreader.h"
+#include "scpreview.h"
+#include "units.h"
 #include "util.h"
 #include "util_color.h"
 #include "util_formats.h"
@@ -73,6 +80,7 @@ ImIconProvider::ImIconProvider() : QFileIconProvider()
 
 QIcon ImIconProvider::icon(const QFileInfo &fi) const
 {
+	QStringList allFormatsV = LoadSavePlugin::getExtensionsForImport(FORMATID_ODGIMPORT);
 	QString ext = fi.suffix().toLower();
 	if (ext.isEmpty())
 		return QFileIconProvider::icon(fi);
@@ -95,8 +103,7 @@ QIcon ImIconProvider::icon(const QFileInfo &fi) const
 			return oosxdpm;
 		else if (ext.endsWith("sxw", Qt::CaseInsensitive))
 			return oosxwpm;
-		else if (ext.endsWith("svg") || ext.endsWith("svgz") || ext.endsWith("cvg") || ext.endsWith("wpg") || ext.endsWith("fig")
-				 || ext.endsWith("ai") || ext.endsWith("wmf") || ext.endsWith("pct") || ext.endsWith("pict") || ext.endsWith("pic"))
+		else if (allFormatsV.contains(ext) || ext.endsWith("sce", Qt::CaseInsensitive) || ext.endsWith("sml", Qt::CaseInsensitive) || ext.endsWith("shape", Qt::CaseInsensitive))
 			return vectorpm;
 		else
 			return QFileIconProvider::icon(fi);
@@ -140,6 +147,8 @@ void FDialogPreview::GenPreview(QString name)
 	QString formatD(FormatsManager::instance()->extensionListForFormat(FormatsManager::IMAGESIMGFRAME, 1));
  	QStringList formats = formatD.split("|");
 	formats.append("pat");
+	
+	QStringList allFormatsV = LoadSavePlugin::getExtensionsForPreview(FORMATID_ODGIMPORT);
 	if (ext.isEmpty())
 		ext = getImageType(name);
 	if (formats.contains(ext.toUtf8()))
@@ -165,16 +174,7 @@ void FDialogPreview::GenPreview(QString name)
 			int yres = im.imgInfo.yres;
 			QString tmp = "";
 			QString tmp2 = "";
-			QImage im2;
-			if ((ix > w-5) || (iy > h-44))
-			{
-				double sx = im.width() / static_cast<double>(w-5);
-				double sy = im.height() / static_cast<double>(h-44);
-				im2 = sy < sx ? im.scaled(qRound(im.width() / sx), qRound(im.height() / sx), Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
-								: im.scaled(qRound(im.width() / sy), qRound(im.height() / sy), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-			}
-			else
-				im2 = im.qImage(); // no need to copy
+			QImage im2 = im.scaled(w - 5, h - 44, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 			QPainter p;
 			QBrush b(QColor(205,205,205), loadIcon("testfill.png"));
 			// Qt4 FIXME imho should be better
@@ -194,6 +194,124 @@ void FDialogPreview::GenPreview(QString name)
 			p.end();
 			setPixmap(pm);
 			repaint();
+		}
+	}
+	else if (allFormatsV.contains(ext.toUtf8()))
+	{
+		FileLoader *fileLoader = new FileLoader(name);
+		int testResult = fileLoader->TestFile();
+		delete fileLoader;
+		if ((testResult != -1) && (testResult >= FORMATID_ODGIMPORT))
+		{
+			const FileFormat * fmt = LoadSavePlugin::getFormatById(testResult);
+			if( fmt )
+			{
+				QImage im = fmt->readThumbnail(name);
+				if (!im.isNull())
+				{
+					QString desc = tr("Size:")+" ";
+					desc += value2String(im.text("XSize").toDouble(), PrefsManager::instance()->appPrefs.docSetupPrefs.docUnitIndex, true, true);
+					desc += " x ";
+					desc += value2String(im.text("YSize").toDouble(), PrefsManager::instance()->appPrefs.docSetupPrefs.docUnitIndex, true, true);
+					im = im.scaled(w - 5, h - 21, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+					QPainter p;
+					QBrush b(QColor(205,205,205), loadIcon("testfill.png"));
+					pm = *pixmap();
+					p.begin(&pm);
+					p.fillRect(0, 0, w, h-21, b);
+					p.fillRect(0, h-21, w, 21, QColor(255, 255, 255));
+					p.drawImage((w - im.width()) / 2, (h - 21 - im.height()) / 2, im);
+					p.drawText(2, h-5, desc);
+					p.end();
+					setPixmap(pm);
+					repaint();
+				}
+			}
+		}
+	}
+	else if (ext.toUtf8() == "sml")
+	{
+		QPixmap pmi;
+		QByteArray cf;
+		if (loadRawText(name, cf))
+		{
+			QString f = QString::fromUtf8(cf.data());
+			StencilReader *pre = new StencilReader();
+			pmi = pre->createPreview(f);
+			QImage im = pmi.toImage();
+			im = im.scaled(w - 5, h - 21, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+			QPainter p;
+			QBrush b(QColor(205,205,205), loadIcon("testfill.png"));
+			pm = *pixmap();
+			p.begin(&pm);
+			p.fillRect(0, 0, w, h-21, b);
+			p.fillRect(0, h-21, w, 21, QColor(255, 255, 255));
+			p.drawImage((w - im.width()) / 2, (h - 21 - im.height()) / 2, im);
+			QString desc = tr("Size:")+QString(" %1 x %2").arg(im.width()).arg(im.height());
+			p.drawText(2, h-5, desc);
+			p.end();
+			setPixmap(pm);
+			repaint();
+			delete pre;
+		}
+	}
+	else if (ext.toUtf8() == "shape")
+	{
+		QPixmap pmi;
+		QByteArray cf;
+		if (loadRawText(name, cf))
+		{
+			QString f = QString::fromUtf8(cf.data());
+			StencilReader *pre = new StencilReader();
+			QString f2 = pre->createShape(f);
+			ScPreview *pre2 = new ScPreview();
+			pmi = pre2->createPreview(f2);
+			QImage im = pmi.toImage();
+			im = im.scaled(w - 5, h - 21, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+			QPainter p;
+			QBrush b(QColor(205,205,205), loadIcon("testfill.png"));
+			pm = *pixmap();
+			p.begin(&pm);
+			p.fillRect(0, 0, w, h-21, b);
+			p.fillRect(0, h-21, w, 21, QColor(255, 255, 255));
+			p.drawImage((w - im.width()) / 2, (h - 21 - im.height()) / 2, im);
+			QString desc = tr("Size:")+QString(" %1 x %2").arg(im.width()).arg(im.height());
+			p.drawText(2, h-5, desc);
+			p.end();
+			setPixmap(pm);
+			repaint();
+			delete pre;
+			delete pre2;
+		}
+	}
+	else if (ext.toUtf8() == "sce")
+	{
+		QPixmap pmi;
+		QByteArray cf;
+		if (loadRawText(name, cf))
+		{
+			QString f;
+			if (cf.left(16) == "<SCRIBUSELEMUTF8")
+				f = QString::fromUtf8(cf.data());
+			else
+				f = cf.data();
+			ScPreview *pre = new ScPreview();
+			pmi = pre->createPreview(f);
+			QImage im = pmi.toImage();
+			im = im.scaled(w - 5, h - 21, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+			QPainter p;
+			QBrush b(QColor(205,205,205), loadIcon("testfill.png"));
+			pm = *pixmap();
+			p.begin(&pm);
+			p.fillRect(0, 0, w, h-21, b);
+			p.fillRect(0, h-21, w, 21, QColor(255, 255, 255));
+			p.drawImage((w - im.width()) / 2, (h - 21 - im.height()) / 2, im);
+			QString desc = tr("Size:")+QString(" %1 x %2").arg(im.width()).arg(im.height());
+			p.drawText(2, h-5, desc);
+			p.end();
+			setPixmap(pm);
+			repaint();
+			delete pre;
 		}
 	}
 	else
@@ -423,6 +541,12 @@ void CustomFDialog::togglePreview()
 {
 	previewIsShown = !previewIsShown;
 	pw->setVisible(previewIsShown);
+	if (previewIsShown)
+	{
+		QStringList sel = fileDialog->selectedFiles();
+		if (!sel.isEmpty())
+			pw->GenPreview(QDir::fromNativeSeparators(sel[0]));
+	}
 }
 
 void CustomFDialog::setSelection(QString sel)

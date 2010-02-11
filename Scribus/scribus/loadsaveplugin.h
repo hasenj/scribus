@@ -42,17 +42,23 @@ class SCRIBUS_API LoadSavePlugin : public ScPlugin
 
 		enum loadFlags
 		{
-			lfCreateDoc      =   1,
-			lfUseCurrentPage =   2,
-			lfInsertPage     =   4,
-			lfInteractive    =   8,
-			lfScripted       =  16,
-			lfKeepColors     =  32,
-			lfKeepGradients  =  64,
-			lfKeepPatterns   = 128
+			lfCreateDoc       =   1,
+			lfUseCurrentPage  =   2,
+			lfInsertPage      =   4,
+			lfInteractive     =   8,
+			lfScripted        =  16,
+			lfKeepColors      =  32,
+			lfKeepGradients   =  64,
+			lfKeepPatterns    = 128,
+			lfCreateThumbnail = 256
 		};
 
 		// Static functions:
+
+		// Return a list of file extensions
+		static const QStringList getExtensionsForImport(const int id = 47);
+		// Return a list of file extensions
+		static const QStringList getExtensionsForPreview(const int id = 47);
 
 		// Return a list of format descriptions suitable for use with
 		// QFileDialog.  You can convert it to QString form with
@@ -101,6 +107,7 @@ class SCRIBUS_API LoadSavePlugin : public ScPlugin
 		virtual bool readLineStyles(const QString& fileName, QMap<QString,multiLine> *Sty);
 		virtual bool readColors(const QString& fileName, ColorList & colors);
 		virtual bool readPageCount(const QString& fileName, int *num1, int *num2, QStringList & masterPageNames);
+		virtual QImage readThumbnail(const QString& fileName);
 		
 	protected:
 
@@ -176,9 +183,9 @@ class SCRIBUS_API FileFormat
 {
 	public:
 		// Default ctor to make QValueList happy
-		FileFormat() : load(false), save(false), plug(0) {}
+		FileFormat() : load(false), save(false), thumb(false), plug(0) {}
 		// Standard ctor that sets up a valid FileFormat
-		FileFormat(LoadSavePlugin * plug) : load(false), save(false), plug(plug) {}
+		FileFormat(LoadSavePlugin * plug) : load(false), save(false), thumb(false), plug(plug) {}
 		// Load a file with this format
 		bool loadFile(const QString & fileName, int flags, int index = 0) const;
 		// Save a file with this format
@@ -194,6 +201,7 @@ class SCRIBUS_API FileFormat
 		bool readLineStyles(const QString& fileName, QMap<QString,multiLine> *Sty) const;
 		bool readColors(const QString& fileName, ColorList & colors) const;
 		bool readPageCount(const QString& fileName, int *num1, int *num2, QStringList & masterPageNames) const;
+		QImage readThumbnail(const QString& fileName) const;
 		//
 		// Data members
 		//
@@ -214,10 +222,14 @@ class SCRIBUS_API FileFormat
 		QRegExp nameMatch;
 		// MIME type(s) that should be matched by this format.
 		QStringList mimeTypes;
+		// Extension list supported by format
+		QStringList fileExtensions;
 		// Can we load it?
 		bool load;
 		// Can we save it?
 		bool save;
+		// Do we support thumbnails
+		bool thumb;
 		// Priority of this format from 0 (lowest, tried last) to
 		// 255 (highest, tried first). 64-128 recommended in general.
 		// Priority controls the order options are displayed in when a file
