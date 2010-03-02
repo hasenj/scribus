@@ -53,7 +53,7 @@ PageItem_ImageFrame::PageItem_ImageFrame(ScribusDoc *pa, double x, double y, dou
 {
 }
 
-void PageItem_ImageFrame::DrawObj_Item(ScPainter *p, QRectF /*e*/, double sc)
+void PageItem_ImageFrame::DrawObj_Item(ScPainter *p, QRectF /*e*/)
 {
 	if(!m_Doc->RePos)
 	{
@@ -142,9 +142,46 @@ void PageItem_ImageFrame::DrawObj_Item(ScPainter *p, QRectF /*e*/, double sc)
 						p->scale(1, -1);
 					}
 					p->translate(LocalX*LocalScX, LocalY*LocalScY);
+					double mscalex = 1.0 / LocalScX;
+					double mscaley = 1.0 / LocalScY;
 					p->scale(LocalScX, LocalScY);
 					if (pixm.imgInfo.lowResType != 0)
+					{
 						p->scale(pixm.imgInfo.lowResScale, pixm.imgInfo.lowResScale);
+						mscalex *= 1.0 / pixm.imgInfo.lowResScale;
+						mscaley *= 1.0 / pixm.imgInfo.lowResScale;
+					}
+					if ((GrMask == 1) || (GrMask == 2) || (GrMask == 4) || (GrMask == 5))
+					{
+						if ((GrMask == 1) || (GrMask == 2))
+							p->setMaskMode(1);
+						else
+							p->setMaskMode(3);
+						if ((!gradientMaskVal.isEmpty()) && (!m_Doc->docGradients.contains(gradientMaskVal)))
+							gradientMaskVal = "";
+						if (!(gradientMaskVal.isEmpty()) && (m_Doc->docGradients.contains(gradientMaskVal)))
+							mask_gradient = m_Doc->docGradients[gradientMaskVal];
+						p->mask_gradient = mask_gradient;
+						if ((GrMask == 1) || (GrMask == 4))
+							p->setGradientMask(VGradient::linear, FPoint(GrMaskStartX * mscalex, GrMaskStartY * mscaley), FPoint(GrMaskEndX * mscalex, GrMaskEndY * mscaley), FPoint(GrMaskStartX * mscalex, GrMaskStartY * mscaley), GrMaskScale, GrMaskSkew);
+						else
+							p->setGradientMask(VGradient::radial, FPoint(GrMaskStartX * mscalex, GrMaskStartY * mscaley), FPoint(GrMaskEndX * mscalex, GrMaskEndY * mscaley), FPoint(GrMaskFocalX * mscalex, GrMaskFocalY * mscaley), GrMaskScale, GrMaskSkew);
+					}
+					else if ((GrMask == 3) || (GrMask == 6))
+					{
+						if ((patternMaskVal.isEmpty()) || (!m_Doc->docPatterns.contains(patternMaskVal)))
+							p->setMaskMode(0);
+						else
+						{
+							p->setPatternMask(&m_Doc->docPatterns[patternMaskVal], patternMaskScaleX * mscalex, patternMaskScaleY * mscaley, patternMaskOffsetX, patternMaskOffsetY, patternMaskRotation, patternMaskSkewX, patternMaskSkewY, patternMaskMirrorX, patternMaskMirrorY);
+							if (GrMask == 3)
+								p->setMaskMode(2);
+							else
+								p->setMaskMode(4);
+						}
+					}
+					else
+						p->setMaskMode(0);
 					p->drawImage(pixm.qImagePtr());
 				}
 			}
@@ -347,81 +384,6 @@ bool PageItem_ImageFrame::createInfoGroup(QFrame *infoGroup, QGridLayout *infoGr
 	return true;
 }
 
-/*
-bool PageItem_ImageFrame::createContextMenu(QMenu *menu, int step)
-{
-	QMap<QString, QPointer<ScrAction> > actions = doc()->scMW()->scrActions;
-	static QMenu* menuResolution = 0;
-	QAction *act;
-	
-	if (menu == 0) {
-		if (menuResolution) delete menuResolution;
-		menuResolution = 0;
-		return true;
-	}
-	
-	switch (step) {
-		case 5:
-			if (pixm.imgInfo.exifDataValid)
-				menu->addAction(actions["itemImageInfo"]);
-		break;
-		case 10:
-			menu->addSeparator();
-			menu->addAction(actions["fileImportImage"]);
-			if (PictureIsAvailable)
-			{
-				if (!isTableItem)
-					menu->addAction(actions["itemAdjustFrameToImage"]);
-				menu->addAction(actions["itemAdjustImageToFrame"]);
-				if (pixm.imgInfo.valid)
-					menu->addAction(actions["itemExtendedImageProperties"]);
-				menu->addAction(actions["itemUpdateImage"]);
-			}
-			createContextMenu(menu, 11);
-			if (PictureIsAvailable && isRaster)
-			{
-				menu->addAction(actions["styleImageEffects"]);
-				menu->addAction(actions["editEditWithImageEditor"]);
-			}
-		break;
-		case 11:
-//			if (menuResolution != 0) {
-//				qDebug() << "New context menu created before old was destroyed."
-//						"Loosing some bytes of memory!";
-//			}
-			menuResolution = new QMenu();
-			act = menu->addMenu(menuResolution);
-			act->setText( tr("Preview Settings"));
-			menuResolution->addAction(actions["itemImageIsVisible"]);
-			menuResolution->addSeparator();
-			menuResolution->addAction(actions["itemPreviewLow"]);
-			menuResolution->addAction(actions["itemPreviewNormal"]);
-			menuResolution->addAction(actions["itemPreviewFull"]);
-		break;
-		case 30:
-			actions["itemConvertToTextFrame"]->setEnabled(true);
-			menu->addAction(actions["itemConvertToTextFrame"]);
-			if (!isTableItem)
-				menu->addAction(actions["itemConvertToPolygon"]);
-		break;
-		case 40:
-			if (PictureIsAvailable)
-				menu->addAction(actions["editCopyContents"]);
-			if (doc()->scMW()->contentsBuffer.sourceType==PageItem::ImageFrame)
-			{
-				menu->addAction(actions["editPasteContents"]);
-				menu->addAction(actions["editPasteContentsAbs"]);
-			}
-			if (PictureIsAvailable)
-				menu->addAction(actions["editClearContents"]);
-			return (PictureIsAvailable) || (doc()->scMW()->contentsBuffer.sourceType==PageItem::ImageFrame);
-		default:
-			return false;
-	}
-	return true;
-}
-*/
-
 void PageItem_ImageFrame::applicableActions(QStringList & actionList)
 {
 	actionList << "fileImportImage";
@@ -443,6 +405,7 @@ void PageItem_ImageFrame::applicableActions(QStringList & actionList)
 		actionList << "itemUpdateImage";
 		actionList << "editClearContents";
 		actionList << "editCopyContents";
+		actionList << "itemToggleInlineImage";
 		if (isRaster)
 		{
 			actionList << "styleImageEffects";

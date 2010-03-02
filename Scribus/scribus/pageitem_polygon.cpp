@@ -48,7 +48,7 @@ PageItem_Polygon::PageItem_Polygon(ScribusDoc *pa, double x, double y, double w,
 {
 }
 
-void PageItem_Polygon::DrawObj_Item(ScPainter *p, QRectF /*e*/, double /*sc*/)
+void PageItem_Polygon::DrawObj_Item(ScPainter *p, QRectF /*e*/)
 {
 	if (!m_Doc->RePos)
 	{
@@ -56,26 +56,6 @@ void PageItem_Polygon::DrawObj_Item(ScPainter *p, QRectF /*e*/, double /*sc*/)
 		p->fillPath();
 	}
 }
-
-/*
-bool PageItem_Polygon::createContextMenu(QMenu *menu, int step)
-{
-	QMap<QString, QPointer<ScrAction> > actions = doc()->scMW()->scrActions;
-	
-	if (menu == 0) return false;
-	switch(step) {
-		case 30:
-			menu->addSeparator();
-			menu->addAction(actions["itemConvertToBezierCurve"]);
-			menu->addAction(actions["itemConvertToImageFrame"]);
-			menu->addAction(actions["itemConvertToTextFrame"]);
-		break;
-		default:
-			return false;
-	}
-	return true;
-}
-*/
 
 void PageItem_Polygon::applicableActions(QStringList & actionList)
 {

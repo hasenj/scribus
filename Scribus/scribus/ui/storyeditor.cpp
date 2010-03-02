@@ -1528,12 +1528,12 @@ StoryEditor::~StoryEditor()
 void StoryEditor::showEvent(QShowEvent *)
 {
 	charSelect = new CharSelect(this);
-	charSelect->userTableModel()->setCharacters(
-			ScCore->primaryMainWindow()->charPalette->userTableModel()->characters());
-	connect(charSelect, SIGNAL(insertSpecialChar()),
-			 this, SLOT(slot_insertSpecialChar()));
-	connect(charSelect, SIGNAL(insertUserSpecialChar(QChar)),
-			 this, SLOT(slot_insertUserSpecialChar(QChar)));
+	charSelect->userTableModel()->setCharacters(ScCore->primaryMainWindow()->charPalette->userTableModel()->characters());
+	connect(charSelect, SIGNAL(insertSpecialChar()), this, SLOT(slot_insertSpecialChar()));
+	connect(charSelect, SIGNAL(insertUserSpecialChar(QChar)), this, SLOT(slot_insertUserSpecialChar(QChar)));
+
+	smartSelection=prefsManager->appPrefs.storyEditorPrefs.smartTextSelection;
+	seActions["settingsSmartTextSelection"]->setChecked(smartSelection);
 }
 
 void StoryEditor::hideEvent(QHideEvent *)
@@ -1541,10 +1541,7 @@ void StoryEditor::hideEvent(QHideEvent *)
 	if (charSelect)
 	{
 		if (charSelectUsed)
-		{
-			ScCore->primaryMainWindow()->charPalette->userTableModel()->setCharacters(
-					charSelect->userTableModel()->characters());
-		}
+			ScCore->primaryMainWindow()->charPalette->userTableModel()->setCharacters(charSelect->userTableModel()->characters());
 		if (charSelect->isVisible())
 			charSelect->close();
 		disconnect(charSelect, SIGNAL(insertSpecialChar()),
@@ -1658,8 +1655,7 @@ void StoryEditor::initActions()
 	seActions.insert("settingsBackground", new ScrAction("", QKeySequence(), this));
 	seActions.insert("settingsDisplayFont", new ScrAction("", QKeySequence(), this));
 	seActions.insert("settingsSmartTextSelection", new ScrAction("", QKeySequence(), this));
-	smartSelection = false;
-	seActions["settingsSmartTextSelection"]->setChecked(false);
+	seActions["settingsSmartTextSelection"]->setChecked(smartSelection);
 	seActions["settingsSmartTextSelection"]->setToggleAction(true);
 
 	connect( seActions["settingsBackground"], SIGNAL(triggered()), this, SLOT(setBackPref()) );
@@ -1700,6 +1696,8 @@ void StoryEditor::buildMenus()
 	seMenuMgr->addMenuItem(seActions["editEditStyle"], "Edit", true);
 	seMenuMgr->addMenuItem(seActions["editFontPreview"], "Edit", true);
 	seMenuMgr->addMenuItem(seActions["editUpdateFrame"], "Edit", false);
+	seMenuMgr->addMenuSeparator("Edit");
+	seMenuMgr->addMenuItem(seActions["settingsSmartTextSelection"], "Edit", true);
 	seMenuMgr->createMenu("Insert", tr("&Insert"));
 	seMenuMgr->addMenuItem(seActions["insertGlyph"], "Insert", true);
 	seMenuMgr->addMenuItem(seActions["insertSampleText"], "Insert", true);
@@ -1766,20 +1764,21 @@ void StoryEditor::buildMenus()
 	seMenuMgr->addMenuItem(seActions["unicodeLigature_st"], "InsertLigature", true);
 
 	seMenuMgr->createMenu("Settings", tr("&Settings"));
-	seMenuMgr->addMenuItem(seActions["settingsBackground"], "Settings", true);
-	seMenuMgr->addMenuItem(seActions["settingsDisplayFont"], "Settings", true);
-	seMenuMgr->addMenuItem(seActions["settingsSmartTextSelection"], "Settings", true);
+//	seMenuMgr->addMenuItem(seActions["settingsBackground"], "Settings", true);
+//	seMenuMgr->addMenuItem(seActions["settingsDisplayFont"], "Settings", true);
+//	seMenuMgr->addMenuItem(seActions["settingsSmartTextSelection"], "Settings", true);
 
 	seMenuMgr->addMenuToMenuBar("File");
 	seMenuMgr->addMenuToMenuBar("Edit");
 	seMenuMgr->addMenuToMenuBar("Insert");
-	seMenuMgr->addMenuToMenuBar("Settings");
+//	seMenuMgr->addMenuToMenuBar("Settings");
 }
 
 void StoryEditor::buildGUI()
 {
 	unicodeCharActionNames.clear();
 	seActions.clear();
+	smartSelection=prefsManager->appPrefs.storyEditorPrefs.smartTextSelection;
 	initActions();
 	ActionManager::initUnicodeActions(&seActions, this, &unicodeCharActionNames);
 	seActions["unicodeSmartHyphen"]->setEnabled(false);//CB TODO doesnt work in SE yet.
@@ -1913,6 +1912,12 @@ void StoryEditor::buildGUI()
 	QFont fo;
 	fo.fromString(prefsManager->appPrefs.storyEditorPrefs.guiFont);
 	Editor->setFont(fo);
+	QPalette pal;
+	QColor newColor(prefsManager->appPrefs.storyEditorPrefs.guiFontColorBackground);
+	pal.setColor(QPalette::Active, QPalette::Base, newColor);
+	pal.setColor(QPalette::Inactive, QPalette::Base, newColor);
+	pal.setColor(QPalette::Disabled, QPalette::Base, newColor);
+	Editor->setPalette(pal);
 	EditorBar->setFrameStyle(Editor->frameStyle());
 	EditorBar->setLineWidth(Editor->lineWidth());
 	EditorBar->editor = Editor;
@@ -1966,7 +1971,7 @@ void StoryEditor::languageChange()
 	seMenuMgr->setText("Settings", tr("&Settings"));
 	seActions["settingsBackground"]->setTexts( tr("&Background..."));
 	seActions["settingsDisplayFont"]->setTexts( tr("&Display Font..."));
-	seActions["settingsSmartTextSelection"]->setTexts( tr("&Smart text selection"));
+	seActions["settingsSmartTextSelection"]->setTexts( tr("&Smart Text Selection"));
 
 	//Unicode Actions
 	ActionManager::languageChangeUnicodeActions(&seActions);
@@ -2196,7 +2201,7 @@ void StoryEditor::setBackPref()
 		pal.setColor(QPalette::Inactive, QPalette::Base, newColor);
 		pal.setColor(QPalette::Disabled, QPalette::Base, newColor);
 		Editor->setPalette(pal);
-		prefsManager->appPrefs.storyEditorPrefs.guiFontColor = newColor;
+		prefsManager->appPrefs.storyEditorPrefs.guiFontColorBackground = newColor;
 	}
 	blockUpdate = false;
 }

@@ -185,6 +185,7 @@ SET(SCRIBUS_MOC_CLASSES
   ui/cmsprefs.h
   ui/cmykfw.h
   collect4output.h
+  ui/collectforoutput_ui.h
   colorblind.h
   ui/colorchart.h
   ui/colorcombo.h
@@ -468,6 +469,7 @@ SET(SCRIBUS_SOURCES
   ui/cmsprefs.cpp
   ui/cmykfw.cpp
   collect4output.cpp
+  ui/collectforoutput_ui.cpp
   colorblind.cpp
   ui/colorchart.cpp
   ui/colorcombo.cpp

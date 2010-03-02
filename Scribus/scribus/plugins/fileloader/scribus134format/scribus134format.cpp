@@ -96,10 +96,12 @@ void Scribus134Format::registerFormats()
 	fmt.formatId = FORMATID_SLA134IMPORT;
 	fmt.load = true;
 	fmt.save = true;
+	fmt.colorReading = true;
 	fmt.filter = fmt.trName + " (*.sla *.SLA *.sla.gz *.SLA.GZ *.scd *.SCD *.scd.gz *.SCD.GZ)";
 	fmt.nameMatch = QRegExp("\\.(sla|scd)(\\.gz)?", Qt::CaseInsensitive);
 	fmt.mimeTypes = QStringList();
 	fmt.mimeTypes.append("application/x-scribus");
+	fmt.fileExtensions = QStringList() << "sla" << "sla.gz" << "scd" << "scd.gz";
 	fmt.priority = 64;
 	registerFormat(fmt);
 }
@@ -911,7 +913,7 @@ void Scribus134Format::readToolSettings(ScribusDoc* doc, ScXmlStreamAttributes& 
 	doc->itemToolPrefs.shapeLineColorShade     = attrs.valueAsInt("PENSHADE", 100);
 	doc->itemToolPrefs.lineColor  = attrs.valueAsInt("LINESHADE", 100);
 	doc->itemToolPrefs.shapeFillColorShade      = attrs.valueAsInt("BRUSHSHADE", 100);
-	doc->opToolPrefs.magMin      = attrs.valueAsInt("MAGMIN", 10);
+	doc->opToolPrefs.magMin      = attrs.valueAsInt("MAGMIN", 1);
 	doc->opToolPrefs.magMax      = attrs.valueAsInt("MAGMAX", 3200);
 	doc->opToolPrefs.magStep     = attrs.valueAsInt("MAGSTEP", 200);
 	doc->opToolPrefs.dispX       = attrs.valueAsDouble("dispX", 10.0);
@@ -1681,6 +1683,9 @@ bool Scribus134Format::readPage(ScribusDoc* doc, ScXmlStreamReader& reader)
 			GuideManagerCore::Standard,
 			attrs.hasAttribute("NumHGuides"));
 	GuideManagerIO::readSelection(attrs.valueAsString("AGSelection"), newPage);
+
+	newPage->guides.addHorizontals(newPage->guides.getAutoHorizontals(newPage), GuideManagerCore::Auto);
+	newPage->guides.addVerticals(newPage->guides.getAutoVerticals(newPage), GuideManagerCore::Auto);
 	return true;
 }
 
@@ -1902,7 +1907,6 @@ bool Scribus134Format::readObject(ScribusDoc* doc, ScXmlStreamReader& reader, It
 				newItem->pixm.imgInfo.isRequest = true;
 				doc->loadPict(newItem->Pfile, newItem, true);
 			}
-			newItem->AdjustPictScale();
 		}
 	}
 
@@ -3101,6 +3105,9 @@ bool Scribus134Format::loadPage(const QString & fileName, int pageNumber, bool M
 											GuideManagerCore::Standard,
 											attrs.hasAttribute("NumHGuides"));
 			GuideManagerIO::readSelection(attrs.valueAsString("AGSelection"), newPage);
+
+			newPage->guides.addHorizontals(newPage->guides.getAutoHorizontals(newPage), GuideManagerCore::Auto);
+			newPage->guides.addVerticals(newPage->guides.getAutoVerticals(newPage), GuideManagerCore::Auto);
 		}
 		if ((tagName == "PAGEOBJECT") || (tagName == "MASTEROBJECT") || (tagName == "FRAMEOBJECT"))
 		{

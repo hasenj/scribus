@@ -584,6 +584,7 @@ public:
 	 * unnecessary part from the view for now which is overloaded with non ScrollView code.
 	 */
 	//TODO: void PasteItem(struct CopyPasteBuffer *Buffer, bool loading, bool drag = false);
+	void PasteItem(struct CopyPasteBuffer *Buffer, bool drag = false, bool noResize = true);
 	
 	/**
 	 * @brief Add an Item to the document.
@@ -811,7 +812,7 @@ public:
 	bool sendItemSelectionToBack();
 	bool bringItemSelectionToFront();
 
-	void itemSelection_GroupObjects  (bool changeLock, bool lock, Selection* customSelection=0);
+	const PageItem * itemSelection_GroupObjects  (bool changeLock, bool lock, Selection* customSelection=0);
 	void itemSelection_UnGroupObjects(Selection* customSelection=0);
 	void itemSelection_convertItemsTo(const PageItem::ItemType newType, Selection* restoredSelection=0, Selection* customSelection=0);
 

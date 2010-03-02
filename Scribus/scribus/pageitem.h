@@ -267,14 +267,14 @@ public:
 	void setObjectAttributes(ObjAttrVector*);
 	
 	virtual bool createInfoGroup(QFrame *, QGridLayout *) {return false;}
-//	virtual bool createContextMenu(QMenu *, int step) {return false;}
 	
   /** Zeichnet das Item */
 	void paintObj(QPainter *p);
 	void DrawObj(ScPainter *p, QRectF e);
-	void DrawObj_Pre(ScPainter *p, double &sc);
+	void DrawObj_Pre(ScPainter *p);
 	virtual void DrawObj_Post(ScPainter *p);
-	virtual void DrawObj_Item(ScPainter *p, QRectF e, double sc) = 0;
+	virtual void DrawObj_Decoration(ScPainter *p);
+	virtual void DrawObj_Item(ScPainter *p, QRectF e) = 0;
 	QImage DrawObj_toImage();
 	QImage DrawObj_toImage(QList<PageItem*> &emG);
 	
@@ -662,6 +662,8 @@ public:
 	QString inlineExt;
 	void setInlineExt(QString val) { inlineExt = val; }
 	void setInlineData(QString data);
+	void makeImageInline();
+	void makeImageExternal(QString path);
 	
 	//Text Data - Move to PageItem_TextFrame at some point? --- no, to FrameStyle, av
 	double textToFrameDistLeft() const { return Extra; }

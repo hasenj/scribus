@@ -71,7 +71,7 @@ void PageItem_PathText::layout()
 }
 
 
-void PageItem_PathText::DrawObj_Item(ScPainter *p, QRectF cullingArea, double sc)
+void PageItem_PathText::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 {
 	itemText.invalidateAll();
 	firstChar = 0;
@@ -393,28 +393,6 @@ bool PageItem_PathText::createInfoGroup(QFrame *infoGroup, QGridLayout *infoGrou
 	infoGroupLayout->addWidget( charT, 4, 1 );
 	return true;
 }
-
-/*
-bool PageItem_PathText::createContextMenu(QMenu *menu, int step)
-{
-	QMap<QString, QPointer<ScrAction> > actions = doc()->scMW()->scrActions;
-	
-	if (menu == 0) return false;
-	
-	switch(step) {
-		case 10:
-			menu->addSeparator();
-			menu->addAction(actions["toolsEditWithStoryEditor"]);
-			break;
-		case 30:
-			menu->addAction(actions["itemConvertToOutlines"]);
-		break;
-		default:
-			return false;
-	}
-	return true;
-}
-*/
 
 void PageItem_PathText::applicableActions(QStringList & actionList)
 {

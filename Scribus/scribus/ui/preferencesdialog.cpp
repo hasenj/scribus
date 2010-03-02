@@ -75,7 +75,6 @@ PreferencesDialog::PreferencesDialog( QWidget* parent )
 	addItem( tr("Plugins"), loadIcon("plugins.png"), prefs_Plugins);
 	prefs_ImageCache = new Prefs_ImageCache(prefsStackWidget);
 	addItem( tr("Image Cache"), loadIcon("22/image-x-generic.png"), prefs_ImageCache);
-
 	arrangeIcons();
 	if (preferencesTypeList->count()>0)
 	{
@@ -125,7 +124,8 @@ void PreferencesDialog::setupGui()
 	prefs_Hyphenator->restoreDefaults(&localPrefs);
 	prefs_Fonts->restoreDefaults(&localPrefs);
 	prefs_Printer->restoreDefaults(&localPrefs);
-	prefs_PDFExport->restoreDefaults(&localPrefs);
+	QMap<QString, int> DocFonts;
+	prefs_PDFExport->restoreDefaults(&localPrefs, NULL, ScCore->PDFXProfiles, DocFonts);
 	prefs_PreflightVerifier->restoreDefaults(&localPrefs);
 	prefs_DocumentItemAttributes->restoreDefaults(&localPrefs);
 	prefs_TableOfContents->restoreDefaults(&localPrefs);
@@ -228,6 +228,8 @@ void PreferencesDialog::itemSelected(QListWidgetItem* ic)
 			prefs_ItemTools->enableFontPreview(true);
 		if (prefsStackWidget->currentWidget()==dynamic_cast<QWidget*>(prefs_TableOfContents))
 			prefs_TableOfContents->setupItemAttrs( prefs_DocumentItemAttributes->getDocAttributesNames() );
+		if (prefsStackWidget->currentWidget()==dynamic_cast<QWidget*>(prefs_PDFExport))
+			prefs_PDFExport->enableCMS(prefs_ColorManagement->cmActive());
 	}
 }
 

@@ -67,34 +67,25 @@ QImage CgmPlug::readThumbnail(QString fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
-	bool haveDoc = false;
 	double b, h;
 	b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
 	docWidth = b;
 	docHeight = h;
-	ScribusView* tempView;
 	progressDialog = NULL;
-	haveDoc = true;
 	m_Doc = new ScribusDoc();
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	tempView = new ScribusView(0, ScCore->primaryMainWindow(), m_Doc);
-	tempView->setScale(1);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), tempView);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
 	baseX = m_Doc->currentPage()->xOffset();
 	baseY = m_Doc->currentPage()->yOffset();
 	Elements.clear();
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
-	m_Doc->view()->updatesOn(false);
-	m_Doc->scMW()->ScriptRunning = true;
-	qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
+	m_Doc->scMW()->setScriptRunning(true);
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	int groupCount = m_Doc->GroupCounter;
-	int itemCount = m_Doc->TotalItems;
 	if (convert(fName))
 	{
 		tmpSel->clear();
@@ -160,7 +151,6 @@ QImage CgmPlug::readThumbnail(QString fName)
 			}
 		}
 		m_Doc->DoDrawing = true;
-		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 		m_Doc->m_Selection->delaySignalsOn();
 		QImage tmpImage;
 		if (Elements.count() > 0)
@@ -178,42 +168,19 @@ QImage CgmPlug::readThumbnail(QString fName)
 			tmpImage.setText("XSize", QString("%1").arg(xs));
 			tmpImage.setText("YSize", QString("%1").arg(ys));
 		}
-		m_Doc->itemSelection_DeleteItem(tmpSel);
-		m_Doc->view()->updatesOn(true);
-		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->scMW()->setScriptRunning(false);
 		m_Doc->setLoading(false);
-		if (importedColors.count() != 0)
-		{
-			for (int cd = 0; cd < importedColors.count(); cd++)
-			{
-				m_Doc->PageColors.remove(importedColors[cd]);
-			}
-		}
 		m_Doc->m_Selection->delaySignalsOff();
-		if (haveDoc)
-		{
-			delete tempView;
-			delete m_Doc;
-		}
-		m_Doc->GroupCounter = groupCount;
-		m_Doc->TotalItems = itemCount;
+		delete m_Doc;
 		return tmpImage;
 	}
 	else
 	{
 		QDir::setCurrent(CurDirP);
 		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->ScriptRunning = false;
-		m_Doc->view()->updatesOn(true);
-		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-		if (haveDoc)
-		{
-			delete tempView;
-			delete m_Doc;
-		}
+		m_Doc->scMW()->setScriptRunning(false);
+		delete m_Doc;
 	}
-	m_Doc->GroupCounter = groupCount;
-	m_Doc->TotalItems = itemCount;
 	return QImage();
 }
 
@@ -310,7 +277,7 @@ bool CgmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
 	m_Doc->view()->updatesOn(false);
-	m_Doc->scMW()->ScriptRunning = true;
+	m_Doc->scMW()->setScriptRunning(true);
 	qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
@@ -379,7 +346,7 @@ bool CgmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			}
 		}
 		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->scMW()->setScriptRunning(false);
 		m_Doc->setLoading(false);
 		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 		if ((Elements.count() > 0) && (!ret) && (interactive))
@@ -413,7 +380,7 @@ bool CgmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				tmpSel->setGroupRect();
 				ScriXmlDoc *ss = new ScriXmlDoc();
 				ScElemMimeData* md = new ScElemMimeData();
-				md->setScribusElem(ss->WriteElem(m_Doc, m_Doc->view(), tmpSel));
+				md->setScribusElem(ss->WriteElem(m_Doc, tmpSel));
 				delete ss;
 				m_Doc->itemSelection_DeleteItem(tmpSel);
 				m_Doc->view()->updatesOn(true);
@@ -439,7 +406,7 @@ bool CgmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	{
 		QDir::setCurrent(CurDirP);
 		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->scMW()->setScriptRunning(false);
 		m_Doc->view()->updatesOn(true);
 		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	}
@@ -558,8 +525,10 @@ bool CgmPlug::convert(QString fn)
 					ts >> paramLen;
 				decodeBinary(ts, elemClass, elemID, paramLen);
 				if (progressDialog)
+				{
 					progressDialog->setProgress("GI", ts.device()->pos());
-				qApp->processEvents();
+					qApp->processEvents();
+				}
 			}
 		}
 		f.close();

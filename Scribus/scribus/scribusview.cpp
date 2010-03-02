@@ -191,7 +191,7 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 // 	setCurrentComboItem(previewQualitySwitcher, tr("Normal"));
 	previewQualitySwitcher->setCurrentIndex(Prefs->itemToolPrefs.imageLowResType);
 
-	zoomSpinBox = new ScrSpinBox( 10, 3200, this, 6 );
+	zoomSpinBox = new ScrSpinBox( 1, 3200, this, 6 );
 	zoomSpinBox->setTabAdvance(false);
 	zoomSpinBox->setFont(fo);
 	zoomSpinBox->setValue( 100 );
@@ -288,6 +288,7 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 	Doc->SubMode = -1;
 	storedFramesShown = Doc->guidesSettings.framesShown;
 	storedShowControls = Doc->guidesSettings.showControls;
+	setRulersShown(Doc->guidesSettings.rulersShown);
 	m_canvas->m_viewMode.viewAsPreview = false;
 	m_canvas->setPreviewVisual(-1);
 //	shiftSelItems = false;
@@ -467,7 +468,7 @@ void ScribusView::changed(QRectF re)
 		m_oldCanvasWidth = newCanvasWidth;
 		m_oldCanvasHeight = newCanvasHeight;
 	}
-	if (!Doc->isLoading() && !m_ScMW->ScriptRunning)
+	if (!Doc->isLoading() && !m_ScMW->scriptIsRunning())
 	{
 // 		qDebug() << "ScribusView-changed(): changed region:" << re;
 		m_canvas->m_viewMode.forceRedraw = true;
@@ -893,7 +894,7 @@ void ScribusView::contentsDropEvent(QDropEvent *e)
 		e->acceptProposedAction();
 		//<<#3524
 		activateWindow();
-		if (!m_ScMW->ScriptRunning)
+		if (!m_ScMW->scriptIsRunning())
 			raise();
 		m_ScMW->newActWin(((ScribusWin*)(Doc->WinHan))->getSubWin());
 		updateContents();
@@ -1497,6 +1498,8 @@ void ScribusView::TransformPoly(int mode, int rot, double scaling)
 	FPoint oldPos(currItem->xyPos());
 	double offsX = currItem->width() / 2.0;
 	double offsY = currItem->height() / 2.0;
+	double oldWidth = currItem->width();
+	double oldHeight = currItem->height();
 	ma.translate(-offsX, -offsY);
 	switch (mode)
 	{
@@ -1525,10 +1528,10 @@ void ScribusView::TransformPoly(int mode, int rot, double scaling)
 		ma.shear(0, 0.017455);
 		break;
 	case 8:
-		ma.scale(1.0 - (scaling / currItem->width()),1.0 - (scaling / currItem->height()));
+		ma.scale(1.0 - (scaling / oldWidth),1.0 - (scaling / oldHeight));
 		break;
 	case 9:
-		ma.scale(1.0 + (scaling / currItem->width()),1.0 + (scaling / currItem->height()));
+		ma.scale(1.0 + (scaling / oldWidth),1.0 + (scaling / oldHeight));
 		break;
 	}
 	currItem->PoLine.map(ma);
@@ -1566,10 +1569,10 @@ void ScribusView::TransformPoly(int mode, int rot, double scaling)
 		ma2.shear(0, 0.017455);
 		break;
 	case 8:
-		ma2.scale(1.0 - (scaling / currItem->width()),1.0 - (scaling / currItem->height()));
+		ma2.scale(1.0 - (scaling / oldWidth),1.0 - (scaling / oldHeight));
 		break;
 	case 9:
-		ma2.scale(1.0 + (scaling / currItem->width()),1.0 + (scaling / currItem->height()));
+		ma2.scale(1.0 + (scaling / oldWidth),1.0 + (scaling / oldHeight));
 		break;
 	}
 	double x = ma2.m11() * n.x() + ma2.m21() * n.y() + ma2.dx();
@@ -2426,7 +2429,7 @@ void ScribusView::rememberOldZoomLocation(int mx, int my)
 
 void ScribusView::setRulerPos(int x, int y)
 {
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	if (Doc->guidesSettings.rulerMode)
 	{
@@ -2501,7 +2504,7 @@ Page* ScribusView::addPage(int nr, bool mov)
 void ScribusView::reformPages(bool moveObjects)
 {
 	Doc->reformPages(moveObjects);
-	if (!m_ScMW->ScriptRunning)
+	if (!m_ScMW->scriptIsRunning())
 		setContentsPos(qRound((Doc->currentPage()->xOffset()-10 - 0*Doc->minCanvasCoordinate.x()) * m_canvas->scale()), qRound((Doc->currentPage()->yOffset()-10 - 0*Doc->minCanvasCoordinate.y()) * m_canvas->scale()));
 	if (!Doc->isLoading())
 	{
@@ -2669,7 +2672,7 @@ void ScribusView::adjustCanvas(double width, double height, double dX, double dY
 
 void ScribusView::setMenTxt(int Seite)
 {
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	disconnect(pageSelector, SIGNAL(GotoPage(int)), this, SLOT(GotoPa(int)));
 	pageSelector->setMaximum(Doc->masterPageMode() ? 1 : Doc->Pages->count());
@@ -2781,7 +2784,7 @@ void ScribusView::DrawNew()
 {
 // 	qDebug("ScribusView::DrawNew");
 // 	printBacktrace(24);
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	m_canvas->m_viewMode.forceRedraw = true;
 	m_canvas->resetRenderMode();
@@ -2795,7 +2798,7 @@ void ScribusView::DrawNew()
 
 void ScribusView::SetCCPo(double x, double y)
 {
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	QPoint nx = m_canvas->canvasToLocal(FPoint(x, y));
 	QSize viewsize = viewport()->size();
@@ -2805,7 +2808,7 @@ void ScribusView::SetCCPo(double x, double y)
 
 void ScribusView::SetCPo(double x, double y)
 {
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	QPoint nx = m_canvas->canvasToLocal(FPoint(x, y));
 	setContentsPos(nx.x(), nx.y());
@@ -2870,7 +2873,7 @@ void ScribusView::GotoPa(int Seite)
 void ScribusView::GotoPage(int Seite)
 {
 	Doc->setCurrentPage(Doc->Pages->at(Seite));
-	if (m_ScMW->ScriptRunning)
+	if (m_ScMW->scriptIsRunning())
 		return;
 	setMenTxt(Seite);
 	SetCPo(Doc->currentPage()->xOffset() - 10, Doc->currentPage()->yOffset() - 10);
@@ -3045,7 +3048,6 @@ QImage ScribusView::PageToPixmap(int Nr, int maxGr, bool drawFrame)
 								Doc->loadPict(currItem->Pfile, currItem, true);
 								currItem->setImageFlippedH(fho);
 								currItem->setImageFlippedV(fvo);
-								currItem->AdjustPictScale();
 							}
 						}
 					}
@@ -3073,7 +3075,6 @@ QImage ScribusView::PageToPixmap(int Nr, int maxGr, bool drawFrame)
 									Doc->loadPict(currItem->Pfile, currItem, true);
 									currItem->setImageFlippedH(fho);
 									currItem->setImageFlippedV(fvo);
-									currItem->AdjustPictScale();
 								}
 							}
 						}
@@ -3108,7 +3109,6 @@ QImage ScribusView::PageToPixmap(int Nr, int maxGr, bool drawFrame)
 					Doc->loadPict(currItem->Pfile, currItem, true);
 					currItem->setImageFlippedH(fho);
 					currItem->setImageFlippedV(fvo);
-					currItem->AdjustPictScale();
 				}
 			}
 
@@ -3400,501 +3400,6 @@ void ScribusView::editExtendedImageProperties()
 			dia=NULL;
 			m_ScMW->propertiesPalette->setTextFlowMode(currItem->textFlowMode());
 		}
-	}
-}
-
-//CB Stop using this for putting items on pages apart from pasting
-//IE write a more generic function in the doc
-void ScribusView::PasteItem(struct CopyPasteBuffer *Buffer, bool loading, bool drag, bool resize)
-{
-	QColor tmp;
-	if (!loading)
-		Deselect(true);
-	double x = Buffer->Xpos;
-	double y = Buffer->Ypos;
-	double w = Buffer->Width;
-	double h = Buffer->Height;
-	double pw = Buffer->Pwidth;
-	int z = 0;
-//	qDebug() << "Pasting frame of type " << Buffer->PType;
-	switch (Buffer->PType)
-	{
-	// OBSOLETE CR 2005-02-06
-	case PageItem::ItemType1:
-		z = Doc->itemAdd(PageItem::Polygon, PageItem::Ellipse, x, y, w, h, pw, Buffer->Pcolor, Buffer->Pcolor2, true);
-		break;
-	//
-	case PageItem::ImageFrame:
-		z = Doc->itemAdd(PageItem::ImageFrame, PageItem::Unspecified, x, y, w, h, 1, Doc->itemToolPrefs.imageFillColor, CommonStrings::None, true);
-		undoManager->setUndoEnabled(false);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageXYOffset(Buffer->LocalX, Buffer->LocalY);
-		Doc->Items->at(z)->Pfile = Buffer->Pfile;
-		Doc->Items->at(z)->IProfile = Buffer->IProfile;
-		Doc->Items->at(z)->EmProfile = Buffer->EmProfile;
-		Doc->Items->at(z)->IRender = Buffer->IRender;
-		Doc->Items->at(z)->UseEmbedded = Buffer->UseEmbedded;
-		if (!Doc->Items->at(z)->Pfile.isEmpty())
-			Doc->LoadPict(Doc->Items->at(z)->Pfile, z);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageShown(Buffer->PicArt);
-/*		Doc->Items->at(z)->BBoxX = Buffer->BBoxX;
-		Doc->Items->at(z)->BBoxH = Buffer->BBoxH; */
-		Doc->Items->at(z)->ScaleType = Buffer->ScaleType;
-		Doc->Items->at(z)->AspectRatio = Buffer->AspectRatio;
-		Doc->Items->at(z)->setLineWidth(Buffer->Pwidth);
-		undoManager->setUndoEnabled(true);
-		break;
-	// OBSOLETE CR 2005-02-06
-	case PageItem::ItemType3:
-		z = Doc->itemAdd(PageItem::Polygon, PageItem::Rectangle, x, y, w, h, pw, Buffer->Pcolor, Buffer->Pcolor2, true);
-		break;
-	//
-	case PageItem::PathText:
-	case PageItem::TextFrame:
-#ifndef NLS_PROTO
-		if (Buffer->PType == PageItem::PathText)
-			z = Doc->itemAdd(PageItem::PathText, PageItem::Unspecified, x, y, w, h, pw, CommonStrings::None, Buffer->Pcolor, true);
-		else
-			z = Doc->itemAdd(PageItem::TextFrame, PageItem::Unspecified, x, y, w, h, pw, CommonStrings::None, Buffer->Pcolor, true);
-		undoManager->setUndoEnabled(false);
-		if ((Buffer->m_isAnnotation) && (Buffer->m_annotation.UseIcons()))
-		{
-			Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-			Doc->Items->at(z)->setImageXYOffset(Buffer->LocalX, Buffer->LocalY);
-			Doc->Items->at(z)->Pfile = Buffer->Pfile;
-			Doc->Items->at(z)->Pfile2 = Buffer->Pfile2;
-			Doc->Items->at(z)->Pfile3 = Buffer->Pfile3;
-			Doc->Items->at(z)->IProfile = Buffer->IProfile;
-			Doc->Items->at(z)->EmProfile = Buffer->EmProfile;
-			Doc->Items->at(z)->IRender = Buffer->IRender;
-			Doc->Items->at(z)->UseEmbedded = Buffer->UseEmbedded;
-			Doc->LoadPict(Doc->Items->at(z)->Pfile, z);
-			Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-			Doc->Items->at(z)->setImageShown(Buffer->PicArt);
-		}
-		if (!Buffer->itemText.isEmpty())
-		{
-			QTextStream t(&Buffer->itemText, QIODevice::ReadOnly);
-			QString cc;
-			while (!t.atEnd())
-			{
-				cc = t.readLine();
-				if (cc.isEmpty())
-					continue;
-				QStringList wt;
-				QStringList::Iterator it;
-				wt = cc.split("\t", QString::SkipEmptyParts);
-				it = wt.begin();
-				CharStyle nstyle;
-				QString ch = (*it);
-				if (ch == QChar(5))
-					ch = SpecialChars::PARSEP;
-				if (ch == QChar(4))
-					ch = SpecialChars::TAB;
-				it++;
-				nstyle.setFont((*Doc->AllFonts)[*it]);
-				it++;
-				nstyle.setFontSize(qRound(ScCLocale::toDoubleC((*it)) * 10));
-				it++;
-				nstyle.setFillColor(*it);
-				it++;
-				nstyle.setTracking((*it).toInt());
-				it++;
-				nstyle.setFillShade((*it).toInt());
-				it++;
-				nstyle.setFeatures(static_cast<StyleFlag>(it == wt.end() ? 0 : (*it).toInt()).featureList());
-				it++;
-				int cab = it == wt.end() ? 0 : (*it).toInt();
-				it++;
-				nstyle.setStrokeColor(it == wt.end() ? CommonStrings::None : *it);
-				it++;
-				nstyle.setStrokeShade(it == wt.end() ? 100 : (*it).toInt());
-				it++;
-				if (it == wt.end())
-					nstyle.setScaleH(1000);
-				else
-					nstyle.setScaleH(qMin(qMax((*it).toInt(), 100), 4000));
-				it++;
-				if (it == wt.end())
-					nstyle.setScaleV(1000);
-				else
-					nstyle.setScaleV(qMin(qMax((*it).toInt(), 100), 4000));
-				it++;
-				nstyle.setBaselineOffset(it == wt.end() ? 0 : (*it).toInt());
-				it++;
-				nstyle.setShadowXOffset(it == wt.end() ? 50 : (*it).toInt());
-				it++;
-				nstyle.setShadowYOffset(it == wt.end() ? -50 : (*it).toInt());
-				it++;
-				nstyle.setOutlineWidth(it == wt.end() ? 10 : (*it).toInt());
-				it++;
-				nstyle.setUnderlineOffset(it == wt.end() ? -1 : (*it).toInt());
-				it++;
-				nstyle.setUnderlineWidth(it == wt.end() ? -1 : (*it).toInt());
-				it++;
-				nstyle.setStrikethruOffset(it == wt.end() ? -1 : (*it).toInt());
-				it++;
-				nstyle.setStrikethruWidth(it == wt.end() ? -1 : (*it).toInt());
-				uint pos = Doc->Items->at(z)->itemText.length();
-				Doc->Items->at(z)->itemText.insertChars(pos, ch);
-				if (ch == SpecialChars::PARSEP && cab > 0) {
-					ParagraphStyle pstyle;
-					pstyle.setParent(Doc->paragraphStyles()[cab].name());
-					Doc->Items->at(z)->itemText.applyStyle(pos, pstyle);
-				}
-				else {
-					Doc->Items->at(z)->itemText.applyCharStyle(pos, 1, nstyle);
-				}
-			}
-		}
-		{
-			ParagraphStyle pstyle;
-			pstyle.setAlignment(static_cast<ParagraphStyle::AlignmentType>(Buffer->textAlignment));
-			pstyle.setLineSpacing(Buffer->LineSp);
-			pstyle.setLineSpacingMode(static_cast<ParagraphStyle::LineSpacingMode>(Buffer->LineSpMode));
-			if (Doc->AllFonts->contains(Buffer->IFont))
-				pstyle.charStyle().setFont((*Doc->AllFonts)[Buffer->IFont]);
-			else
-				pstyle.charStyle().setFont((*Doc->AllFonts)[Doc->itemToolPrefs.textFont]);
-			pstyle.charStyle().setFontSize(Buffer->ISize);
-			pstyle.charStyle().setFillColor(Buffer->TxtFill);
-			pstyle.charStyle().setStrokeColor(Buffer->TxtStroke);
-			pstyle.charStyle().setFillShade(Buffer->ShTxtFill);
-			pstyle.charStyle().setStrokeShade(Buffer->ShTxtStroke);
-			pstyle.charStyle().setScaleH(Buffer->TxtScale);
-			pstyle.charStyle().setScaleV(Buffer->TxtScaleV);
-			pstyle.charStyle().setBaselineOffset(Buffer->TxTBase);
-			pstyle.charStyle().setFeatures(StyleFlag(Buffer->TxTStyle).featureList());
-			pstyle.charStyle().setShadowXOffset(Buffer->TxtShadowX);
-			pstyle.charStyle().setShadowYOffset(Buffer->TxtShadowY);
-			pstyle.charStyle().setOutlineWidth(Buffer->TxtOutline);
-			pstyle.charStyle().setUnderlineOffset(Buffer->TxtUnderPos);
-			pstyle.charStyle().setUnderlineWidth(Buffer->TxtUnderWidth);
-			pstyle.charStyle().setStrikethruOffset(Buffer->TxtStrikePos);
-			pstyle.charStyle().setStrikethruWidth(Buffer->TxtStrikeWidth);
-			Doc->Items->at(z)->itemText.setDefaultStyle(pstyle);
-		}
-		undoManager->setUndoEnabled(true);
-#endif
-		break;
-	case PageItem::Line:
-		z = Doc->itemAdd(PageItem::Line, PageItem::Unspecified, x, y, w ,0, pw, CommonStrings::None, Buffer->Pcolor2, true);
-		break;
-	case PageItem::Polygon:
-		z = Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, x, y, w, h, pw, Buffer->Pcolor, Buffer->Pcolor2, true);
-		break;
-	case PageItem::PolyLine:
-		z = Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, x, y, w, h, pw, Buffer->Pcolor, Buffer->Pcolor2, true);
-		break;
-	case PageItem::Multiple:
-		Q_ASSERT(false);
-		break;
-	case PageItem::LatexFrame:
-		{
-		z = Doc->itemAdd(PageItem::LatexFrame, PageItem::Unspecified, x, y, w, h, 1, Doc->itemToolPrefs.imageFillColor, CommonStrings::None, true);
-		undoManager->setUndoEnabled(false);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageXYOffset(Buffer->LocalX, Buffer->LocalY);
-		Doc->Items->at(z)->Pfile = Buffer->Pfile;
-		Doc->Items->at(z)->IProfile = Buffer->IProfile;
-		Doc->Items->at(z)->EmProfile = Buffer->EmProfile;
-		Doc->Items->at(z)->IRender = Buffer->IRender;
-		Doc->Items->at(z)->UseEmbedded = Buffer->UseEmbedded;
-		if (!Doc->Items->at(z)->Pfile.isEmpty())
-			Doc->LoadPict(Doc->Items->at(z)->Pfile, z);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageShown(Buffer->PicArt);
-		Doc->Items->at(z)->ScaleType = Buffer->ScaleType;
-		Doc->Items->at(z)->AspectRatio = Buffer->AspectRatio;
-		Doc->Items->at(z)->setLineWidth(Buffer->Pwidth);
-		PageItem_LatexFrame *latexframe = Doc->Items->at(z)->asLatexFrame();
-		latexframe->setFormula(Buffer->itemText); //itemText seems to be a good choice...
-		undoManager->setUndoEnabled(true);
-		break;
-		}
-	case PageItem::OSGFrame:
-#ifdef HAVE_OSG
-		z = Doc->itemAdd(PageItem::OSGFrame, PageItem::Unspecified, x, y, w, h, 1, Doc->itemToolPrefs.imageFillColor, CommonStrings::None, true);
-		undoManager->setUndoEnabled(false);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageXYOffset(Buffer->LocalX, Buffer->LocalY);
-		Doc->Items->at(z)->Pfile = Buffer->Pfile;
-		Doc->Items->at(z)->IProfile = Buffer->IProfile;
-		Doc->Items->at(z)->EmProfile = Buffer->EmProfile;
-		Doc->Items->at(z)->IRender = Buffer->IRender;
-		Doc->Items->at(z)->UseEmbedded = Buffer->UseEmbedded;
-		if (!Doc->Items->at(z)->Pfile.isEmpty())
-			Doc->LoadPict(Doc->Items->at(z)->Pfile, z);
-		Doc->Items->at(z)->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
-		Doc->Items->at(z)->setImageShown(Buffer->PicArt);
-		Doc->Items->at(z)->ScaleType = Buffer->ScaleType;
-		Doc->Items->at(z)->AspectRatio = Buffer->AspectRatio;
-		Doc->Items->at(z)->setLineWidth(Buffer->Pwidth);
-		undoManager->setUndoEnabled(true);
-#endif
-		break;
-	}
-	PageItem *currItem = Doc->Items->at(z);
-	undoManager->setUndoEnabled(false);
-/*FIXME
-	currItem->setLineSpacingMode(Buffer->LineSpMode);
-	if (currItem->lineSpacingMode() == 3)
-	{
-		currItem->setLineSpacing(Doc->typographicSettings.valueBaseGrid-1);
-	}
-	*/
-	currItem->setImageFlippedH(Buffer->flippedH);
-	currItem->setImageFlippedV(Buffer->flippedV);
-	currItem->setCornerRadius(Buffer->RadRect);
-	currItem->FrameType = Buffer->FrameType;
-	currItem->ClipEdited = Buffer->ClipEdited;
-	currItem->setFillColor(Buffer->Pcolor);
-	currItem->setLineColor(Buffer->Pcolor2);
-	currItem->setFillShade(Buffer->Shade);
-	currItem->setLineShade(Buffer->Shade2);
-	currItem->fillRule = Buffer->FillRule;
-/*	currItem->TxtStroke = Buffer->TxtStroke;
-	currItem->TxtFill = Buffer->TxtFill;
-	currItem->ShTxtStroke = Buffer->ShTxtStroke;
-	currItem->ShTxtFill = Buffer->ShTxtFill;
-	currItem->TxtScale = Buffer->TxtScale;
-	currItem->TxtScaleV = Buffer->TxtScaleV;
-	currItem->TxTStyle = Buffer->TxTStyle;
-	currItem->TxtShadowX = Buffer->TxtShadowX;
-	currItem->TxtShadowY = Buffer->TxtShadowY;
-	currItem->TxtOutline = Buffer->TxtOutline;
-	currItem->TxtUnderPos = Buffer->TxtUnderPos;
-	currItem->TxtUnderWidth = Buffer->TxtUnderWidth;
-	currItem->TxtStrikePos = Buffer->TxtStrikePos;
-	currItem->TxtStrikeWidth = Buffer->TxtStrikeWidth;
-*/
-	currItem->setRotation(Buffer->Rot);
-	currItem->setTextToFrameDist(Buffer->Extra, Buffer->RExtra, Buffer->TExtra, Buffer->BExtra);
-	currItem->PLineArt = Qt::PenStyle(Buffer->PLineArt);
-	currItem->PLineEnd = Qt::PenCapStyle(Buffer->PLineEnd);
-	currItem->PLineJoin = Qt::PenJoinStyle(Buffer->PLineJoin);
-	currItem->setPrintEnabled(Buffer->isPrintable);
-	currItem->isBookmark = Buffer->isBookmark;
-//	currItem->BMnr = Buffer->BMnr;
-	currItem->Groups = Buffer->Groups;
-	currItem->setIsAnnotation(Buffer->m_isAnnotation);
-	currItem->setAnnotation(Buffer->m_annotation);
-	if (!Buffer->AnName.isEmpty())
-	{
-		if (!drag)
-		{
-			if (currItem->itemName() == Buffer->AnName)
-				currItem->AutoName = true;
-			else
-			{
-				currItem->setItemName(Buffer->AnName);
-				currItem->AutoName = false;
-			}
-		}
-		else
-		{
-//			currItem->setItemName(currItem->generateUniqueCopyName(Buffer->AnName));
-			currItem->setItemName(Buffer->AnName);
-			currItem->AutoName = false;
-		}
-	}
-	else
-	{
-		if (currItem->isGroupControl)
-			currItem->setItemName( tr("Group%1").arg(currItem->Groups.top()));
-	}
-
-	currItem->TopLine = Buffer->TopLine;
-	currItem->RightLine = Buffer->RightLine;
-	currItem->LeftLine = Buffer->LeftLine;
-	currItem->BottomLine = Buffer->BottomLine;
-	currItem->isTableItem = Buffer->isTableItem;
-	currItem->TopLinkID = Buffer->TopLinkID;
-	currItem->LeftLinkID = Buffer->LeftLinkID;
-	currItem->RightLinkID = Buffer->RightLinkID;
-	currItem->BottomLinkID = Buffer->BottomLinkID;
-	currItem->Clip = Buffer->Clip; //irrelevant, overwritten below
-	currItem->PoShow = Buffer->PoShow;
-	currItem->BaseOffs = Buffer->BaseOffs;
-	currItem->textPathFlipped = Buffer->textPathFlipped;
-	currItem->textPathType = Buffer->textPathType;
-	//currItem->setTextFlowsAroundFrame(Buffer->Textflow);
-	//currItem->setTextFlowUsesBoundingBox(Buffer->Textflow2);
-	currItem->setTextFlowMode((PageItem::TextFlowMode) Buffer->TextflowMode);
-//	currItem->textAlignment = Buffer->textAlignment;
-//	currItem->setFont(Buffer->IFont);
-//	currItem->setFontSize(Buffer->ISize);
-//	currItem->ExtraV = Buffer->ExtraV;
-//	currItem->TabValues = Buffer->TabValues;
-	currItem->DashValues = Buffer->DashValues;
-	currItem->DashOffset = Buffer->DashOffset;
-	currItem->setLocked(Buffer->Locked);
-	currItem->setSizeLocked(Buffer->LockRes);
-	currItem->setFillTransparency(Buffer->Transparency);
-	currItem->setLineTransparency(Buffer->TranspStroke);
-	currItem->setFillBlendmode(Buffer->TransBlend);
-	currItem->setLineBlendmode(Buffer->TransBlendS);
-	currItem->setStartArrowIndex(Buffer->startArrowIndex);
-	currItem->setEndArrowIndex(Buffer->endArrowIndex);
-	currItem->setReversed(Buffer->Reverse);
-	currItem->NamedLStyle = Buffer->NamedLStyle;
-//	currItem->Language = m_ScMW->GetLang(Buffer->Language);
-	currItem->Cols = Buffer->Cols;
-	currItem->ColGap = Buffer->ColGap;
-	currItem->setFirstLineOffset(Buffer->firstLineOffsetP);
-	if (Buffer->LayerID != -1)
-		currItem->LayerID = Buffer->LayerID;
-	currItem->PoLine = Buffer->PoLine.copy();
-	//currItem->setTextFlowUsesContourLine(Buffer->UseContour);
-	currItem->setTextFlowMode((PageItem::TextFlowMode) Buffer->TextflowMode);
-	if (Buffer->ContourLine.size() == 0)
-		currItem->ContourLine = currItem->PoLine.copy();
-	else
-		currItem->ContourLine = Buffer->ContourLine.copy();
-	if (!currItem->asLine())
-	{
-		// OBSOLETE CR 2005-02-06
-		if ((currItem->PoLine.size() == 0) && (currItem->itemType() != PageItem::ItemType1))
-			currItem->convertClip();
-		else
-			//
-			currItem->Clip = FlattenPath(currItem->PoLine, currItem->Segments);
-	}
-	else
-	{
-		int ph = static_cast<int>(qMax(1.0, currItem->lineWidth() / 2.0));
-		currItem->Segments.clear();
-		currItem->PoLine.resize(0);
-		currItem->Clip.setPoints(4, -ph,-ph, static_cast<int>(currItem->width()+ph),-ph,
-		                  static_cast<int>(currItem->width()+ph),static_cast<int>(currItem->height()+ph),
-		                  -ph,static_cast<int>(currItem->height()+ph));
-		currItem->setHeight(1.0);
-	}
-	// OBSOLETE CR 2005-02-06
-	if (currItem->itemType() == PageItem::ItemType1)
-	{
-		currItem->SetOvalFrame();
-		Doc->setRedrawBounding(currItem);
-	}
-	// OBSOLETE CR 2005-02-06
-	if (currItem->itemType() == PageItem::ItemType3)
-	{
-		if (currItem->cornerRadius() != 0.0)
-		{
-			Doc->nodeEdit.deselect();
-			currItem->SetFrameRound();
-			Doc->setRedrawBounding(currItem);
-		}
-		else
-		{
-			currItem->SetRectFrame();
-			Doc->setRedrawBounding(currItem);
-		}
-		currItem->ClipEdited = true;
-	}
-	if (currItem->asImageFrame())
-		currItem->AdjustPictScale();
-//	if (!(currItem->asTextFrame()) && !(currItem->asPathText()))
-//		currItem->setFont(Doc->toolSettings.textFont);
-	if (currItem->asPathText())
-	{
-		currItem->ClipEdited = true;
-		currItem->FrameType = 3;
-		currItem->updatePolyClip();
-		currItem->Frame = true;
-	}
-	if (Buffer->GrType != 0)
-	{
-		if (Buffer->GrType == 8)
-		{
-			currItem->setPattern(Buffer->pattern);
-			currItem->GrType = Buffer->GrType;
-			currItem->setPatternTransform(Buffer->patternScaleX, Buffer->patternScaleY, Buffer->patternOffsetX, Buffer->patternOffsetY, Buffer->patternRotation, Buffer->patternSkewX, Buffer->patternSkewY);
-			currItem->setPatternFlip(Buffer->patternMirrorX, Buffer->patternMirrorY);
-		}
-		else
-		{
-			if ((!Buffer->GrColor.isEmpty()) && (!Buffer->GrColor2.isEmpty()))
-			{
-				currItem->fill_gradient.clearStops();
-				if (Buffer->GrType == 5)
-				{
-					if ((Buffer->GrColor != CommonStrings::None) && (!Buffer->GrColor.isEmpty()))
-						currItem->SetQColor(&tmp, Buffer->GrColor, Buffer->GrShade);
-					currItem->fill_gradient.addStop(tmp, 0.0, 0.5, 1.0, Buffer->GrColor, Buffer->GrShade);
-					if ((Buffer->GrColor2 != CommonStrings::None) && (!Buffer->GrColor2.isEmpty()))
-						currItem->SetQColor(&tmp, Buffer->GrColor2, Buffer->GrShade2);
-					currItem->fill_gradient.addStop(tmp, 1.0, 0.5, 1.0, Buffer->GrColor2, Buffer->GrShade2);
-				}
-				else
-				{
-					if ((Buffer->GrColor2 != CommonStrings::None) && (!Buffer->GrColor2.isEmpty()))
-						currItem->SetQColor(&tmp, Buffer->GrColor2, Buffer->GrShade2);
-					currItem->fill_gradient.addStop(tmp, 0.0, 0.5, 1.0, Buffer->GrColor2, Buffer->GrShade2);
-					if ((Buffer->GrColor != CommonStrings::None) && (!Buffer->GrColor.isEmpty()))
-						currItem->SetQColor(&tmp, Buffer->GrColor, Buffer->GrShade);
-					currItem->fill_gradient.addStop(tmp, 1.0, 0.5, 1.0, Buffer->GrColor, Buffer->GrShade);
-				}
-			}
-			else
-				currItem->fill_gradient = Buffer->fill_gradient;
-			currItem->GrType = Buffer->GrType;
-			currItem->GrStartX = Buffer->GrStartX;
-			currItem->GrStartY = Buffer->GrStartY;
-			currItem->GrEndX   = Buffer->GrEndX;
-			currItem->GrEndY   = Buffer->GrEndY;
-			currItem->GrFocalX = Buffer->GrFocalX;
-			currItem->GrFocalY = Buffer->GrFocalY;
-			currItem->GrScale  = Buffer->GrScale;
-			currItem->GrSkew   = Buffer->GrSkew;
-		}
-	}
-	if (Buffer->GrTypeStroke >0)
-	{
-		currItem->stroke_gradient = Buffer->stroke_gradient;
-		currItem->GrTypeStroke = Buffer->GrTypeStroke;
-		currItem->GrStrokeStartX = Buffer->GrStrokeStartX;
-		currItem->GrStrokeStartY = Buffer->GrStrokeStartY;
-		currItem->GrStrokeEndX   = Buffer->GrStrokeEndX;
-		currItem->GrStrokeEndY   = Buffer->GrStrokeEndY;
-		currItem->GrStrokeFocalX = Buffer->GrStrokeFocalX;
-		currItem->GrStrokeFocalY = Buffer->GrStrokeFocalY;
-		currItem->GrStrokeScale  = Buffer->GrStrokeScale;
-		currItem->GrStrokeSkew   = Buffer->GrStrokeSkew;
-	}
-	currItem->GrMask = Buffer->GrMask;
-	if ((currItem->GrMask == 1) || (currItem->GrMask == 2) || (currItem->GrMask == 4) || (currItem->GrMask == 5))
-	{
-		currItem->mask_gradient = Buffer->mask_gradient;
-		currItem->GrMaskStartX = Buffer->GrMaskStartX;
-		currItem->GrMaskStartY = Buffer->GrMaskStartY;
-		currItem->GrMaskEndX = Buffer->GrMaskEndX;
-		currItem->GrMaskEndY = Buffer->GrMaskEndY;
-		currItem->GrMaskFocalX = Buffer->GrMaskFocalX;
-		currItem->GrMaskFocalY = Buffer->GrMaskFocalY;
-		currItem->GrMaskScale  = Buffer->GrMaskScale;
-		currItem->GrMaskSkew   = Buffer->GrMaskSkew;
-	}
-	else if ((currItem->GrMask == 3) || (currItem->GrMask == 6))
-	{
-		currItem->setPatternMask(Buffer->patternMaskVal);
-		currItem->setMaskTransform(Buffer->patternMaskScaleX, Buffer->patternMaskScaleY, Buffer->patternMaskOffsetX, Buffer->patternMaskOffsetY, Buffer->patternMaskRotation, Buffer->patternMaskSkewX, Buffer->patternMaskSkewY);
-		currItem->setMaskFlip(Buffer->patternMaskMirrorX, Buffer->patternMaskMirrorY);
-	}
-	currItem->updateGradientVectors();
-	currItem->setObjectAttributes(&(Buffer->pageItemAttributes));
-	if (resize)
-		Doc->setRedrawBounding(currItem);
-	currItem->OwnPage = Doc->OnPage(currItem);
-	undoManager->setUndoEnabled(true);
-	if (!loading)
-	{
-		Doc->m_Selection->addItem(currItem);
-		emit HaveSel(currItem->itemType());
-		currItem->emitAllToGUI();
-		emit DocChanged();
-		updateContents();
 	}
 }
 
@@ -4816,8 +4321,6 @@ double ScribusView::scale() const
 	return m_canvas->scale();
 }
 
-
-
 bool ScribusView::eventFilter(QObject *obj, QEvent *event)
 {
 //	if (obj == horizRuler || obj == vertRuler || obj == rulerMover)
@@ -4853,7 +4356,7 @@ bool ScribusView::eventFilter(QObject *obj, QEvent *event)
 		m_canvasMode->mouseDoubleClickEvent(m);
 		return true;
 	}
-	else if (/* obj == widget() && */ event->type() == QEvent::KeyPress)
+	else if (event->type() == QEvent::KeyPress)
 	{
 		QKeyEvent* m = static_cast<QKeyEvent*> (event);
 		if (m_canvasMode->handleKeyEvents())
@@ -4862,7 +4365,7 @@ bool ScribusView::eventFilter(QObject *obj, QEvent *event)
 			m_ScMW->keyPressEvent(m);
 		return true;
 	}
-	else if (/* obj == widget() && */ event->type() == QEvent::KeyRelease)
+	else if (event->type() == QEvent::KeyRelease)
 	{
 		QKeyEvent* m = static_cast<QKeyEvent*> (event);
 		if (m_canvasMode->handleKeyEvents())

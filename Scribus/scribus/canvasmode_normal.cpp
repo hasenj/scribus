@@ -218,6 +218,7 @@ void CanvasMode_Normal::mouseDoubleClickEvent(QMouseEvent *m)
 			//CB if annotation, open the annotation dialog
 			if (currItem->isAnnotation())
 			{
+				qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 				m_view->requestMode(submodeAnnotProps);
 				//mousePressEvent(m);
 			}
@@ -312,7 +313,7 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 					m_doc->DragElements.append(m_doc->m_Selection->itemAt(dre)->ItemNr);
 				ScriXmlDoc *ss = new ScriXmlDoc();
 				ScElemMimeData* md = new ScElemMimeData();
-				md->setScribusElem(ss->WriteElem(m_doc, m_view, m_doc->m_Selection));
+				md->setScribusElem(ss->WriteElem(m_doc, m_doc->m_Selection));
 				delete ss;
 				ss = NULL;
 				QDrag* dr = new QDrag(m_view);
@@ -753,6 +754,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 	m_canvas->m_viewMode.m_MouseButtonPressed = false;
 	m_canvas->resetRenderMode();
 	m->accept();
+	m_view->redrawMarker->hide();
 //	m_view->stopDragTimer();
 	//m_canvas->update(); //ugly in a mouseReleaseEvent!!!!!!!
 	if ((!GetItem(&currItem)) && (m->button() == Qt::RightButton) && (!m_doc->DragP))
@@ -944,7 +946,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 		}
 		m_view->HaveSelRect = false;
 		shiftSelItems = false;
-		m_view->redrawMarker->hide();
+//		m_view->redrawMarker->hide();
 		m_view->updateContents();
 	}
 	if (m_doc->appMode != modeEdit)
@@ -959,7 +961,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 	}
 	if (GetItem(&currItem))
 	{
-		qApp->changeOverrideCursor(QCursor(Qt::OpenHandCursor));
+	//	qApp->changeOverrideCursor(QCursor(Qt::OpenHandCursor));
 		if (m_doc->m_Selection->count() > 1)
 		{
 			m_doc->m_Selection->setGroupRect();

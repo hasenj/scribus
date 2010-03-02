@@ -2083,6 +2083,7 @@ void PageItem_TextFrame::layout()
 							hl->glyph.xadvance = 0;
 						}
 						
+						current.updateHeightMetrics(itemText);
 						EndX = current.endOfLine(cl, pf2, style.rightMargin());
 						current.finishLine(EndX);
 #if BIDI_LAYOUT
@@ -2713,7 +2714,7 @@ void PageItem_TextFrame::invalidateLayout()
 	}
 }
 
-void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea, double sc)
+void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 {
 	if(invalid)
 		layout();
@@ -2999,7 +3000,6 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea, double s
 
 void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 {
-	ScribusView* view = m_Doc->view();
 	if (m_Doc->layerOutline(LayerID))
 	{
 		p->setPen(m_Doc->layerMarker(LayerID), 1, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
@@ -3131,6 +3131,16 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 	}
 	p->setFillMode(ScPainter::Solid);
 	p->setStrokeMode(ScPainter::Solid);
+	p->restore();
+}
+
+void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
+{
+	ScribusView* view = m_Doc->view();
+	p->save();
+	if (!isEmbedded)
+		p->translate(Xpos, Ypos);
+	p->rotate(Rot);
 	if ((!isEmbedded) && (!m_Doc->RePos))
 	{
 		// added to prevent fat frame outline due to antialiasing and considering you can’t pass a cosmetic pen to scpainter - pm
@@ -4032,70 +4042,6 @@ bool PageItem_TextFrame::createInfoGroup(QFrame *infoGroup, QGridLayout *infoGro
 	infoGroupLayout->addWidget( charT, 4, 1 );
 	return true;
 }
-
-/*
-bool PageItem_TextFrame::createContextMenu(QMenu *menu, int step)
-{
-	static QMenu *menuPDF = 0;
-	QMap<QString, QPointer<ScrAction> > actions = doc()->scMW()->scrActions;
-	QAction *act;
-	
-	if (menu == 0) {
-		if (menuPDF) delete menuPDF;
-		return true;
-	}
-	switch(step) {
-		case 10:
-			menu->addSeparator();
-			menu->addAction(actions["fileImportText"]);
-			menu->addAction(actions["fileImportAppendText"]);
-			menu->addAction(actions["toolsEditWithStoryEditor"]);
-			menu->addAction(actions["insertSampleText"]);
-			break;
-		case 20:
-			if (doc()->currentPage()->pageName().isEmpty())
-			{
-				menuPDF = new QMenu();
-				menuPDF->addAction(actions["itemPDFIsAnnotation"]);
-				menuPDF->addAction(actions["itemPDFIsBookmark"]);
-				if (isAnnotation())
-				{
-					if ((annotation().Type() == 0) || (annotation().Type() == 1) || (annotation().Type() > 9))
-						menuPDF->addAction(actions["itemPDFAnnotationProps"]);
-					else
-						menuPDF->addAction(actions["itemPDFFieldProps"]);
-				}
-			}
-			act = menu->addMenu(menuPDF);
-			act->setText( ScribusView::tr("&PDF Options"));
-			break;
-		case 30:
-			if (isTableItem)
-			{
-				actions["itemConvertToImageFrame"]->setEnabled(true);
-				menu->addAction(actions["itemConvertToImageFrame"]);
-				//TODO: ConvertToLatexFrame
-			} else {
-				if ((prevInChain() == 0) && (nextInChain() == 0))
-					menu->addAction(actions["itemConvertToImageFrame"]);
-				menu->addAction(actions["itemConvertToOutlines"]);
-				if ((prevInChain() == 0) && (nextInChain() == 0))
-					menu->addAction(actions["itemConvertToPolygon"]);
-			}
-			break;
-		case 40:
-			if (itemText.lines() != 0) {
-				menu->addAction(actions["editClearContents"]);
-			} else {
-				return false;
-			}
-			break;
-		default:
-			return false;
-	}
-	return true;
-}
-*/
 
 void PageItem_TextFrame::applicableActions(QStringList & actionList)
 {

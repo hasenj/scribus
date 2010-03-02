@@ -116,6 +116,7 @@ struct DocumentSetupPrefs
 	int docUnitIndex; //! The index of the default unit
 	bool AutoSave;
 	int AutoSaveTime;
+	bool saveCompressed;
 };
 
 //Guides
@@ -273,6 +274,7 @@ struct ScrapbookPrefs
 	int numScrapbookCopies;
 	bool doCopyToScrapbook; //! When copying (copy/paste), also copy to a scrapbook
 	bool persistentScrapbook; //! Keep the scrapbook contents between sessions
+	bool writePreviews;		//! Write previews to the scrapbook dir;
 };
 
 struct DisplayPrefs
@@ -294,6 +296,7 @@ struct DisplayPrefs
 	double pageGapHorizontal; //! Horizontal gap between pages
 	double pageGapVertical; //! Vertical gap between pages
 	double displayScale; //! Display scale, typically used to set the scale of the display to 100% of real values.
+	bool showVerifierWarningsOnCanvas; //! Show preflight verifier warnings on canvas
 };
 
 struct ExternalToolsPrefs
@@ -324,8 +327,9 @@ struct MiscellaneousPrefs
 
 struct StoryEditorPrefs
 {
-	QColor guiFontColor; //! Color of the text used in the Story Editor window
+	QColor guiFontColorBackground; //! Color of the background for text used in the Story Editor window
 	QString guiFont; //! Font of the text used in the Story Editor window
+	bool smartTextSelection; //! Use smart text selection (relates to spacing mostly)
 };
 
 struct PrintPreviewPrefs

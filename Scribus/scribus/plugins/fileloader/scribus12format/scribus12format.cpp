@@ -111,10 +111,12 @@ void Scribus12Format::registerFormats()
 	fmt.formatId = FORMATID_SLA12XIMPORT;
 	fmt.load = true;
 	fmt.save = false;
+	fmt.colorReading = true;
 	fmt.filter = fmt.trName + " (*.sla *.SLA *.sla.gz *.SLA.GZ *.scd *.SCD *.scd.gz *.SCD.GZ)";
 	fmt.nameMatch = QRegExp("\\.(sla|scd)(\\.gz)?", Qt::CaseInsensitive);
 	fmt.mimeTypes = QStringList();
 	fmt.mimeTypes.append("application/x-scribus");
+	fmt.fileExtensions = QStringList() << "sla" << "sla.gz" << "scd" << "scd.gz";
 	fmt.priority = 64;
 	registerFormat(fmt);
 }
@@ -552,7 +554,7 @@ bool Scribus12Format::loadFile(const QString & fileName, const FileFormat & /* f
 					/*int docGc = m_Doc->GroupCounter;
 					m_Doc->GroupCounter = 0;*/
 					uint last = m_Doc->Items->count();
-					m_View->PasteItem(&OB, true);
+					m_Doc->PasteItem(&OB);
 					/*m_Doc->GroupCounter = docGc;*/
 					Neu = m_Doc->Items->at(last);
 					Neu->OnMasterPage = PgNam;
@@ -1427,7 +1429,7 @@ bool Scribus12Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 						IT=IT.nextSibling();
 					}
 					OB.itemText = "";
-					m_View->PasteItem(&OB, true);
+					m_Doc->PasteItem(&OB);
 					Neu = m_Doc->Items->at(counter);
 					IT=OBJ.firstChild();
 					LastStyles* last = new LastStyles();

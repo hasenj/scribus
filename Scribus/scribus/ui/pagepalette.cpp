@@ -642,6 +642,10 @@ void PagePalette::deleteMasterPage(QString tmp)
 	if (exit == QMessageBox::Yes)
 	{
 		bool oldMPMode = currView->Doc->masterPageMode();
+		int  storedPageNum = currView->Doc->currentPageNumber();
+		int  storedViewXCoor = currView->horizontalScrollBar()->value();
+		int  storedViewYCoor = currView->verticalScrollBar()->value();
+
 		currView->Doc->setMasterPageMode(true);
 		currView->Doc->scMW()->DeletePage2(currView->Doc->MasterNames[tmp]);
 		//<<CB TODO Move back into ScribusDoc::deleteMasterPage();
@@ -651,6 +655,11 @@ void PagePalette::deleteMasterPage(QString tmp)
 		currView->Doc->replaceMasterPage(tmp);
 		currView->Doc->setMasterPageMode(oldMPMode);
 		currView->Doc->setModified(true);
+
+		currView->Doc->setCurrentPage(currView->Doc->DocPages.at(storedPageNum));
+		currView->reformPages(false);
+		currView->setContentsPos(storedViewXCoor, storedViewYCoor);
+		currView->DrawNew();
 	}
 }
 
@@ -712,7 +721,7 @@ void PagePalette::handleFirstPage(int fp)
 
 void PagePalette::rebuildMasters()
 {
-	if (m_scMW->ScriptRunning)
+	if (m_scMW->scriptIsRunning())
 		return;
 	masterPageList->clear();
 	if (currView == 0)
@@ -733,7 +742,7 @@ void PagePalette::rebuildMasters()
 
 void PagePalette::rebuildPages()
 {
-	if (m_scMW->ScriptRunning)
+	if (m_scMW->scriptIsRunning())
 		return;
 	QString str;
 	disconnect(pageLayout, SIGNAL(selectedLayout(int )), this, SLOT(handlePageLayout(int )));
@@ -750,12 +759,12 @@ void PagePalette::rebuildPages()
 	pageLayout->updateLayoutSelector(currView->Doc->pageSets);
 	pageLayout->selectItem(currView->Doc->currentPageLayout);
 	pageLayout->firstPage->setCurrentIndex(currView->Doc->pageSets[currView->Doc->currentPageLayout].FirstPage);
-	pageView->MaxC = currView->Doc->Pages->count()-1;
+	pageView->MaxC = currView->Doc->DocPages.count()-1;
 	int counter, rowcounter, colmult, rowmult, coladd,rowadd;
 	counter = currView->Doc->pageSets[currView->Doc->currentPageLayout].FirstPage;
 	int cols = currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns;
-	int rows = (currView->Doc->Pages->count()+counter) / currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns;
-	if (((currView->Doc->Pages->count()+counter) % currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns) != 0)
+	int rows = (currView->Doc->DocPages.count()+counter) / currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns;
+	if (((currView->Doc->DocPages.count()+counter) % currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns) != 0)
 		rows++;
 	rowcounter = 0;
 	if (cols == 1)
@@ -792,9 +801,9 @@ void PagePalette::rebuildPages()
 	pageView->firstP = counter;
 	pageView->cols = currView->Doc->pageSets[currView->Doc->currentPageLayout].Columns;
 	pageList.clear();
-	for (int a = 0; a < currView->Doc->Pages->count(); ++a)
+	for (int a = 0; a < currView->Doc->DocPages.count(); ++a)
 	{
-		str = currView->Doc->Pages->at(a)->MPageNam;
+		str = currView->Doc->DocPages.at(a)->MPageNam;
 		SeItem *it = new SeItem(str, a, CreateIcon(a, pix));
 		pageList.append(it);
 		pageView->setItem(rowcounter*rowmult+rowadd, counter*colmult+coladd, (QTableWidgetItem *)it);
@@ -861,7 +870,7 @@ void PagePalette::markPage(uint nr)
 
 void PagePalette::setView(ScribusView *view)
 {
-	if (m_scMW->ScriptRunning)
+	if (m_scMW->scriptIsRunning())
 		return;
 	currView = view;
 }
@@ -938,4 +947,5 @@ const bool PagePalette::getThumb()
 {
 	return masterPageList->Thumb;
 }
+
 

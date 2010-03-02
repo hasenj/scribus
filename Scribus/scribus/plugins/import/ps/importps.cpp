@@ -218,7 +218,7 @@ bool EPSPlug::import(QString fName, const TransactionSettings &trSettings, int f
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
 	m_Doc->view()->updatesOn(false);
-	m_Doc->scMW()->ScriptRunning = true;
+	m_Doc->scMW()->setScriptRunning(true);
 	qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
@@ -289,7 +289,7 @@ bool EPSPlug::import(QString fName, const TransactionSettings &trSettings, int f
 			}
 		}
 		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->scMW()->setScriptRunning(false);
 		m_Doc->setLoading(false);
 		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 		if ((Elements.count() > 0) && (!ret) && (interactive))
@@ -323,7 +323,7 @@ bool EPSPlug::import(QString fName, const TransactionSettings &trSettings, int f
 				tmpSel->setGroupRect();
 				ScriXmlDoc *ss = new ScriXmlDoc();
 				ScElemMimeData* md = new ScElemMimeData();
-				md->setScribusElem(ss->WriteElem(m_Doc, m_Doc->view(), tmpSel));
+				md->setScribusElem(ss->WriteElem(m_Doc, tmpSel));
 				delete ss;
 /*#ifndef Q_WS_MAC*/
 // see #2196
@@ -354,7 +354,7 @@ bool EPSPlug::import(QString fName, const TransactionSettings &trSettings, int f
 	{
 		QDir::setCurrent(CurDirP);
 		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->ScriptRunning = false;
+		m_Doc->scMW()->setScriptRunning(false);
 		m_Doc->view()->updatesOn(true);
 		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	}

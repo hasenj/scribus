@@ -99,6 +99,8 @@ void ImportAIPlugin::registerFormats()
 	fmt.fileExtensions = QStringList() << "ai";
 	fmt.load = true;
 	fmt.save = false;
+	fmt.thumb = true;
+	fmt.colorReading = true;
 	fmt.mimeTypes = FormatsManager::instance()->mimetypeOfFormat(FormatsManager::AI); // MIME types
 	fmt.priority = 64; // Priority
 	registerFormat(fmt);
@@ -163,4 +165,44 @@ bool ImportAIPlugin::import(QString fileName, int flags)
 		QMessageBox::warning(ScCore->primaryMainWindow(), CommonStrings::trWarning, tr("The file could not be imported"), 1, 0, 0);
 	delete dia;
 	return success;
+}
+
+QImage ImportAIPlugin::readThumbnail(const QString& fileName)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return QImage();
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = NULL;
+	AIPlug *dia = new AIPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	QImage ret = dia->readThumbnail(fileName);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
+}
+
+bool ImportAIPlugin::readColors(const QString& fileName, ColorList &colors)
+{
+	bool wasUndo = false;
+	if( fileName.isEmpty() )
+		return false;
+	if (UndoManager::undoEnabled())
+	{
+		UndoManager::instance()->setUndoEnabled(false);
+		wasUndo = true;
+	}
+	m_Doc = NULL;
+	AIPlug *dia = new AIPlug(m_Doc, lfCreateThumbnail);
+	Q_CHECK_PTR(dia);
+	bool ret = dia->readColors(fileName, colors);
+	if (wasUndo)
+		UndoManager::instance()->setUndoEnabled(true);
+	delete dia;
+	return ret;
 }

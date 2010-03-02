@@ -561,7 +561,7 @@ void LegacyMode::mouseMoveEvent(QMouseEvent *m)
 				ScriXmlDoc *ss = new ScriXmlDoc();
 				//Q_3DragObject *dr = new Q_3TextDrag(ss->WriteElem(Doc, this, m_doc->m_Selection), this);
 				ScElemMimeData* md = new ScElemMimeData();
-				md->setScribusElem(ss->WriteElem(m_doc, m_view, m_doc->m_Selection));
+				md->setScribusElem(ss->WriteElem(m_doc, m_doc->m_Selection));
 				QDrag* dr = new QDrag(m_view);
 				dr->setMimeData(md);
 				const QPixmap& pm = loadIcon("DragPix.xpm");
@@ -2211,6 +2211,7 @@ void LegacyMode::mouseReleaseEvent(QMouseEvent *m)
 	m_canvas->m_viewMode.m_MouseButtonPressed = false;
 	m_canvas->resetRenderMode();
 	m->accept();
+	m_view->redrawMarker->hide();
 //	m_view->stopDragTimer();
 	//m_canvas->update(); //ugly in a mouseReleaseEvent!!!!!!!
 	if (m_doc->appMode == modeEditGradientVectors)
@@ -2400,7 +2401,7 @@ void LegacyMode::mouseReleaseEvent(QMouseEvent *m)
 			}
 			m_view->HaveSelRect = false;
 			shiftSelItems = false;
-			m_view->redrawMarker->hide();
+//			m_view->redrawMarker->hide();
 			m_view->updateContents();
 		}
 		if (m_doc->appMode != modeEdit)

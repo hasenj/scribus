@@ -26,7 +26,7 @@ FontPreview::FontPreview(QString fontName, QWidget* parent, ScribusDoc* doc)
 	setWindowIcon(loadIcon("AppIcon.png"));
 	m_Doc=doc;
 
-	sampleItem = new SampleItem(m_Doc);
+	sampleItem = new SampleItem();
 
 	languageChange();
 
@@ -103,7 +103,6 @@ FontPreview::~FontPreview()
 	prefs->set("fontSize", sizeSpin->value());
 	prefs->set("phrase", displayEdit->text());
 	prefs->set("extendedView", extendedCheckBox->isChecked());
-	sampleItem->cleanupTemporary(); // just to be sure
 }
 
 void FontPreview::languageChange()

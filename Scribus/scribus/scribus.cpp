@@ -89,7 +89,7 @@ for which a new license (GPL+exception) is in place.
 #include "ui/charselect.h"
 #include "ui/checkDocument.h"
 #include "ui/cmsprefs.h"
-#include "collect4output.h"
+#include "ui/collectforoutput_ui.h"
 #include "ui/colorcombo.h"
 #include "ui/colorm.h"
 #include "commonstrings.h"
@@ -437,7 +437,7 @@ void ScribusMainWindow::initToolBars()
 void ScribusMainWindow::initDefaultValues()
 {
 	HaveDoc = false;
-	ScriptRunning = false;
+	ScriptRunning = 0;
 	view = NULL;
 	doc = NULL;
 	DocNr = 1;
@@ -712,7 +712,7 @@ void ScribusMainWindow::initMenuBar()
 //	scrActions["editSearchReplace"]->setEnabled(false);
 //	scrActions["editReplaceColors"]->setEnabled(false);
 //	scrActions["editPatterns"]->setEnabled(false);
-//	scrActions["editGradients"]->setEnabled(false);
+	scrActions["editGradients"]->setEnabled(true);
 // 	scrActions["editStyles"]->setEnabled(false);
 //	scrActions["editMasterPages"]->setEnabled(false);
 //	scrActions["editJavascripts"]->setEnabled(false);
@@ -765,8 +765,10 @@ void ScribusMainWindow::initMenuBar()
 	scrMenuMgr->addMenuSeparator("Item");
 	scrMenuMgr->addMenuItem(scrActions["itemAdjustFrameToImage"], "Item", false);
 	scrMenuMgr->addMenuItem(scrActions["itemAdjustImageToFrame"], "Item", false);
-	scrMenuMgr->addMenuItem(scrActions["itemExtendedImageProperties"], "Item", false);
 	scrMenuMgr->addMenuItem(scrActions["itemUpdateImage"], "Item", false);
+	scrMenuMgr->addMenuItem(scrActions["styleImageEffects"], "Item", false);
+	scrMenuMgr->addMenuItem(scrActions["itemExtendedImageProperties"], "Item", false);
+	scrMenuMgr->addMenuItem(scrActions["itemToggleInlineImage"], "Item", false);
 	scrMenuMgr->createMenu("ItemPreviewSettings", tr("Preview Settings"), "Item");
 	scrMenuMgr->addMenuItem(scrActions["itemImageIsVisible"], "ItemPreviewSettings", false);
 	scrMenuMgr->addMenuSeparator("ItemPreviewSettings");
@@ -1933,8 +1935,11 @@ ScribusDoc *ScribusMainWindow::doFileNew(double width, double height, double top
 		view = tempView;
 	tempDoc->setCurrentPage(tempDoc->Pages->at(0));
 	tempDoc->setGUI(requiresGUI, this, tempView);
-	tempDoc->docHyphenator->ignoredWords = prefsManager->appPrefs.hyphPrefs.ignoredWords;
-	tempDoc->docHyphenator->specialWords = prefsManager->appPrefs.hyphPrefs.specialWords;
+	if (requiresGUI)
+	{
+		tempDoc->docHyphenator->ignoredWords = prefsManager->appPrefs.hyphPrefs.ignoredWords;
+		tempDoc->docHyphenator->specialWords = prefsManager->appPrefs.hyphPrefs.specialWords;
+	}
 	tempDoc->setLoading(false);
 	//run after setGUI to set up guidepalette ok
 
@@ -2605,6 +2610,7 @@ void ScribusMainWindow::HaveNewSel(int SelectedType)
 	scrActions["itemAdjustFrameToImage"]->setEnabled(SelectedType==PageItem::ImageFrame && currItem->PictureIsAvailable && !currItem->isTableItem);
 	scrActions["itemAdjustImageToFrame"]->setEnabled(SelectedType==PageItem::ImageFrame && currItem->PictureIsAvailable);
 	scrActions["itemExtendedImageProperties"]->setEnabled(SelectedType==PageItem::ImageFrame && currItem->PictureIsAvailable && currItem->pixm.imgInfo.valid);
+	scrActions["itemToggleInlineImage"]->setEnabled(SelectedType==PageItem::ImageFrame && currItem->PictureIsAvailable);
 	scrMenuMgr->setMenuEnabled("ItemPreviewSettings", SelectedType==PageItem::ImageFrame);
 	scrActions["itemImageIsVisible"]->setEnabled(SelectedType==PageItem::ImageFrame);
 	scrActions["itemPreviewLow"]->setEnabled(SelectedType==PageItem::ImageFrame);
@@ -2734,6 +2740,7 @@ void ScribusMainWindow::HaveNewSel(int SelectedType)
 		scrActions["toolsRotate"]->setEnabled(true);
 		scrActions["toolsCopyProperties"]->setEnabled(true);
 		scrActions["itemImageIsVisible"]->setChecked(currItem->imageShown());
+		scrActions["itemToggleInlineImage"]->setChecked(currItem->isImageInline());
 		scrActions["itemPreviewLow"]->setChecked(currItem->pixm.imgInfo.lowResType==scrActions["itemPreviewLow"]->actionInt());
 		scrActions["itemPreviewNormal"]->setChecked(currItem->pixm.imgInfo.lowResType==scrActions["itemPreviewNormal"]->actionInt());
 		scrActions["itemPreviewFull"]->setChecked(currItem->pixm.imgInfo.lowResType==scrActions["itemPreviewFull"]->actionInt());
@@ -3363,7 +3370,7 @@ void ScribusMainWindow::importVectorFile()
 	allFormats += formats;
 	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
 	QString wdir = dirs->get("pastefile", ".");
-	CustomFDialog dia(this, wdir, tr("Open"), allFormats, fdHidePreviewCheckBox | fdExistingFiles);
+	CustomFDialog dia(this, wdir, tr("Open"), allFormats, fdExistingFiles);
 	if (dia.exec() == QDialog::Accepted)
 		fileName = dia.selectedFile();
 	else
@@ -3730,7 +3737,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		view->updatesOn(false);
 		doc->SoftProofing = false;
 		doc->Gamut = false;
-		ScriptRunning = true;
+		setScriptRunning(true);
 		bool loadSuccess=fileLoader->LoadFile(doc);
 		//Do the font replacement check from here, when we have a GUI. TODO do this also somehow without the GUI
 		//This also gives the user the opportunity to cancel the load when finding theres a replacement required.
@@ -3745,7 +3752,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			delete w;
 			view=NULL;
 			doc=NULL;
-			ScriptRunning = false;
+			setScriptRunning(false);
 			qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 			mainWindowStatusLabel->setText("");
 			mainWindowProgressBar->reset();
@@ -3759,7 +3766,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		fileLoader->informReplacementFonts();
 		setCurrentComboItem(view->unitSwitcher, unitGetStrFromIndex(doc->unitIndex()));
 		view->unitChange();
-		ScriptRunning = false;
+		setScriptRunning(false);
 		view->Deselect(true);
 		mainWindowStatusLabel->setText("");
 		mainWindowProgressBar->reset();
@@ -4069,9 +4076,6 @@ void ScribusMainWindow::slotGetContent()
 				qApp->changeOverrideCursor( QCursor(Qt::WaitCursor) );
 				qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 				doc->LoadPict(fileName, currItem->ItemNr, false, true);
-				//view->AdjustPictScale(currItem, false);
-				//false was ignored anyway
-				currItem->AdjustPictScale();
 				propertiesPalette->setScaleAndOffset(currItem->imageXScale(), currItem->imageYScale(), currItem->imageXOffset(), currItem->imageYOffset());
 				qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 				view->DrawNew();
@@ -4161,7 +4165,6 @@ void ScribusMainWindow::slotGetClipboardImage()
 					currItem->Pfile = fileName;
 					img.save(fileName, "PNG");
 					doc->LoadPict(fileName, currItem->ItemNr, false, true);
-					currItem->AdjustPictScale();
 					propertiesPalette->setScaleAndOffset(currItem->imageXScale(), currItem->imageYScale(), currItem->imageXOffset(), currItem->imageYOffset());
 					qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 					view->DrawNew();
@@ -4169,6 +4172,71 @@ void ScribusMainWindow::slotGetClipboardImage()
 					propertiesPalette->ShowCMS();
 					currItem->emitAllToGUI();
 				}
+			}
+		}
+	}
+}
+
+void ScribusMainWindow::toogleInlineState()
+{
+	if (doc->m_Selection->count() != 0)
+	{
+		PageItem *currItem = doc->m_Selection->itemAt(0);
+		if (currItem->itemType() == PageItem::ImageFrame)
+		{
+			if (currItem->PictureIsAvailable)
+			{
+				if (currItem->isImageInline())
+				{
+					QFileInfo fiB(currItem->Pfile);
+					QString fna = fiB.fileName();
+					PrefsContext* docContext = prefsManager->prefsFile->getContext("docdirs", false);
+					QString wdir = ".";
+					if (doc->hasName)
+					{
+						QFileInfo fi(doc->DocName);
+						wdir = QDir::fromNativeSeparators( fi.path() );
+					}
+					else
+					{
+						QString prefsDocDir = prefsManager->documentDir();
+						if (!prefsDocDir.isEmpty())
+							wdir = docContext->get("place_as", prefsDocDir);
+						else
+							wdir = docContext->get("place_as", ".");
+						wdir = QDir::fromNativeSeparators( wdir );
+					}
+					QString fileName = CFileDialog(wdir, tr("Filename and Path for Image"), tr("All Files (*)"), fna, fdHidePreviewCheckBox);
+					if (!fileName.isEmpty())
+					{
+						if (ScCore->fileWatcher->files().contains(currItem->Pfile) != 0)
+							ScCore->fileWatcher->removeFile(currItem->Pfile);
+						docContext->set("place_as", fileName.left(fileName.lastIndexOf("/")));
+						if (overwrite(this, fileName))
+						{
+							currItem->makeImageExternal(fileName);
+							ScCore->fileWatcher->addFile(currItem->Pfile);
+							bool fho = currItem->imageFlippedH();
+							bool fvo = currItem->imageFlippedV();
+							doc->loadPict(currItem->Pfile, currItem, true);
+							currItem->setImageFlippedH(fho);
+							currItem->setImageFlippedV(fvo);
+						}
+					}
+				}
+				else
+				{
+					if (ScCore->fileWatcher->files().contains(currItem->Pfile) != 0)
+						ScCore->fileWatcher->removeFile(currItem->Pfile);
+					currItem->makeImageInline();
+					ScCore->fileWatcher->addFile(currItem->Pfile);
+					bool fho = currItem->imageFlippedH();
+					bool fvo = currItem->imageFlippedV();
+					doc->loadPict(currItem->Pfile, currItem, true);
+					currItem->setImageFlippedH(fho);
+					currItem->setImageFlippedV(fvo);
+				}
+				scrActions["itemToggleInlineImage"]->setChecked(currItem->isImageInline());
 			}
 		}
 	}
@@ -4274,10 +4342,13 @@ bool ScribusMainWindow::slotFileSaveAs()
 			fna = wdir;
 		fna += doc->DocName + ".sla";
 	}
-	QString fileSpec=tr("Documents (*.sla *.sla.gz);;All Files (*)");
-// 	bool setter=true;
+	bool saveCompressed=prefsManager->appPrefs.docSetupPrefs.saveCompressed;
+	if (saveCompressed)
+		fna.append(".gz");
+
+	QString fileSpec = tr("Documents (*.sla *.sla.gz);;All Files (*)");
 	int optionFlags = fdCompressFile | fdHidePreviewCheckBox;
-	QString fn = CFileDialog( wdir, tr("Save As"), fileSpec, fna, optionFlags);
+	QString fn = CFileDialog( wdir, tr("Save As"), fileSpec, fna, optionFlags, &saveCompressed);
 	if (!fn.isEmpty())
 	{
 		docContext->set("save_as", fn.left(fn.lastIndexOf("/")));
@@ -4778,7 +4849,7 @@ void ScribusMainWindow::slotEditCut()
 			if (prefsManager->appPrefs.scrapbookPrefs.doCopyToScrapbook)
 			{
 				ScriXmlDoc ss;
-				QString buffer = ss.WriteElem(doc, view, doc->m_Selection);
+				QString buffer = ss.WriteElem(doc, doc->m_Selection);
 				scrapbookPalette->ObjFromCopyAction(buffer, currItem->itemName());
 				rebuildRecentPasteMenu();
 			}
@@ -4863,7 +4934,7 @@ void ScribusMainWindow::slotEditCopy()
 			if ((prefsManager->appPrefs.scrapbookPrefs.doCopyToScrapbook) && (!internalCopy))
 			{
 				ScriXmlDoc ss;
-				QString buffer = ss.WriteElem(doc, view, doc->m_Selection);
+				QString buffer = ss.WriteElem(doc, doc->m_Selection);
 				scrapbookPalette->ObjFromCopyAction(buffer, currItem->itemName());
 				rebuildRecentPasteMenu();
 			}
@@ -6464,7 +6535,7 @@ void ScribusMainWindow::setAppMode(int mode)
 void ScribusMainWindow::setMainWindowActive()
 {
 	activateWindow();
-	if (!ScriptRunning)
+	if (!scriptIsRunning())
 		raise();
 }
 
@@ -7497,7 +7568,7 @@ void ScribusMainWindow::slotPrefs150Org()
 	{
 		struct ApplicationPrefs newPrefs(prefsDialog.prefs());
 		prefsManager->setNewPrefs(newPrefs);
-
+		prefsManager->applyLoadedShortCuts();
 		// TODO:
 		// CB: Hoping to clean this into a nicer function
 		//
@@ -7600,7 +7671,7 @@ void ScribusMainWindow::ShowSubs()
 // 	pdfToolBar->initVisibility();
 
 	activateWindow();
-	if (!ScriptRunning)
+	if (!scriptIsRunning())
 		raise();
 }
 
@@ -8107,7 +8178,7 @@ void ScribusMainWindow::slotElemRead(QString xml, double x, double y, bool art, 
 		view->requestMode(submodeEndNodeEdit);
 
 	ScriXmlDoc ss;
-	if(ss.ReadElem(xml, prefsManager->appPrefs.fontPrefs.AvailFonts, docc, x, y, art, loca, prefsManager->appPrefs.fontPrefs.GFontSub, vie))
+	if(ss.ReadElem(xml, prefsManager->appPrefs.fontPrefs.AvailFonts, docc, x, y, art, loca, prefsManager->appPrefs.fontPrefs.GFontSub))
 	{
 		vie->DrawNew();
 		if (doc == docc)
@@ -8588,7 +8659,7 @@ void ScribusMainWindow::StatusPic()
 QString ScribusMainWindow::CFileDialog(QString wDir, QString caption, QString filter, QString defNa,
                                 int optionFlags, bool *docom, bool *doFont, bool *doProfiles)
 {
-	QString retval = "";
+	QString retval("");
 	// changed from "this" to qApp->activeWindow() to be sure it will be opened
 	// with the current active window as parent. E.g. it won't hide StoryEditor etc. -- PV
 	CustomFDialog *dia = new CustomFDialog(qApp->activeWindow(), wDir, caption, filter, optionFlags);
@@ -8598,12 +8669,17 @@ QString ScribusMainWindow::CFileDialog(QString wDir, QString caption, QString fi
 		dia->setExtension(f.completeSuffix());
 		dia->setZipExtension(f.completeSuffix() + ".gz");
 		dia->setSelection(defNa);
+		if (docom != NULL)
+			dia->SaveZip->setChecked(*docom);
 	}
 	if (optionFlags & fdDirectoriesOnly)
 	{
-		dia->SaveZip->setChecked(*docom);
-		dia->WithFonts->setChecked(*doFont);
-		dia->WithProfiles->setChecked(*doProfiles);
+		if (docom != NULL)
+			dia->SaveZip->setChecked(*docom);
+		if (doFont != NULL)
+			dia->WithFonts->setChecked(*doFont);
+		if (doProfiles != NULL)
+			dia->WithProfiles->setChecked(*doProfiles);
 	}
 	if (dia->exec() == QDialog::Accepted)
 	{
@@ -8619,9 +8695,12 @@ QString ScribusMainWindow::CFileDialog(QString wDir, QString caption, QString fi
 		}
 		else
 		{
-			*docom = dia->SaveZip->isChecked();
-			*doFont = dia->WithFonts->isChecked();
-			*doProfiles = dia->WithProfiles->isChecked();
+			if (docom != NULL)
+				*docom = dia->SaveZip->isChecked();
+			if (doFont != NULL)
+				*doFont = dia->WithFonts->isChecked();
+			if (doProfiles != NULL)
+				*doProfiles = dia->WithProfiles->isChecked();
 		}
 		this->repaint();
 		retval = dia->selectedFile();
@@ -8690,7 +8769,7 @@ void ScribusMainWindow::SetShortCut()
 void ScribusMainWindow::PutScrap()
 {
 	ScriXmlDoc ss;
-	QString objectString = ss.WriteElem(doc, view, doc->m_Selection);
+	QString objectString = ss.WriteElem(doc, doc->m_Selection);
 	QDomDocument docu("scridoc");
 	docu.setContent(objectString);
 	QDomElement elem = docu.documentElement();
@@ -8888,8 +8967,10 @@ void ScribusMainWindow::ImageEffects()
 
 QString ScribusMainWindow::Collect(bool compress, bool withFonts, const bool withProfiles, const QString& )
 {
-	CollectForOutput c(doc, withFonts, withProfiles, compress);
-	return c.collect();
+	CollectForOutput_UI c(this, doc, QString::null, withFonts, withProfiles, compress);
+	QString newFileName;
+	QString errorMsg=c.collect(newFileName);
+	return newFileName;
 }
 
 void ScribusMainWindow::docCheckToggle(bool visible)
@@ -9257,7 +9338,7 @@ void ScribusMainWindow::dragEnterEvent ( QDragEnterEvent* e)
 		for( int i = 0; i < fileUrls.count(); ++i )
 		{
 			fileUrl = fileUrls[i].toLocalFile().toLower();
-			if ( fileUrl.endsWith(".sla") || fileUrl.endsWith(".sla.gz") )
+			if (fileUrl.endsWith(".sla") || fileUrl.endsWith(".sla.gz") || fileUrl.endsWith(".sml") || fileUrl.endsWith(".shape") || fileUrl.endsWith(".sce"))
 			{
 				accepted = true;
 				break;
@@ -9275,6 +9356,12 @@ void ScribusMainWindow::dragEnterEvent ( QDragEnterEvent* e)
 				}
 			}
 		}
+	}
+	else if (e->mimeData()->hasText())
+	{
+		QString text = e->mimeData()->text();
+		if ((text.startsWith("<SCRIBUSELEM")) || (text.startsWith("SCRIBUSELEMUTF8")))
+			accepted = true;
 	}
 	if (accepted)
 		e->accept();
@@ -9300,6 +9387,45 @@ void ScribusMainWindow::dropEvent ( QDropEvent * e)
 					loadDoc( fi.absoluteFilePath() );
 				}
 			}
+			else if ((fileUrl.endsWith(".shape")) || (fileUrl.endsWith(".sml")) || (fileUrl.endsWith(".sce")))
+			{
+				QUrl url( fileUrls[i] );
+				QFileInfo fi(url.path());
+				if ( fi.exists() )
+				{
+					accepted = true;
+					QString data;
+					QByteArray cf;
+					loadRawText(url.toLocalFile(), cf);
+					if (fileUrl.endsWith(".sce"))
+						data = QString::fromUtf8(cf.data());
+					else
+					{
+						QString f = QString::fromUtf8(cf.data());
+						StencilReader *pre = new StencilReader();
+						if (fileUrl.endsWith(".shape"))
+							data = pre->createShape(f);
+						else if (fileUrl.endsWith(".sml"))
+							data = pre->createObjects(f);
+						delete pre;
+					}
+					double gx, gy, gw, gh;
+					ScriXmlDoc *ss = new ScriXmlDoc();
+					if(ss->ReadElemHeader(data, false, &gx, &gy, &gw, &gh))
+					{
+						doFileNew(gw, gh, 0, 0, 0, 0, 0, 0, false, false, 0, false, 0, 1, "Custom", true);
+						HaveNewDoc();
+						doc->reformPages(true);
+						if (fileUrl.endsWith(".sce"))
+							slotElemRead(data, doc->currentPage()->xOffset(), doc->currentPage()->yOffset(), false, false, doc, view);
+						else
+							slotElemRead(data, doc->currentPage()->xOffset(), doc->currentPage()->yOffset(), false, true, doc, view);
+						slotDocCh(false);
+						doc->regionsChanged()->update(QRectF());
+						delete ss;
+					}
+				}
+			}
 			else
 			{
 				QUrl url( fileUrls[i] );
@@ -9314,6 +9440,28 @@ void ScribusMainWindow::dropEvent ( QDropEvent * e)
 						accepted = true;
 						loadDoc( fi.absoluteFilePath() );
 					}
+				}
+			}
+		}
+	}
+	else
+	{
+		if (e->mimeData()->hasText())
+		{
+			QString text = e->mimeData()->text();
+			if ((text.startsWith("<SCRIBUSELEM")) || (text.startsWith("SCRIBUSELEMUTF8")))
+			{
+				double gx, gy, gw, gh;
+				ScriXmlDoc *ss = new ScriXmlDoc();
+				if(ss->ReadElemHeader(text, false, &gx, &gy, &gw, &gh))
+				{
+					doFileNew(gw, gh, 0, 0, 0, 0, 0, 0, false, false, 0, false, 0, 1, "Custom", true);
+					HaveNewDoc();
+					doc->reformPages(true);
+					slotElemRead(text, doc->currentPage()->xOffset(), doc->currentPage()->yOffset(), false, false, doc, view);
+					slotDocCh(false);
+					doc->regionsChanged()->update(QRectF());
+					delete ss;
 				}
 			}
 		}
@@ -9373,7 +9521,6 @@ void ScribusMainWindow::slotEditPasteContents(int absolute)
 				qApp->changeOverrideCursor( QCursor(Qt::WaitCursor) );
 				qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 				doc->loadPict(contentsBuffer.contentsFileName, imageItem);
-				imageItem->AdjustPictScale();
 				imageItem->setImageXYScale(contentsBuffer.LocalScX, contentsBuffer.LocalScY);
 				if (absolute==0)
 					imageItem->setImageXYOffset(contentsBuffer.LocalX, contentsBuffer.LocalY);

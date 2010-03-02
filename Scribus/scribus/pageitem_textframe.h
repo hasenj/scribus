@@ -78,8 +78,9 @@ public:
 #endif
 	
 protected:
-	virtual void DrawObj_Item(ScPainter *p, QRectF e, double sc);
+	virtual void DrawObj_Item(ScPainter *p, QRectF e);
 	virtual void DrawObj_Post(ScPainter *p);
+	virtual void DrawObj_Decoration(ScPainter *p);
 	void drawOverflowMarker(ScPainter *p);
 	void drawColumnBorders(ScPainter *p);
 	QRegion availableRegion(QRegion clip);
@@ -94,7 +95,6 @@ protected:
 	QString unicodeInputString;
 	
 	virtual bool createInfoGroup(QFrame *, QGridLayout *);
-//	virtual bool createContextMenu(QMenu *, int);
 	virtual void applicableActions(QStringList& actionList);
 	virtual QString infoDescription();
 	

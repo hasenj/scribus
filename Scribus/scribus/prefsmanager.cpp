@@ -266,6 +266,7 @@ void PrefsManager::initDefaults()
 	appPrefs.opToolPrefs.constrain = 15.0;
 	appPrefs.displayPrefs.paperColor = QColor(Qt::white);
 	appPrefs.displayPrefs.showPageShadow = true;
+	appPrefs.displayPrefs.showVerifierWarningsOnCanvas = true;
 	appPrefs.displayPrefs.frameColor = QColor(Qt::red);
 	appPrefs.displayPrefs.frameNormColor = QColor(Qt::black);
 	appPrefs.displayPrefs.frameGroupColor = QColor(Qt::darkCyan);
@@ -281,7 +282,7 @@ void PrefsManager::initDefaults()
 	appPrefs.itemToolPrefs.lineWidth = 1;
 	appPrefs.itemToolPrefs.lineStartArrow = 0;
 	appPrefs.itemToolPrefs.lineEndArrow = 0;
-	appPrefs.opToolPrefs.magMin = 10;
+	appPrefs.opToolPrefs.magMin = 1;
 	appPrefs.opToolPrefs.magMax = 3200;
 	appPrefs.opToolPrefs.magStep = 200;
 	appPrefs.itemToolPrefs.imageFillColor = CommonStrings::None;
@@ -304,6 +305,7 @@ void PrefsManager::initDefaults()
 	appPrefs.uiPrefs.recentDocCount = 5;
 	appPrefs.scrapbookPrefs.doCopyToScrapbook = true;
 	appPrefs.scrapbookPrefs.persistentScrapbook = false;
+	appPrefs.scrapbookPrefs.writePreviews = true;
 	appPrefs.scrapbookPrefs.numScrapbookCopies = 10;
 	appPrefs.displayPrefs.marginColored = false;
 	appPrefs.docSetupPrefs.pageSize = "A4";
@@ -333,7 +335,7 @@ void PrefsManager::initDefaults()
 	appPrefs.hyphPrefs.AutoCheck = false;
 	appPrefs.docSetupPrefs.AutoSave = true;
 	appPrefs.docSetupPrefs.AutoSaveTime = 600000;
-
+	appPrefs.docSetupPrefs.saveCompressed = false;
 	int dpi = qApp->desktop()->logicalDpiX();
 	if ((dpi < 60) || (dpi > 200))
 		dpi = 72;
@@ -367,7 +369,8 @@ void PrefsManager::initDefaults()
 	appPrefs.extToolPrefs.gs_AntiAliasText = true;
 	appPrefs.extToolPrefs.gs_exe = getGSDefaultExeName();
 	appPrefs.extToolPrefs.gs_Resolution = 72;
-	appPrefs.storyEditorPrefs.guiFontColor = QColor(Qt::white);
+	appPrefs.storyEditorPrefs.guiFontColorBackground = QColor(Qt::white);
+	appPrefs.storyEditorPrefs.smartTextSelection=false;
 	appPrefs.colorPrefs.DCMSset.DefaultMonitorProfile = "";
 	appPrefs.colorPrefs.DCMSset.DefaultPrinterProfile = "";
 	appPrefs.colorPrefs.DCMSset.DefaultImageRGBProfile = "";
@@ -1271,8 +1274,6 @@ bool PrefsManager::WritePref(QString ho)
 	dc.setAttribute("ScratchTop", appPrefs.displayPrefs.scratch.Top);
 	dc.setAttribute("GapHorizontal", ScCLocale::toQStringC(appPrefs.displayPrefs.pageGapHorizontal));
 	dc.setAttribute("GapVertical", ScCLocale::toQStringC(appPrefs.displayPrefs.pageGapVertical));
-	dc.setAttribute("STECOLOR", appPrefs.storyEditorPrefs.guiFontColor.name());
-	dc.setAttribute("STEFONT", appPrefs.storyEditorPrefs.guiFont);
 	dc.setAttribute("STYLEPREVIEW", static_cast<int>(appPrefs.miscPrefs.haveStylePreview));
 	dc.setAttribute("UI_SHOWSTARTUPDIALOG", static_cast<int>(appPrefs.uiPrefs.showStartupDialog));
 	dc.setAttribute("UI_SHOWSPLASHSCREEN", static_cast<int>(appPrefs.uiPrefs.showSplashOnStartup));
@@ -1282,6 +1283,11 @@ bool PrefsManager::WritePref(QString ho)
 	dc.setAttribute("showMouseCoordinates", static_cast<int>(appPrefs.displayPrefs.showMouseCoordinates));
 	dc.setAttribute("stickyTools", static_cast<int>(appPrefs.uiPrefs.stickyTools));
 	elem.appendChild(dc);
+	QDomElement deSE=docu.createElement("StoryEditor");
+	deSE.setAttribute("Font",appPrefs.storyEditorPrefs.guiFont);
+	deSE.setAttribute("FontColorBackground",appPrefs.storyEditorPrefs.guiFontColorBackground.name());
+	deSE.setAttribute("SmartTextSelection",static_cast<int>(appPrefs.storyEditorPrefs.smartTextSelection));
+	elem.appendChild(deSE);
 	QDomElement dc1=docu.createElement("GRID");
 	dc1.setAttribute("MINOR",ScCLocale::toQStringC(appPrefs.guidesPrefs.minorGridSpacing));
 	dc1.setAttribute("MAJOR",ScCLocale::toQStringC(appPrefs.guidesPrefs.majorGridSpacing));
@@ -1307,6 +1313,8 @@ bool PrefsManager::WritePref(QString ho)
 	dc1a.setAttribute("MARGC",appPrefs.guidesPrefs.marginColor.name());
 	dc1a.setAttribute("RANDF", static_cast<int>(appPrefs.displayPrefs.marginColored));
 	dc1a.setAttribute("DScale", ScCLocale::toQStringC(appPrefs.displayPrefs.displayScale));
+	dc1a.setAttribute("ShowVerifierWarningsOnCanvas",static_cast<int>(appPrefs.displayPrefs.showVerifierWarningsOnCanvas));
+
 	elem.appendChild(dc1a);
 	// Font information must be written before FONTS element so that face "usable"
 	// member is set properly before one try to set default font. Allows to check
@@ -1418,6 +1426,7 @@ bool PrefsManager::WritePref(QString ho)
 	QDomElement dc73=docu.createElement("SCRAPBOOK");
 	dc73.setAttribute("CopyToScrapbook",static_cast<int>(appPrefs.scrapbookPrefs.doCopyToScrapbook));
 	dc73.setAttribute("persistentScrapbook",static_cast<int>(appPrefs.scrapbookPrefs.persistentScrapbook));
+	dc73.setAttribute("writePreviews",static_cast<int>(appPrefs.scrapbookPrefs.writePreviews));
 	dc73.setAttribute("numScrapbookCopies",appPrefs.scrapbookPrefs.numScrapbookCopies);
 	for (int rd=0; rd<appPrefs.scrapbookPrefs.RecentScrapbooks.count(); ++rd)
 	{
@@ -1443,6 +1452,7 @@ bool PrefsManager::WritePref(QString ho)
 	dc76.setAttribute("DOPPEL", appPrefs.docSetupPrefs.pagePositioning);
 	dc76.setAttribute("AutoSave", static_cast<int>(appPrefs.docSetupPrefs.AutoSave));
 	dc76.setAttribute("AutoSaveTime", appPrefs.docSetupPrefs.AutoSaveTime);
+	dc76.setAttribute("SaveCompressed", static_cast<int>(appPrefs.docSetupPrefs.saveCompressed));
 	dc76.setAttribute("BleedTop", ScCLocale::toQStringC(appPrefs.docSetupPrefs.bleeds.Top));
 	dc76.setAttribute("BleedLeft", ScCLocale::toQStringC(appPrefs.docSetupPrefs.bleeds.Left));
 	dc76.setAttribute("BleedRight", ScCLocale::toQStringC(appPrefs.docSetupPrefs.bleeds.Right));
@@ -1840,7 +1850,7 @@ bool PrefsManager::ReadPref(QString ho)
 				appPrefs.uiPrefs.useSmallWidgets = dc.attribute("UseSmallWidgets").toInt();
 			else
 				appPrefs.uiPrefs.useSmallWidgets = static_cast<bool>(dc.attribute("UI_USESMALLWIDGETS", "0").toInt());
-			appPrefs.uiPrefs.useTabs = static_cast<bool>(dc.attribute("UI_USETABS", "0").toInt());
+			appPrefs.uiPrefs.useTabs = static_cast<bool>(dc.attribute("UI_USESTABS", "0").toInt());
 			appPrefs.pathPrefs.documents = dc.attribute("DOC","");
 			appPrefs.pathPrefs.colorProfiles = dc.attribute("PROFILES","");
 			appPrefs.pathPrefs.scripts = dc.attribute("SCRIPTS","");
@@ -1867,13 +1877,15 @@ bool PrefsManager::ReadPref(QString ho)
 			appPrefs.displayPrefs.scratch.Top    = ScCLocale::toDoubleC(dc.attribute("ScratchTop"), 20.0);
 			appPrefs.displayPrefs.pageGapHorizontal  = ScCLocale::toDoubleC(dc.attribute("GapHorizontal"), 0.0);
 			appPrefs.displayPrefs.pageGapVertical    = ScCLocale::toDoubleC(dc.attribute("GapVertical"), 40.0);
-			if (dc.hasAttribute("STECOLOR"))
-				appPrefs.storyEditorPrefs.guiFontColor = QColor(dc.attribute("STECOLOR"));
-			if (dc.hasAttribute("STEFONT"))
-				appPrefs.storyEditorPrefs.guiFont = dc.attribute("STEFONT");
 			appPrefs.displayPrefs.showToolTips = static_cast<bool>(dc.attribute("ToolTips", "1").toInt());
 			appPrefs.displayPrefs.showMouseCoordinates = static_cast<bool>(dc.attribute("showMouseCoordinates", "1").toInt());
 			appPrefs.uiPrefs.stickyTools = static_cast<bool>(dc.attribute("stickyTools", "0").toInt());
+		}
+		if (dc.tagName()=="StoryEditor")
+		{
+			appPrefs.storyEditorPrefs.guiFont  = dc.attribute("Font","");
+			appPrefs.storyEditorPrefs.guiFontColorBackground  = QColor(dc.attribute("FontColorBackground", "#FFFFFF"));
+			appPrefs.storyEditorPrefs.smartTextSelection = static_cast<bool>(dc.attribute("SmartTextSelection", "0").toInt());
 		}
 		if (dc.tagName()=="GRID")
 		{
@@ -1905,6 +1917,7 @@ bool PrefsManager::ReadPref(QString ho)
 			appPrefs.guidesPrefs.marginColor = QColor(dc.attribute("MARGC","#0000ff"));
 			appPrefs.displayPrefs.marginColored = static_cast<bool>(dc.attribute("RANDF", "0").toInt());
 			appPrefs.displayPrefs.displayScale = ScCLocale::toDoubleC(dc.attribute("DScale"), appPrefs.displayPrefs.displayScale);
+			appPrefs.displayPrefs.showVerifierWarningsOnCanvas = static_cast<bool>(dc.attribute("ShowVerifierWarningsOnCanvas", "1").toInt());
 		}
 		if (dc.tagName()=="TYPO")
 		{
@@ -1961,7 +1974,7 @@ bool PrefsManager::ReadPref(QString ho)
 			appPrefs.itemToolPrefs.shapeLineColorShade = dc.attribute("PENSHADE").toInt();
 			appPrefs.itemToolPrefs.lineColorShade = dc.attribute("LINESHADE").toInt();
 			appPrefs.itemToolPrefs.shapeFillColorShade  = dc.attribute("BRUSHSHADE").toInt();
-			appPrefs.opToolPrefs.magMin  = dc.attribute("MAGMIN", "10").toInt();
+			appPrefs.opToolPrefs.magMin  = dc.attribute("MAGMIN", "1").toInt();
 			appPrefs.opToolPrefs.magMax  = dc.attribute("MAGMAX", "3200").toInt();
 			appPrefs.opToolPrefs.magStep = dc.attribute("MAGSTEP", "200").toInt();
 			//CB Reset prefs zoom step value to 200% instead of old values.
@@ -2034,6 +2047,7 @@ bool PrefsManager::ReadPref(QString ho)
 		{
 			appPrefs.scrapbookPrefs.doCopyToScrapbook = static_cast<bool>(dc.attribute("CopyToScrapbook", "1").toInt());
 			appPrefs.scrapbookPrefs.persistentScrapbook = static_cast<bool>(dc.attribute("persistentScrapbook", "0").toInt());
+			appPrefs.scrapbookPrefs.writePreviews = static_cast<bool>(dc.attribute("writePreviews", "1").toInt());
 			appPrefs.scrapbookPrefs.numScrapbookCopies = dc.attribute("numScrapbookCopies", "10").toInt();
 			QDomNode scrp = dc.firstChild();
 			while(!scrp.isNull())
@@ -2063,6 +2077,7 @@ bool PrefsManager::ReadPref(QString ho)
 			appPrefs.docSetupPrefs.pagePositioning    = dc.attribute("DOPPEL", "0").toInt();
 			appPrefs.docSetupPrefs.AutoSave      = static_cast<bool>(dc.attribute("AutoSave", "0").toInt());
 			appPrefs.docSetupPrefs.AutoSaveTime  = dc.attribute("AutoSaveTime", "600000").toInt();
+			appPrefs.docSetupPrefs.saveCompressed = static_cast<bool>(dc.attribute("SaveCompressed", "0").toInt());
 			appPrefs.docSetupPrefs.bleeds.Top    = ScCLocale::toDoubleC(dc.attribute("BleedTop"), 0.0);
 			appPrefs.docSetupPrefs.bleeds.Left   = ScCLocale::toDoubleC(dc.attribute("BleedLeft"), 0.0);
 			appPrefs.docSetupPrefs.bleeds.Right  = ScCLocale::toDoubleC(dc.attribute("BleedRight"), 0.0);

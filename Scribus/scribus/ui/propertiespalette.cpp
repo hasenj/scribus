@@ -224,7 +224,7 @@ PropertiesPalette::PropertiesPalette( QWidget* parent) : ScrPaletteBase( parent,
 	keepFrameWHRatioButton->setCheckable( true );
 	keepFrameWHRatioButton->setAutoRaise( true );
 	keepFrameWHRatioButton->setMaximumSize( QSize( 15, 32767 ) );
-	keepFrameWHRatioButton->setChecked(true);
+	keepFrameWHRatioButton->setChecked(false);
 	GeoGroupLayout->addWidget( keepFrameWHRatioButton, 2, 2, 2, 1 );
 	Rotation = new ScrSpinBox( GeoGroup, 6);
 	Rotation->setWrapping( true );
@@ -1655,7 +1655,7 @@ PropertiesPalette::PropertiesPalette( QWidget* parent) : ScrPaletteBase( parent,
 
 void PropertiesPalette::closeEvent(QCloseEvent *closeEvent)
 {
-	if (m_ScMW && !m_ScMW->ScriptRunning)
+	if (m_ScMW && !m_ScMW->scriptIsRunning())
 	{
 		if ((HaveDoc) && (HaveItem))
 		{
@@ -1696,11 +1696,29 @@ void PropertiesPalette::setMainWindow(ScribusMainWindow* mw)
 
 void PropertiesPalette::SelTab(int t)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
+	foreach (QObject *o, TabStack->widget(t)->children())
+	{
+		// Layouts, boxes etc aren't widgets at all
+		// so let's skip them silently...
+		QWidget *w = qobject_cast<QWidget*>(o);
+		if (w)
+		{
+			QWidget *i = TabStack->widget(t);
+			while ((i = i->nextInFocusChain()) != TabStack->widget(t))
+			{
+				if (((i->focusPolicy() & Qt::TabFocus) == Qt::TabFocus) && !i->focusProxy() && i->isEnabled())
+				{
+					i->setFocus();
+					break;
+				}
+			}
+		}
+	}
 	// fix for #5991: Property Palette text input box focus stays even when on another tab
 	// Disable widgets in all pages except current one - PV
-	bool enable;
+/*	bool enable;
 	for (int i = 0; i < TabStack->count(); ++i)
 	{
 		enable = (i == t);
@@ -1878,12 +1896,12 @@ void PropertiesPalette::SelTab(int t)
 			SCustom->setEnabled(false);
 		}
 #endif
-	}
+	} */
 }
 
 void PropertiesPalette::setDoc(ScribusDoc *d)
 {
-	if(doc == d || (m_ScMW && m_ScMW->ScriptRunning))
+	if(doc == d || (m_ScMW && m_ScMW->scriptIsRunning()))
 		return;
 
 	disconnect(this->Tpal, SIGNAL(NewTrans(double)), 0, 0);
@@ -2047,7 +2065,7 @@ void PropertiesPalette::unsetItem()
 
 void PropertiesPalette::setTextFlowMode(PageItem::TextFlowMode mode)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning || !HaveItem)
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !HaveItem)
 		return;
 	if (CurItem->isGroupControl)
 	{
@@ -2087,7 +2105,7 @@ void PropertiesPalette::setTextFlowMode(PageItem::TextFlowMode mode)
 
 void PropertiesPalette::SetCurItem(PageItem *i)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	//CB We shouldnt really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
@@ -2532,11 +2550,12 @@ void PropertiesPalette::SetCurItem(PageItem *i)
 	}
 #endif
 	updateSpinBoxConstants();
+	connect(TabStack, SIGNAL(currentChanged(int)), this, SLOT(SelTab(int)));
 }
 
 void PropertiesPalette::NewSel(int nr)
 {
-	if (!HaveDoc || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	int visID;
 	PageItem *i=0;
@@ -2847,7 +2866,7 @@ void PropertiesPalette::setLevel(uint l)
 
 void PropertiesPalette::setXY(double x, double y)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(Xpos, SIGNAL(valueChanged(double)), this, SLOT(NewX()));
 	disconnect(Ypos, SIGNAL(valueChanged(double)), this, SLOT(NewY()));
@@ -2915,7 +2934,7 @@ void PropertiesPalette::setXY(double x, double y)
 
 void PropertiesPalette::setBH(double x, double y)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -2942,7 +2961,7 @@ void PropertiesPalette::setBH(double x, double y)
 
 void PropertiesPalette::setR(double r)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	double rr = r;
@@ -2955,7 +2974,7 @@ void PropertiesPalette::setR(double r)
 
 void PropertiesPalette::setRR(double r)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -2965,7 +2984,7 @@ void PropertiesPalette::setRR(double r)
 
 void PropertiesPalette::setCols(int r, double g)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3016,7 +3035,7 @@ void PropertiesPalette::setLineSpacingMode(int id)
 
 void PropertiesPalette::setLsp(double r)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3040,7 +3059,7 @@ void PropertiesPalette::setLsp(double r)
 
 void PropertiesPalette::setTextToFrameDistances(double left, double top, double bottom, double right)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3053,7 +3072,7 @@ void PropertiesPalette::setTextToFrameDistances(double left, double top, double 
 
 void PropertiesPalette::setFontFace(const QString& newFont)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3066,7 +3085,7 @@ void PropertiesPalette::setFontFace(const QString& newFont)
 
 void PropertiesPalette::setSize(double s)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3076,7 +3095,7 @@ void PropertiesPalette::setSize(double s)
 
 void PropertiesPalette::setExtra(double e)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3086,7 +3105,7 @@ void PropertiesPalette::setExtra(double e)
 
 void PropertiesPalette::ChangeScaling()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (FreeScale == sender())
 	{
@@ -3123,7 +3142,7 @@ void PropertiesPalette::ChangeScaling()
 
 void PropertiesPalette::setScaleAndOffset(double scx, double scy, double x, double y)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3167,7 +3186,7 @@ void PropertiesPalette::setScaleAndOffset(double scx, double scy, double x, doub
 
 void PropertiesPalette::setLineWidth(double s)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3190,7 +3209,7 @@ void PropertiesPalette::setLineWidth(double s)
 
 void PropertiesPalette::setLIvalue(Qt::PenStyle p, Qt::PenCapStyle pc, Qt::PenJoinStyle pj)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3272,7 +3291,7 @@ void PropertiesPalette::setupLineSpacingSpinbox(int mode, double value)
 
 void PropertiesPalette::updateStyle(const ParagraphStyle& newCurrent)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3301,7 +3320,7 @@ void PropertiesPalette::updateStyle(const ParagraphStyle& newCurrent)
 
 void PropertiesPalette::setStil(int s)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	StrokeIcon->setEnabled(false);
 	TxStroke->setEnabled(false);
@@ -3317,7 +3336,7 @@ void PropertiesPalette::setStil(int s)
 
 void PropertiesPalette::setAli(int e)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3329,7 +3348,7 @@ void PropertiesPalette::setAli(int e)
 
 void PropertiesPalette::setParStyle(const QString& name)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3340,7 +3359,7 @@ void PropertiesPalette::setParStyle(const QString& name)
 
 void PropertiesPalette::setCharStyle(const QString& name)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3350,7 +3369,7 @@ void PropertiesPalette::setCharStyle(const QString& name)
 
 void PropertiesPalette::setOpticalMargins()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	int omt(ParagraphStyle::OM_None);
 //	if (optMarginCheckLeftProtruding->isChecked()) omt+=ParagraphStyle::OM_LeftProtruding;
@@ -3366,7 +3385,7 @@ void PropertiesPalette::setOpticalMargins()
 
 void PropertiesPalette::resetOpticalMargins()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_resetOpticalMargins();
 }
@@ -3387,7 +3406,7 @@ void PropertiesPalette::updateOpticalMargins(const ParagraphStyle & pStyle)
 
 void PropertiesPalette::setMinWordTracking()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	ParagraphStyle newStyle;
 	newStyle.setMinWordTracking(minWordTrackingSpinBox->value() / 100.0);
@@ -3397,7 +3416,7 @@ void PropertiesPalette::setMinWordTracking()
 
 void PropertiesPalette::setNormWordTracking()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	ParagraphStyle newStyle;
 //	newStyle.setNormWordTracking(percent / 100.0);
@@ -3407,7 +3426,7 @@ void PropertiesPalette::setNormWordTracking()
 
 void PropertiesPalette::setMinGlyphExtension()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	ParagraphStyle newStyle;
 	newStyle.setMinGlyphExtension(minGlyphExtSpinBox->value() / 100.0);
@@ -3416,7 +3435,7 @@ void PropertiesPalette::setMinGlyphExtension()
 
 void PropertiesPalette::setMaxGlyphExtension()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	ParagraphStyle newStyle;
 	newStyle.setMaxGlyphExtension(maxGlyphExtSpinBox->value() / 100.0);
@@ -3426,7 +3445,7 @@ void PropertiesPalette::setMaxGlyphExtension()
 
 void PropertiesPalette::setTScaleV(double e)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3436,21 +3455,21 @@ void PropertiesPalette::setTScaleV(double e)
 
 void PropertiesPalette::NewTScaleV()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetScaleV(qRound(ChScaleV->value() * 10));
 }
 
 void PropertiesPalette::NewTBase()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetBaselineOffset(qRound(ChBase->value() * 10));
 }
 
 void PropertiesPalette::setTScale(double e)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3460,7 +3479,7 @@ void PropertiesPalette::setTScale(double e)
 
 void PropertiesPalette::setTBase(double e)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool tmp = HaveItem;
 	HaveItem = false;
@@ -3470,14 +3489,14 @@ void PropertiesPalette::setTBase(double e)
 
 void PropertiesPalette::NewTScale()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetScaleH(qRound(ChScale->value() * 10));
 }
 
 void PropertiesPalette::NewX()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -3559,7 +3578,7 @@ void PropertiesPalette::NewX()
 
 void PropertiesPalette::NewY()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 
 	double x,y,w,h, gx, gy, gh, gw, base;
@@ -3639,7 +3658,7 @@ void PropertiesPalette::NewY()
 
 void PropertiesPalette::NewW()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	
 	double x,y,w,h, gx, gy, gh, gw;
@@ -3746,7 +3765,7 @@ void PropertiesPalette::NewW()
 
 void PropertiesPalette::NewH()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -3855,7 +3874,7 @@ void PropertiesPalette::NewH()
 
 void PropertiesPalette::setRotation()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	double gx, gy, gh, gw;
 	if ((HaveDoc) && (HaveItem))
@@ -3884,7 +3903,7 @@ void PropertiesPalette::setRotation()
 
 void PropertiesPalette::NewCornerRadius()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->setCornerRadius(RoundRect->value() / m_unitRatio);
 	m_ScMW->view->SetFrameRounded();
@@ -3894,14 +3913,14 @@ void PropertiesPalette::NewCornerRadius()
 
 void PropertiesPalette::NewLineSpacing()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetLineSpacing(LineSp->value());
 }
 
 void PropertiesPalette::HandleGapSwitch()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	setCols(CurItem->Cols, CurItem->ColGap);
 	dGap->setToolTip("");
@@ -3914,7 +3933,7 @@ void PropertiesPalette::HandleGapSwitch()
 
 void PropertiesPalette::NewCols()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->Cols = DCol->value();
 	setCols(CurItem->Cols, CurItem->ColGap);
@@ -3924,7 +3943,7 @@ void PropertiesPalette::NewCols()
 
 void PropertiesPalette::NewPage()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool reallynew = (CurItem->pixm.imgInfo.actualPageNumber != imagePageNumber->value());
 	CurItem->pixm.imgInfo.actualPageNumber = imagePageNumber->value();
@@ -3935,7 +3954,7 @@ void PropertiesPalette::NewPage()
 
 void PropertiesPalette::NewGap()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (colgapLabel->currentIndex() == 0)
 		CurItem->ColGap = dGap->value() / m_unitRatio;
@@ -3956,28 +3975,28 @@ void PropertiesPalette::NewGap()
 
 void PropertiesPalette::NewSize()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetFontSize(qRound(Size->value()*10.0));
 }
 
 void PropertiesPalette::NewTracking()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetTracking(qRound(Extra->value() * 10.0));
 }
 
 void PropertiesPalette::NewLocalXY()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetImageOffset(imageXOffsetSpinBox->value() / m_unitRatio / CurItem->imageXScale(), imageYOffsetSpinBox->value() / m_unitRatio / CurItem->imageYScale());
 }
 
 void PropertiesPalette::NewLocalSC()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -3997,7 +4016,7 @@ void PropertiesPalette::NewLocalSC()
 
 void PropertiesPalette::NewLocalDpi()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4018,14 +4037,14 @@ void PropertiesPalette::NewLocalDpi()
 
 void PropertiesPalette::handleImageEffects()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->ImageEffects();
 }
 
 void PropertiesPalette::handleExtImgProperties()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->view->editExtendedImageProperties();
 	emit DocChanged();
@@ -4033,7 +4052,7 @@ void PropertiesPalette::handleExtImgProperties()
 
 void PropertiesPalette::NewLineWidth()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4063,14 +4082,14 @@ void PropertiesPalette::NewLineWidth()
 
 void PropertiesPalette::setStartArrow(int id)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_ApplyArrowHead(id,-1);
 }
 
 void PropertiesPalette::setEndArrow(int id)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 		doc->itemSelection_ApplyArrowHead(-1, id);
@@ -4078,7 +4097,7 @@ void PropertiesPalette::setEndArrow(int id)
 
 void PropertiesPalette::NewLineStyle()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4115,7 +4134,7 @@ void PropertiesPalette::NewLineStyle()
 
 void PropertiesPalette::dashChange()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4131,7 +4150,7 @@ void PropertiesPalette::dashChange()
 
 void PropertiesPalette::NewLineMode()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (LineMode->currentIndex() == 0)
 	{
@@ -4161,7 +4180,7 @@ void PropertiesPalette::NewLineMode()
 
 void PropertiesPalette::NewLineJoin()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	Qt::PenJoinStyle c = Qt::MiterJoin;
 	switch (LJoinStyle->currentIndex())
@@ -4182,7 +4201,7 @@ void PropertiesPalette::NewLineJoin()
 
 void PropertiesPalette::NewLineEnd()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	Qt::PenCapStyle c = Qt::FlatCap;
 	switch (LEndStyle->currentIndex())
@@ -4203,7 +4222,7 @@ void PropertiesPalette::NewLineEnd()
 
 void PropertiesPalette::ToggleKette()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(imageXScaleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(HChange()));
 	disconnect(imageYScaleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(VChange()));
@@ -4243,7 +4262,7 @@ void PropertiesPalette::VChange()
 
 void PropertiesPalette::ToggleKetteD()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(imgDpiX, SIGNAL(valueChanged(double)), this, SLOT(HChangeD()));
 	disconnect(imgDpiY, SIGNAL(valueChanged(double)), this, SLOT(VChangeD()));
@@ -4283,14 +4302,14 @@ void PropertiesPalette::VChangeD()
 
 void PropertiesPalette::NewAlignement(int a)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetAlignment(a);
 }
 
 void PropertiesPalette::setTypeStyle(int s)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	emit NewEffects(s);
 }
@@ -4307,7 +4326,7 @@ void PropertiesPalette::newShadowOffs()
 
 void PropertiesPalette::setShadowOffs(double x, double y)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(SeStyle->ShadowVal->Xoffset, SIGNAL(valueChanged(double)), this, SLOT(newShadowOffs()));
 	disconnect(SeStyle->ShadowVal->Yoffset, SIGNAL(valueChanged(double)), this, SLOT(newShadowOffs()));
@@ -4329,7 +4348,7 @@ void PropertiesPalette::newUnderline()
 
 void PropertiesPalette::setUnderline(double p, double w)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(SeStyle->UnderlineVal->LPos, SIGNAL(valueChanged(double)), this, SLOT(newUnderline()));
 	disconnect(SeStyle->UnderlineVal->LWidth, SIGNAL(valueChanged(double)), this, SLOT(newUnderline()));
@@ -4351,7 +4370,7 @@ void PropertiesPalette::newStrike()
 
 void PropertiesPalette::setStrike(double p, double w)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(SeStyle->StrikeVal->LPos, SIGNAL(valueChanged(double)), this, SLOT(newStrike()));
 	disconnect(SeStyle->StrikeVal->LWidth, SIGNAL(valueChanged(double)), this, SLOT(newStrike()));
@@ -4363,7 +4382,7 @@ void PropertiesPalette::setStrike(double p, double w)
 
 void PropertiesPalette::setOutlineW(double x)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(SeStyle->OutlineVal->LWidth, SIGNAL(valueChanged(double)), this, SLOT(newOutlineW()));
 	SeStyle->OutlineVal->LWidth->setValue(x / 10.0);
@@ -4379,35 +4398,35 @@ void PropertiesPalette::newOutlineW()
 
 void PropertiesPalette::DoLower()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->view->LowerItem();
 }
 
 void PropertiesPalette::DoRaise()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->view->RaiseItem();
 }
 
 void PropertiesPalette::DoFront()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->view->ToFront();
 }
 
 void PropertiesPalette::DoBack()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->view->ToBack();
 }
 
 void PropertiesPalette::NewRotMode(int m)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	double inX, inY, gx, gy, gh, gw;
 	inX = 0;
@@ -4516,7 +4535,7 @@ void PropertiesPalette::NewRotMode(int m)
 void PropertiesPalette::DoFlow()
 {
 	PageItem::TextFlowMode mode = PageItem::TextFlowDisabled;
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4554,7 +4573,7 @@ void PropertiesPalette::DoFlow()
 
 void PropertiesPalette::MakeIrre(int f, int c, qreal *vals)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4620,7 +4639,7 @@ void PropertiesPalette::MakeIrre(int f, int c, qreal *vals)
 
 void PropertiesPalette::handleShapeEdit()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4632,7 +4651,7 @@ void PropertiesPalette::handleShapeEdit()
 
 void PropertiesPalette::NewTDist()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4645,7 +4664,7 @@ void PropertiesPalette::NewTDist()
 
 void PropertiesPalette::NewSpGradient(double x1, double y1, double x2, double y2, double fx, double fy, double sg, double sk)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4720,7 +4739,7 @@ void PropertiesPalette::NewSpGradient(double x1, double y1, double x2, double y2
 
 void PropertiesPalette::toggleGradientEdit(int stroke)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4745,7 +4764,7 @@ void PropertiesPalette::toggleGradientEdit(int stroke)
 
 void PropertiesPalette::NewSpGradientM(double x1, double y1, double x2, double y2, double fx, double fy, double sg, double sk)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4786,7 +4805,7 @@ void PropertiesPalette::NewSpGradientM(double x1, double y1, double x2, double y
 
 void PropertiesPalette::toggleGradientEditM()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -4800,14 +4819,14 @@ void PropertiesPalette::toggleGradientEditM()
 
 void PropertiesPalette::NewTFont(QString c)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	emit NewFont(c);
 }
 
 void PropertiesPalette::DoRevert()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool setter=Revert->isChecked();
 	CurItem->setImageFlippedH(setter);
@@ -4819,7 +4838,7 @@ void PropertiesPalette::DoRevert()
 
 void PropertiesPalette::doClearCStyle()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (HaveDoc)
 	{
@@ -4830,7 +4849,7 @@ void PropertiesPalette::doClearCStyle()
 
 void PropertiesPalette::doClearPStyle()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (HaveDoc)
 	{
@@ -4843,7 +4862,7 @@ void PropertiesPalette::doClearPStyle()
 
 void PropertiesPalette::SetLineFormats(ScribusDoc *dd)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	disconnect(StyledLine, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(SetSTline(QListWidgetItem*)));
 	StyledLine->clear();
@@ -4862,7 +4881,7 @@ void PropertiesPalette::SetLineFormats(ScribusDoc *dd)
 
 void PropertiesPalette::SetSTline(QListWidgetItem *c)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (c == NULL)
 		return;
@@ -4876,7 +4895,7 @@ void PropertiesPalette::SetSTline(QListWidgetItem *c)
 
 void PropertiesPalette::updateColorList()
 {
-	if (!HaveDoc || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	Cpal->SetColors(doc->PageColors);
 	Cpal->SetPatterns(&doc->docPatterns);
@@ -4893,7 +4912,7 @@ void PropertiesPalette::updateColorList()
 
 void PropertiesPalette::updateCmsList()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (HaveDoc)
 	{
@@ -4960,35 +4979,35 @@ void PropertiesPalette::updateCmsList()
 
 void PropertiesPalette::ChangeProfile(const QString& prn)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetColorProfile(InputP->currentText());
 }
 
 void PropertiesPalette::ChangeIntent()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetRenderIntent(MonitorI->currentIndex());
 }
  
 void PropertiesPalette::ChangeCompressionMethod()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetCompressionMethod(CompressionMethod->currentIndex() - 1);
 }
 
 void PropertiesPalette::ChangeCompressionQuality()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetCompressionQuality(CompressionQuality->currentIndex() - 1);
 }
 
 void PropertiesPalette::ShowCMS()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if (HaveItem)
 		updateCmsList();
@@ -4998,21 +5017,21 @@ void PropertiesPalette::ShowCMS()
 
 void PropertiesPalette::newTxtFill()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetFillColor(TxFill->currentColor());
 }
 
 void PropertiesPalette::newTxtStroke()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	doc->itemSelection_SetStrokeColor(TxStroke->currentColor());
 }
 
 void PropertiesPalette::setActShade()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	int b;
 	if (PM1 == sender())
@@ -5029,7 +5048,7 @@ void PropertiesPalette::setActShade()
 
 void PropertiesPalette::setActFarben(QString p, QString b, double shp, double shb)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	ColorList::Iterator it;
 	int c = 0;
@@ -5062,28 +5081,28 @@ void PropertiesPalette::setActFarben(QString p, QString b, double shp, double sh
 
 void PropertiesPalette::handleLock()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->scrActions["itemLock"]->toggle();
 }
 
 void PropertiesPalette::handleLockSize()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->scrActions["itemLockSize"]->toggle();
 }
 
 void PropertiesPalette::handlePrint()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->scrActions["itemPrintingEnabled"]->toggle();
 }
 
 void PropertiesPalette::handleFlipH()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->scrActions["itemFlipH"]->toggle();
 	/*
@@ -5100,7 +5119,7 @@ void PropertiesPalette::handleFlipH()
 
 void PropertiesPalette::handleFlipV()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	m_ScMW->scrActions["itemFlipV"]->toggle();
 	/*
@@ -5118,7 +5137,7 @@ void PropertiesPalette::handleFlipV()
 
 void PropertiesPalette::handlePathType()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->textPathType = pathTextType->currentIndex();
 	CurItem->update();
@@ -5127,7 +5146,7 @@ void PropertiesPalette::handlePathType()
 
 void PropertiesPalette::handlePathFlip()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->textPathFlipped = flippedPathText->isChecked();
 	CurItem->updatePolyClip();
@@ -5137,7 +5156,7 @@ void PropertiesPalette::handlePathFlip()
 
 void PropertiesPalette::handlePathLine()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->PoShow = showcurveCheckBox->isChecked();
 	CurItem->update();
@@ -5146,7 +5165,7 @@ void PropertiesPalette::handlePathLine()
 
 void PropertiesPalette::handlePathDist()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->setTextToFrameDistLeft(Dist->value());
 	doc->AdjustItemSize(CurItem);
@@ -5157,7 +5176,7 @@ void PropertiesPalette::handlePathDist()
 
 void PropertiesPalette::handlePathOffs()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->BaseOffs = -LineW->value();
 	doc->AdjustItemSize(CurItem);
@@ -5168,7 +5187,7 @@ void PropertiesPalette::handlePathOffs()
 
 void PropertiesPalette::handleFillRule()
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	CurItem->fillRule = EvenOdd->isChecked();
 	CurItem->update();
@@ -5177,7 +5196,7 @@ void PropertiesPalette::handleFillRule()
 
 void PropertiesPalette::handleOverprint(int val)
 {
-	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->ScriptRunning)
+	if (!HaveDoc || !HaveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	bool setter = true;
 	if (val == 0)
@@ -5187,7 +5206,7 @@ void PropertiesPalette::handleOverprint(int val)
 
 void PropertiesPalette::NewName()
 {
-	if (m_ScMW->ScriptRunning || !HaveDoc || !HaveItem)
+	if (m_ScMW->scriptIsRunning() || !HaveDoc || !HaveItem)
 		return;
 	QString NameOld = CurItem->itemName();
 	QString NameNew = NameEdit->text();
@@ -5226,7 +5245,7 @@ void PropertiesPalette::fillLangCombo(QMap<QString,QString> langMap)
 {
 	QStringList sortList;
 	QMap<QString,QString>::Iterator it;
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	langCombo->clear();
 	for (it = langMap.begin(); it != langMap.end(); ++it)
@@ -5624,12 +5643,12 @@ void PropertiesPalette::languageChange()
 	textFlowDisabled->setToolTip( tr("Disable text flow from lower frames around object"));
 	textFlowUsesFrameShape->setToolTip( tr("Use the frame shape for text flow of text frames below the object."));
 	textFlowUsesBoundingBox->setToolTip(  "<qt>" + tr("Use the bounding box, which is always rectangular, instead of the frame's shape for text flow of text frames below the object. ") + "</qt>" );
-	textFlowUsesContourLine->setToolTip(  "<qt>" + tr("When chosen, the contour line can be edited with the Edit Shape Tool on the palette further above. When edited via the shape palette, this becomes a second separate line originally based on the frame's shape for text flow of text frames below the object. T") + "</qt>" );
+	textFlowUsesContourLine->setToolTip(  "<qt>" + tr("When chosen, the contour line can be edited with the Edit Shape Tool on the palette further above. When edited via the shape palette, this becomes a second separate line originally based on the frame's shape for text flow of text frames below the object.") + "</qt>" );
 	textFlowUsesImageClipping->setToolTip(  "<qt>" + tr("Use the clipping path of the image") + "</qt>" );
 	textFlowDisabled2->setToolTip( tr("Disable text flow from lower frames around object"));
 	textFlowUsesFrameShape2->setToolTip( tr("Use the frame shape for text flow of text frames below the object."));
 	textFlowUsesBoundingBox2->setToolTip(  "<qt>" + tr("Use the bounding box, which is always rectangular, instead of the frame's shape for text flow of text frames below the object. ") + "</qt>" );
-	textFlowUsesContourLine2->setToolTip(  "<qt>" + tr("When chosen, the contour line can be edited with the Edit Shape Tool on the palette further above. When edited via the shape palette, this becomes a second separate line originally based on the frame's shape for text flow of text frames below the object. T") + "</qt>" );
+	textFlowUsesContourLine2->setToolTip(  "<qt>" + tr("When chosen, the contour line can be edited with the Edit Shape Tool on the palette further above. When edited via the shape palette, this becomes a second separate line originally based on the frame's shape for text flow of text frames below the object.") + "</qt>" );
 	textFlowUsesImageClipping2->setToolTip(  "<qt>" + tr("Use the clipping path of the image") + "</qt>" );
 
 //	Fonts->setToolTip( tr("Font of selected text or object"));
@@ -5882,7 +5901,7 @@ void PropertiesPalette::doGrouping()
 
 void PropertiesPalette::handleShapeEdit2()
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning)
+	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 	if ((HaveDoc) && (HaveItem))
 	{
@@ -5912,7 +5931,7 @@ void PropertiesPalette::endEdit2()
 
 void PropertiesPalette::flop(int radioFlop)
 {
-	if (!m_ScMW || m_ScMW->ScriptRunning || !HaveDoc || !HaveItem)
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !HaveDoc || !HaveItem)
 		return;
 // 	qDebug("%s", QString("rF %1").arg(radioFlop).toAscii());
 	if( radioFlop == 0)
@@ -5924,5 +5943,6 @@ void PropertiesPalette::flop(int radioFlop)
 	CurItem->update();
 	emit DocChanged();
 }
+
 
 
