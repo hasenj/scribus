@@ -47,13 +47,15 @@ void Prefs_PreflightVerifier::languageChange()
 
 void Prefs_PreflightVerifier::restoreDefaults(struct ApplicationPrefs *prefsData)
 {
-	checkerProfile = prefsData->checkerPrefsList;
+	showPagesWithoutErrorsCheckBox->setChecked(prefsData->verifierPrefs.showPagesWithoutErrors);
+	showNonPrintingLayerErrorsCheckBox->setChecked(prefsData->verifierPrefs.showNonPrintingLayerErrors);
+	checkerProfile = prefsData->verifierPrefs.checkerPrefsList;
 	currentProfileComboBox->clear();
 	CheckerPrefsList::Iterator it;
 	currentProfileComboBox->clear();
 	for (it = checkerProfile.begin(); it != checkerProfile.end(); ++it)
 		currentProfileComboBox->addItem(it.key());
-	QString prefProfile(prefsData->curCheckProfile);
+	QString prefProfile(prefsData->verifierPrefs.curCheckProfile);
 	setCurrentComboItem(currentProfileComboBox, prefProfile);
 	ignoreAllErrorsCheckBox->setChecked(checkerProfile[prefProfile].ignoreErrors);
 	autoCheckBeforePrintExportCheckBox->setChecked(checkerProfile[prefProfile].autoCheck);
@@ -79,8 +81,10 @@ void Prefs_PreflightVerifier::restoreDefaults(struct ApplicationPrefs *prefsData
 
 void Prefs_PreflightVerifier::saveGuiToPrefs(struct ApplicationPrefs *prefsData) const
 {
-	prefsData->checkerPrefsList = checkerProfile;
-	prefsData->curCheckProfile = currentProfileComboBox->currentText();
+	prefsData->verifierPrefs.showPagesWithoutErrors=showPagesWithoutErrorsCheckBox->isChecked();
+	prefsData->verifierPrefs.showNonPrintingLayerErrors=showNonPrintingLayerErrorsCheckBox->isChecked();
+	prefsData->verifierPrefs.checkerPrefsList = checkerProfile;
+	prefsData->verifierPrefs.curCheckProfile = currentProfileComboBox->currentText();
 
 }
 

@@ -2301,8 +2301,11 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		if (pagenr > -2) 
 			currItem->OwnPage = pagenr;
 		UndoManager::instance()->setUndoEnabled(false);
+		currItem->ScaleType   = attrs.valueAsInt("SCALETYPE", 1);
+		currItem->AspectRatio = attrs.valueAsInt("RATIO", 0);
 		currItem->setImageXYScale(scx, scy);
 		currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
+		currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 //		if (!currItem->asLatexFrame())
 #ifdef HAVE_OSG
 		if ((currItem->asImageFrame() || currItem->asOSGFrame()) && (!currItem->asLatexFrame()))
@@ -2363,6 +2366,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		}
 		else
 			currItem->setImageXYScale(scx, scy);
+		currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 		clPath = attrs.valueAsString("ImageClip", "");
 		if (currItem->pixm.imgInfo.PDSpathData.contains(clPath))
 		{
@@ -2376,8 +2380,6 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		currItem->setImageShown( attrs.valueAsInt("PICART"));
 /*		currItem->BBoxX = ScCLocale::toDoubleC( obj->attribute("BBOXX"));
 		currItem->BBoxH = ScCLocale::toDoubleC( obj->attribute("BBOXH")); */
-		currItem->ScaleType   = attrs.valueAsInt("SCALETYPE", 1);
-		currItem->AspectRatio = attrs.valueAsInt("RATIO", 0);
 		currItem->setLineWidth(pw);
 		UndoManager::instance()->setUndoEnabled(true);
 		break;
@@ -2399,6 +2401,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		{
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
+			currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 			currItem->Pfile  = Relative2Path(attrs.valueAsString("PFILE" , "") , baseDir);
 			currItem->Pfile2 = Relative2Path(attrs.valueAsString("PFILE2", ""), baseDir);
 			currItem->Pfile3 = Relative2Path(attrs.valueAsString("PFILE3", ""), baseDir);
@@ -2427,6 +2430,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		{
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
+			currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 			currItem->Pfile  = Relative2Path(attrs.valueAsString("PFILE" , ""), baseDir);
 			currItem->Pfile2 = Relative2Path(attrs.valueAsString("PFILE2", ""), baseDir);
 			currItem->Pfile3 = Relative2Path(attrs.valueAsString("PFILE3", ""), baseDir);

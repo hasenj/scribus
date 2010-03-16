@@ -45,6 +45,14 @@ struct CheckerPrefs
 
 typedef QMap<QString, CheckerPrefs> CheckerPrefsList;
 
+struct VerifierPrefs
+{
+	CheckerPrefsList checkerPrefsList;
+	bool showPagesWithoutErrors;
+	bool showNonPrintingLayerErrors;
+	QString curCheckProfile;
+};
+
 struct TypoPrefs
 {
 	int valueSuperScript; //! Displacement of superscript
@@ -390,7 +398,7 @@ struct ApplicationPrefs
 	PluginPrefs pluginPrefs;
 	ShortWordPrefs shortwordPrefs;
 	ScripterPrefs scripterPrefs;
-	CheckerPrefsList checkerPrefsList;
+	VerifierPrefs verifierPrefs;
 	StoryEditorPrefs storyEditorPrefs;
 	PrintPreviewPrefs printPreviewPrefs;
 	ImageCachePrefs imageCachePrefs;
@@ -398,7 +406,7 @@ struct ApplicationPrefs
 	QList<ArrowDesc> arrowStyles;
 	QMap<QString, VGradient> defaultGradients;
 	QList<PageSet> pageSets;
-	QString curCheckProfile;
+
 
 
 	//TODO : Remove these no longer used items

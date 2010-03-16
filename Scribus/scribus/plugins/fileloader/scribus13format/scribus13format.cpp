@@ -2022,6 +2022,7 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 	double offsY = ScCLocale::toDoubleC(obj->attribute("LOCALY"));
 	double scx = ScCLocale::toDoubleC(obj->attribute("LOCALSCX"));
 	double scy = ScCLocale::toDoubleC(obj->attribute("LOCALSCY"));
+	double rot = ScCLocale::toDoubleC(obj->attribute("LOCALROT"));
 	QString Pcolor = obj->attribute("PCOLOR");
 	if (Pcolor.isEmpty())
 		Pcolor = "None";
@@ -2055,8 +2056,11 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		if (pagenr > -2) 
 			currItem->OwnPage = pagenr;
 		UndoManager::instance()->setUndoEnabled(false);
+		currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
+		currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 		currItem->setImageXYScale(scx, scy);
 		currItem->setImageXYOffset(offsX, offsY);
+		currItem->setImageRotation(rot);
 		currItem->Pfile     = Relative2Path(obj->attribute("PFILE"), baseDir);
 		currItem->IProfile  = obj->attribute("PRFILE","");
 		currItem->EmProfile = obj->attribute("EPROF","");
@@ -2096,8 +2100,6 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		currItem->setImageShown(obj->attribute("PICART").toInt());
 /*		currItem->BBoxX = obj->attribute("BBOXX").toDouble();
 		currItem->BBoxH = obj->attribute("BBOXH").toDouble(); */
-		currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
-		currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 		currItem->setLineWidth(pw);
 		if (currItem->pixm.imgInfo.layerInfo.count() != 0)
 		{
@@ -2141,8 +2143,11 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		UndoManager::instance()->setUndoEnabled(false);
 		if ((obj->attribute("ANNOTATION", "0").toInt()) && (static_cast<bool>(obj->attribute("ANICON", "0").toInt())))
 		{
+			currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
+			currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(offsX, offsY);
+			currItem->setImageRotation(rot);
 			currItem->Pfile  = Relative2Path(obj->attribute("PFILE" ,""), baseDir);
 			currItem->Pfile2 = Relative2Path(obj->attribute("PFILE2",""), baseDir);
 			currItem->Pfile3 = Relative2Path(obj->attribute("PFILE3",""), baseDir);
@@ -2155,8 +2160,6 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 			currItem->setImageShown(obj->attribute("PICART").toInt());
 /*			currItem->BBoxX = obj->attribute("BBOXX").toDouble();
 			currItem->BBoxH = obj->attribute("BBOXH").toDouble(); */
-			currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
-			currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 		}
 		//currItem->convertTo(pt);
 		UndoManager::instance()->setUndoEnabled(true);
@@ -2169,8 +2172,11 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		UndoManager::instance()->setUndoEnabled(false);
 		if ((obj->attribute("ANNOTATION", "0").toInt()) && (static_cast<bool>(obj->attribute("ANICON", "0").toInt())))
 		{
+			currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
+			currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(offsX, offsY);
+			currItem->setImageRotation(rot);
 			currItem->Pfile  = Relative2Path(obj->attribute("PFILE" ,""), baseDir);
 			currItem->Pfile2 = Relative2Path(obj->attribute("PFILE2",""), baseDir);
 			currItem->Pfile3 = Relative2Path(obj->attribute("PFILE3",""), baseDir);
@@ -2183,8 +2189,6 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 			currItem->setImageShown(obj->attribute("PICART").toInt());
 /*			currItem->BBoxX = obj->attribute("BBOXX").toDouble();
 			currItem->BBoxH = obj->attribute("BBOXH").toDouble(); */
-			currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
-			currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 		}
 		//currItem->convertTo(pt);
 		UndoManager::instance()->setUndoEnabled(true);
@@ -3703,6 +3707,7 @@ void Scribus13Format::SetItemProps(QDomElement *ob, PageItem* item, const QStrin
 	ob->setAttribute("LOCALSCY",item->imageYScale());
 	ob->setAttribute("LOCALX",item->imageXOffset());
 	ob->setAttribute("LOCALY",item->imageYOffset());
+	ob->setAttribute("LOCALROT", item->imageRotation());
 	ob->setAttribute("PICART", item->imageShown() ? 1 : 0);
 	ob->setAttribute("PLTSHOW", item->PoShow ? 1 : 0);
 	ob->setAttribute("BASEOF", item->BaseOffs);

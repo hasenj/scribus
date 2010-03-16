@@ -142,6 +142,7 @@ public:
 	const VGradient getFillGradient();
 	const VGradient getStrokeGradient();
 	const VGradient getMaskGradient();
+	const VGradient getMaskGradientGroup();
 	void updateColorList();
 	void setGradientEditMode(bool);
 	void updateCmsList();
@@ -160,6 +161,7 @@ public:
 
 	Cpalette *Cpal;
 	Tpalette *Tpal;
+	Tpalette *TpalGroup;
 	Autoforms* SCustom;
 	Autoforms* SCustom2;
 	ParaStyleComboBox *paraStyleCombo;
@@ -168,11 +170,6 @@ public:
 	ArrowChooser* startArrow;
 	ArrowChooser* endArrow;
 	BasePointWidget* RotationGroup;
-/*	QRadioButton* TopLeft;
-	QRadioButton* TopRight;
-	QRadioButton* Center;
-	QRadioButton* BottomLeft;
-	QRadioButton* BottomRight; */
 	QGroupBox* textFlowOptions;
 	QGroupBox* textFlowOptions2;
 	QButtonGroup* textFlowOptionsB;
@@ -205,6 +202,7 @@ public slots:
 	void setExtra(double e);
 	void setTextToFrameDistances(double left, double top, double bottom, double right);
 	void ChangeScaling();
+	void setImgRotation(double rot);
 	void setScaleAndOffset(double scx, double scy, double x, double y);
 	void setLineWidth(double s);
 	void setLIvalue(Qt::PenStyle p, Qt::PenCapStyle pc, Qt::PenJoinStyle pj);
@@ -276,6 +274,7 @@ private slots:
 	void NewLocalXY();
 	void NewLocalSC();
 	void NewLocalDpi();
+	void NewLocalRot();
 	void NewLineWidth();
 	void NewLineStyle();
 	void NewLineJoin();
@@ -296,6 +295,7 @@ private slots:
 	void toggleGradientEdit(int);
 	void NewSpGradientM(double x1, double y1, double x2, double y2, double fx, double fy, double sg, double sk);
 	void toggleGradientEditM();
+	void toggleGradientEditMGroup();
 	void DoRevert();
 	void doClearCStyle();
 	void doClearPStyle();
@@ -322,8 +322,11 @@ private slots:
 	void HandleTLines();
 	void setStartArrow(int id);
 	void setEndArrow(int id);
-	void setGroupTransparency(int trans);
+	void setGroupTransparency(double trans);
 	void setGroupBlending(int blend);
+	void setGroupGradMask(int typ);
+	void setGroupPatternMask(QString pattern);
+	void setGroupPatternMaskProps(double imageScaleX, double imageScaleY, double offsetX, double offsetY, double rotation, double skewX, double skewY, bool mirrorX, bool mirrorY);
 	void doGrouping();
 	void dashChange();
 	void flop(int);
@@ -349,8 +352,6 @@ protected:
 	QVBoxLayout* MpalLayout;
 	QVBoxLayout* pageLayout;
 	QVBoxLayout* pageLayout_2;
-//	QVBoxLayout* pageLayout_2a;
-//	QVBoxLayout* pageLayout_2b;
 	QVBoxLayout* pageLayout_2c;
 	QVBoxLayout* pageLayout_3;
 	QVBoxLayout* pageLayout_4;
@@ -359,14 +360,10 @@ protected:
 	QVBoxLayout* pageLayout_5b;
 	QVBoxLayout* pageLayout_6;
 	QVBoxLayout* pageLayout_7;
-//	QVBoxLayout* OverPLayout;
 	QVBoxLayout* TLineLayout;
 	QHBoxLayout* layout60;
 	QGridLayout* Layout44;
 	QHBoxLayout* Layout13;
-//	QGridLayout* Layout12;
-	QHBoxLayout* layout47;
-	QVBoxLayout* layout46;
 	QGridLayout* layout41;
 	QGridLayout* layout41a;
 	QGridLayout* layout41c;
@@ -376,7 +373,7 @@ protected:
 	QVBoxLayout* Layout24;
 	QHBoxLayout* Layout18;
 	QGridLayout* Layout12_2;
-	QGridLayout* imagePageNumberSelector; 
+	QGridLayout* imagePageNumberSelector;
 	QHBoxLayout* NameGroupLayout;
 	QGridLayout* GeoGroupLayout;
 	QGridLayout* LayerGroupLayout;
@@ -393,7 +390,7 @@ protected:
 	QHBoxLayout* layout24;
 	QVBoxLayout* page_group_layout;
 	QHBoxLayout* ShapeGroupLayout2;
-	QGridLayout* Layout1t;
+	QVBoxLayout* Layout1t;
 	QHBoxLayout* wordTrackingHLayout;
 	QHBoxLayout* glyphExtensionHLayout;
 	QGridLayout* flopLayout;
@@ -404,7 +401,6 @@ protected:
 	QWidget* page;
 	QWidget* page_2;
 	QWidget* page_2a;
-//	QWidget* page_2b;
 	QWidget* page_2c;
 	QWidget* page_3;
 	QWidget* page_4;
@@ -440,6 +436,7 @@ protected:
 	QLabel* xscaleLabel;
 	QLabel* xposImgLabel;
 	QLabel* yposImgLabel;
+	QLabel* imageRotationLabel;
 	QLabel* linewidthLabel;
 	QLabel* endingsLabel;
 	QLabel* linetypeLabel;
@@ -473,7 +470,6 @@ protected:
 	QLabel* minGlyphExtensionLabel;
 	QLabel* maxGlyphExtensionLabel;
 
-//	LabelButton* colgapLabel;
 	ScComboBox* colgapLabel;
 	StyleSelect* SeStyle;
 	AlignSelect* GroupAlign;
@@ -498,7 +494,6 @@ protected:
 	QGroupBox* ShapeGroup;
 	QGroupBox* ShapeGroup2;
 	QGroupBox* Distance3;
-//	QGroupBox* OverP;
 
 	QToolButton* TabsButton;
 
@@ -552,7 +547,6 @@ protected:
 	QComboBox* LEndStyle;
 	ColorCombo* TxFill;
 	ScComboBox* blendMode;
-//	QComboBox *optMarginCombo;
 	QRadioButton *optMarginRadioNone;
 	QRadioButton *optMarginRadioBoth;
 	QRadioButton *optMarginRadioLeft;
@@ -579,6 +573,7 @@ protected:
 	ScrSpinBox* Extra;
 	ScrSpinBox* imageYOffsetSpinBox;
 	ScrSpinBox* imageXOffsetSpinBox;
+	ScrSpinBox* imageRotation;
 	ScrSpinBox* imageYScaleSpinBox;
 	ScrSpinBox* imageXScaleSpinBox;
 	ScrSpinBox* imgDpiX;
@@ -599,23 +594,16 @@ protected:
 	QRadioButton* FrameScale;
 	QRadioButton* EvenOdd;
 	QRadioButton* NonZero;
-//	QRadioButton* KnockOut;
-//	QRadioButton* Overprint;
 	QRadioButton* flopRealHeight;
 	QRadioButton* flopFontAscent;
 	QRadioButton* flopLineSpacing;
 	
 	QButtonGroup* flopGroup;
 
-//	QFrame* Line1;
-//	QFrame* Line2;
-//	QFrame* Line4;
-//	QFrame* Line5;
 	QFrame* Frame4;
 
 	QMenu* lineSpacingPop;
 
-// 	QToolButton* linespacingButton;
 	QToolButton* DoGroup;
 	QToolButton* DoUnGroup;
 	QToolButton* FlipH;

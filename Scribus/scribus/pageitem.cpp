@@ -233,6 +233,7 @@ PageItem::PageItem(const PageItem & other)
 	LocalScY(other.LocalScY),
 	LocalX(other.LocalX),
 	LocalY(other.LocalY),
+	LocalRot(other.LocalRot),
 	Reverse(other.Reverse),
 	m_startArrowIndex(other.m_startArrowIndex),
 	m_endArrowIndex(other.m_endArrowIndex),
@@ -437,6 +438,7 @@ PageItem::PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double 
 	OrigH = 0;
 	oldLocalX = LocalX = 0;
 	oldLocalY = LocalY = 0;
+	LocalRot = 0;
 	BBoxX = 0;
 	BBoxH = 0;
 	RadRect = 0;
@@ -885,6 +887,15 @@ void PageItem::moveImageXYOffsetBy(const double dX, const double dY)
 		return;
 	checkChanges();
 	emit imageOffsetScale(LocalScX, LocalScY, LocalX, LocalY);
+}
+
+void PageItem::setImageRotation(const double newRotation)
+{
+	LocalRot = newRotation;
+	if (m_Doc->isLoading())
+		return;
+	checkChanges();
+	emit imageRotation(LocalRot);
 }
 
 void PageItem::setReversed(bool newReversed)
@@ -1654,13 +1665,44 @@ void PageItem::DrawObj_Embedded(ScPainter *p, QRectF cullingArea, const CharStyl
 		if (embedded->isGroupControl)
 		{
 			p->save();
-			FPointArray cl = embedded->PoLine.copy();
 			QTransform mm;
 			mm.translate((embedded->gXpos * (style.scaleH() / 1000.0)), ( - (embedded->gHeight * (style.scaleV() / 1000.0)) + embedded->gYpos * (style.scaleV() / 1000.0)));
 			if (style.baselineOffset() != 0)
 				mm.translate(0, -embedded->gHeight * (style.baselineOffset() / 1000.0));
 			mm.scale(style.scaleH() / 1000.0, style.scaleV() / 1000.0);
 			mm.rotate(embedded->rotation());
+			if ((embedded->GrMask == 1) || (embedded->GrMask == 2) || (embedded->GrMask == 4) || (embedded->GrMask == 5))
+			{
+				if ((embedded->GrMask == 1) || (embedded->GrMask == 2))
+					p->setMaskMode(1);
+				else
+					p->setMaskMode(3);
+				if ((!embedded->gradientMaskVal.isEmpty()) && (!m_Doc->docGradients.contains(embedded->gradientMaskVal)))
+					embedded->gradientMaskVal = "";
+				if (!(embedded->gradientMaskVal.isEmpty()) && (m_Doc->docGradients.contains(embedded->gradientMaskVal)))
+					embedded->mask_gradient = m_Doc->docGradients[embedded->gradientMaskVal];
+				p->mask_gradient = embedded->mask_gradient;
+				if ((embedded->GrMask == 1) || (embedded->GrMask == 4))
+					p->setGradientMask(VGradient::linear, FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), FPoint(embedded->GrMaskEndX, embedded->GrMaskEndY).transformPoint(mm, false), FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), embedded->GrMaskScale, embedded->GrMaskSkew);
+				else
+					p->setGradientMask(VGradient::radial, FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), FPoint(embedded->GrMaskEndX, embedded->GrMaskEndY).transformPoint(mm, false), FPoint(embedded->GrMaskFocalX, embedded->GrMaskFocalY).transformPoint(mm, false), embedded->GrMaskScale, embedded->GrMaskSkew);
+			}
+			else if ((embedded->GrMask == 3) || (embedded->GrMask == 6))
+			{
+				if ((embedded->patternMaskVal.isEmpty()) || (!m_Doc->docPatterns.contains(embedded->patternMaskVal)))
+					p->setMaskMode(0);
+				else
+				{
+					p->setPatternMask(&m_Doc->docPatterns[embedded->patternMask()], embedded->patternMaskScaleX, embedded->patternMaskScaleY, embedded->patternMaskOffsetX + embedded->xPos(), embedded->patternMaskOffsetY + embedded->yPos(), embedded->patternMaskRotation + embedded->rotation(), embedded->patternMaskSkewX, embedded->patternMaskSkewY, embedded->patternMaskMirrorX, embedded->patternMaskMirrorY);
+					if (embedded->GrMask == 3)
+						p->setMaskMode(2);
+					else
+						p->setMaskMode(4);
+				}
+			}
+			else
+				p->setMaskMode(0);
+			FPointArray cl = embedded->PoLine.copy();
 			cl.map( mm );
 			p->beginLayer(1.0 - embedded->fillTransparency(), embedded->fillBlendmode(), &cl);
 			groupStack.push(embedded->groupsLastItem);
@@ -1988,10 +2030,41 @@ QImage PageItem::DrawObj_toImage(QList<PageItem*> &emG)
 		if (embedded->isGroupControl)
 		{
 			painter->save();
-			FPointArray cl = embedded->PoLine.copy();
 			QTransform mm;
 			mm.translate(embedded->gXpos, embedded->gYpos);
 			mm.rotate(embedded->rotation());
+			if ((embedded->GrMask == 1) || (embedded->GrMask == 2) || (embedded->GrMask == 4) || (embedded->GrMask == 5))
+			{
+				if ((embedded->GrMask == 1) || (embedded->GrMask == 2))
+					painter->setMaskMode(1);
+				else
+					painter->setMaskMode(3);
+				if ((!embedded->gradientMaskVal.isEmpty()) && (!m_Doc->docGradients.contains(embedded->gradientMaskVal)))
+					embedded->gradientMaskVal = "";
+				if (!(embedded->gradientMaskVal.isEmpty()) && (m_Doc->docGradients.contains(embedded->gradientMaskVal)))
+					embedded->mask_gradient = m_Doc->docGradients[embedded->gradientMaskVal];
+				painter->mask_gradient = embedded->mask_gradient;
+				if ((embedded->GrMask == 1) || (embedded->GrMask == 4))
+					painter->setGradientMask(VGradient::linear, FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), FPoint(embedded->GrMaskEndX, embedded->GrMaskEndY).transformPoint(mm, false), FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), embedded->GrMaskScale, embedded->GrMaskSkew);
+				else
+					painter->setGradientMask(VGradient::radial, FPoint(embedded->GrMaskStartX, embedded->GrMaskStartY).transformPoint(mm, false), FPoint(embedded->GrMaskEndX, embedded->GrMaskEndY).transformPoint(mm, false), FPoint(embedded->GrMaskFocalX, embedded->GrMaskFocalY).transformPoint(mm, false), embedded->GrMaskScale, embedded->GrMaskSkew);
+			}
+			else if ((embedded->GrMask == 3) || (embedded->GrMask == 6))
+			{
+				if ((embedded->patternMaskVal.isEmpty()) || (!m_Doc->docPatterns.contains(embedded->patternMaskVal)))
+					painter->setMaskMode(0);
+				else
+				{
+					painter->setPatternMask(&m_Doc->docPatterns[embedded->patternMask()], embedded->patternMaskScaleX, embedded->patternMaskScaleY, embedded->patternMaskOffsetX + embedded->xPos(), embedded->patternMaskOffsetY + embedded->yPos(), embedded->patternMaskRotation + embedded->rotation(), embedded->patternMaskSkewX, embedded->patternMaskSkewY, embedded->patternMaskMirrorX, embedded->patternMaskMirrorY);
+					if (embedded->GrMask == 3)
+						painter->setMaskMode(2);
+					else
+						painter->setMaskMode(4);
+				}
+			}
+			else
+				painter->setMaskMode(0);
+			FPointArray cl = embedded->PoLine.copy();
 			cl.map( mm );
 			painter->beginLayer(1.0 - embedded->fillTransparency(), embedded->fillBlendmode(), &cl);
 			groupStack.push(embedded->groupsLastItem);
@@ -5784,6 +5857,7 @@ void PageItem::AdjustPictScale()
 		return;
 	LocalX = 0;
 	LocalY = 0;
+	LocalRot = 0;
 	double xs = Width / static_cast<double>(OrigW);
 	double ys = Height / static_cast<double>(OrigH);
 	if (AspectRatio)
@@ -5829,6 +5903,7 @@ void PageItem::AdjustPictScale()
 		imageClip.map(cl);
 	}
 	emit imageOffsetScale(LocalScX, LocalScY, LocalX, LocalY );
+	emit imageRotation(LocalRot);
 }
 
 void PageItem::setExternalFile(QString val)
@@ -6042,6 +6117,7 @@ bool PageItem::connectToGUI()
 	//Line signals
 	connect(this, SIGNAL(lineWidth(double)), pp, SLOT(setLineWidth(double)));
 	connect(this, SIGNAL(imageOffsetScale(double, double, double, double)), pp, SLOT(setScaleAndOffset(double, double, double, double)));
+	connect(this, SIGNAL(imageRotation(double)), pp, SLOT(setImgRotation(double)));
 	connect(this, SIGNAL(lineStyleCapJoin(Qt::PenStyle, Qt::PenCapStyle, Qt::PenJoinStyle)), pp, SLOT( setLIvalue(Qt::PenStyle, Qt::PenCapStyle, Qt::PenJoinStyle)));
 	//Frame text signals
 	connect(this, SIGNAL(lineSpacing(double)), pp, SLOT(setLsp(double)));
@@ -6178,6 +6254,7 @@ void PageItem::moveImageInFrame(double newX, double newY)
 		imageClip = pixm.imgInfo.PDSpathData[pixm.imgInfo.usedPath].copy();
 		QTransform cl;
 		cl.translate(imageXOffset()*imageXScale(), imageYOffset()*imageYScale());
+		cl.rotate(imageRotation());
 		cl.scale(imageXScale(), imageYScale());
 		imageClip.map(cl);
 	}
